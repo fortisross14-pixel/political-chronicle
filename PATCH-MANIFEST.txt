@@ -1,0 +1,40 @@
+POLITICAL CHRONICLE v0.3.0 - HISTORICAL FOUNDATIONS PATCH
+
+Base version: v0.2.0
+
+Replace:
+- package.json
+- scripts/simulation-test.mjs
+- src/App.jsx
+- src/constants.js
+- src/simulation.js
+- src/styles.css
+- src/world.js
+
+Major changes:
+- 50-state recognition and favorability maps replace generic political fame.
+- Home-state standing drives House, Senate, and governor careers; national viability emerges from the 50-state map.
+- Pre-political career histories: local/state politics, law, military, academic, business, civil service, celebrity, and activism.
+- Career origins affect abilities, starting recognition, coalition appeal, and election calculations.
+- Year 1 is now a founding-era republic led by a highly recognized Generational founding president.
+- Historical eras progress from Founding through Expansion, Industrialization, Global Conflict, Modern State, and Contemporary politics.
+- Historical pressure system creates path-dependent decisions on federal power, indigenous policy, slavery, sectional conflict, labor, wars, depression, civil rights, and globalization.
+- Slavery can end peacefully, survive longer, or trigger civil conflict depending on society and presidential leadership.
+- Two dominant electoral coalition slots remain internally stable for US-style election mechanics, while visible political parties can reorganize, disappear, and be replaced by successor parties.
+- Party ancestry, platform history, ideological drift, and realignments are permanently archived.
+- Population-group composition and partisan loyalty evolve with industrialization, urbanization, literacy, policy, and party platforms.
+- Simplified world simulation adds 36 foreign countries and comparative GDP, population, quality of life, military, technology, inequality, taxes, and rights.
+- Federal and state decisions permanently change economic/social statistics and politician coalition standing.
+- New World and expanded History screens show long-run national development, international rankings, conflicts, turning points, and party family trees.
+- Politician pages add pre-political origins and full 50-state recognition/favorability views.
+- Old election records preserve the historical party names that actually contested them.
+- Tiered historical storage keeps major political figures fully detailed while compacting routine retirees, allowing century-scale simulations without forcing future elections to scan every retired politician.
+
+Validation:
+- Deterministic 12-year invariant test passes with 6,200 active politicians, 435 House seats, 100 Senate seats, 50 governors, contested/uncontested primaries, state policy histories, historical turning points, and compacted retiree lookup.
+- 60-year stress run completed with party succession, historical conflict, evolving population, world rankings, and exactly 6,200 active politicians.
+- 120-year stress run completed through the Global Conflict era with a Civil War/abolition path in the tested seed, 30 presidential administrations, party succession, and stable office counts.
+- JSX and module sources pass TypeScript parser validation.
+
+Save compatibility:
+- v0.2.x saves are intentionally incompatible with v0.3.0 because recognition, party history, historical-era, world, and archive schemas changed.
