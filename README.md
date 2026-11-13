@@ -5,13 +5,14 @@ for mayor, then climb through the House, Senate and Governor's office while bala
 your voters want against what your party wants. Every career is recorded so runs can be
 compared.
 
-- [Game design](docs/DESIGN.md)
+- [Design v2 — the game we're building](docs/DESIGN_V2.md)
+- [Design v1 — simulation engine](docs/DESIGN.md)
 - [POC milestones](docs/MILESTONES.md)
 
 Status: **M6 (parties & the climb to Governor) done** — join the Democratic Union or the
 Republic Party, build standing, earn party money, request nominations or fight primaries, and
-run for the House, Senate or Governor across all of New York. Next: M7 (stats, Hall of Runs
-& POC polish).
+run for the House, Senate or Governor across all of New York. Next: M7 (character v2:
+traits, skills, backgrounds) — see the v2 roadmap.
 
 ## Development
 

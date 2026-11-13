@@ -1,4 +1,8 @@
-# Political Chronicle — Game Design (v1 draft)
+# Political Chronicle — Game Design (v1: simulation engine)
+
+> **Product direction has moved to [DESIGN_V2.md](./DESIGN_V2.md)** (card roguelike, scenarios
+> and sandbox, people cards, election night). This file remains the reference for the engine
+> formulas built in M1–M6.
 
 > A card-driven career simulator. You create a politician, start as an independent
 > running for mayor, and climb (or crash) your way through the House, Senate and

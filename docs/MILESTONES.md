@@ -118,29 +118,83 @@ compete in NYC. The red-region/blue-state tension is visible in the Party tab.
 
 ---
 
-## M7 — Stats, Hall of Runs & POC polish
+## Roadmap v2 (from here)
 
-**Goal:** careers are measurable and comparable; the slice is shippable.
+The direction changed after M6: a card roguelike for phones and tablets, with scenarios and
+sandbox, people cards, a legislature and an animated election night. See
+[DESIGN_V2.md](./DESIGN_V2.md). The old M7 (stats and Hall of Runs) folds into M10.
 
-- **Stats** sub-tab: charts over time (funds, recognition, approval, standing, alignment,
-  skills, integrity) from snapshots.
-- **Election history** sub-tab with per-region result maps.
-- Run end conditions (retire, 3 straight losses, age 85), end-of-career summary and
-  **legacy score**.
-- **Hall of Runs**: list and compare finished runs, overlay charts.
-- First-run tutorial hints, balance pass using the sim harness (House ~55%, Governor from a
-  rural base ~35%), bug bash.
+## M7 — Character v2: traits, skills, backgrounds
 
-**Done when:** you can finish 3 different careers and compare them side by side.
+- Home state (any of 50) and resident state/region (playable); native vs transplant rules
+  (hometown bonus vs newcomer penalty plus outside donors).
+- 7 skills: CHA, COM, FUN, POL, ADM, LEA, LAW, remapped onto existing mechanics; POL ≥ 7 draws
+  4 decision cards.
+- 7 backgrounds with fixed and free points, state affinities, perks and weaknesses.
+- Creator v2; save schema bump; bot and sim updated.
+
+**Done when:** a native and a transplant start measurably differently (native ~10–12 points
+likelier to win their first mayoral race, transplant ~20% more money), and each background's
+perk shows up in the sim.
+
+## M8 — People cards & the legislature
+
+- People market (2–3 per turn), roster (max 6), signing fee plus salary, firing (card lost).
+- Slots: campaign manager, chief of staff, party liaison, legislative director.
+- Bill passage for Governor and federal offices: chamber control per cycle, LAW, director.
+- ADM and LEA effects in office (wear, execution, crises).
+
+**Done when:** a Rare cabinet is worth about +2 skill levels in the sim, and a Governor with
+low LAW and no director sees noticeably more failed bills.
+
+## M9 — Election night
+
+- Engine: reporting timeline per region (poll closings, count progress, shrinking noise),
+  call logic, win probability.
+- Ground-game tokens earned in the campaign; actions on uncounted regions; capped swing.
+- Animated screen: map fills, totals, needle, called banners, final call.
+
+**Done when:** election nights for a mayoral and a statewide race play out live in about
+1–2 min, and the bot shows the actions flip about 20–30% of close races and almost no
+blowouts.
+
+## M10 — Scenarios, meta-progression & run results
+
+- Scenario framework: data definitions, objectives, cycle limits, stars, rewards.
+- 4 beginner scenarios (Hometown favorite → Big city, small town); Sandbox unlocks on
+  completion.
+- Artifacts and loadout slots; profile store separate from run saves.
+- Run results screen: stats charts, election history maps, legacy score; Hall of Runs (the
+  old M7).
+- CI: the bot plays each scenario and asserts its difficulty band.
+
+**Done when:** a new player can clear the beginner track, earn artifacts, unlock Sandbox and
+compare runs.
+
+## M11 — Mobile-first UX & juice
+
+- Portrait phone layout: bottom hand with drag-to-region, swipe decision stack, slim top bar.
+- Landscape tablet layout.
+- Animations (Framer Motion), haptics hooks; installable offline PWA.
+
+**Done when:** a full scenario plays comfortably one-handed on a phone and the app installs
+offline.
+
+## M12 — California & advanced scenarios
+
+- California (Los Angeles, Bay Area, Central Valley) with offices and chapter platforms.
+- Advanced scenarios: The Underdog Superstar, Blue in a red district, The Carpetbagger,
+  Machine politics, The Comeback.
+- Balance pass on every scenario band.
+
+**Done when:** all advanced scenarios sit inside their difficulty bands in CI.
 
 ---
 
-## After the POC (expansion)
+## After v2 (expansion)
 
-1. **E1 – The map:** 15 states / 25 regions, US map view, campaign travel between states.
-2. **E2 – The presidency:** national recognition, presidential primaries, general election
-   over the 15-state electoral map.
-3. **E3 – Living world:** random events & scandals, staff, recurring rivals, other
-   politicians' careers.
-4. **E4 – Depth:** legislative coalitions & vote counts, vetoes, third parties,
-   relocation, more decision-card content.
+1. **More states:** up to 15 states / 25 regions, plus a US map.
+2. **The presidency:** national primaries and the general election over the playable states,
+   where the transplant's two-state payoff kicks in.
+3. **Living world:** scandals, random events, recurring rivals, staff poached by opponents.
+4. **Store release:** Capacitor builds, sound, onboarding polish.
