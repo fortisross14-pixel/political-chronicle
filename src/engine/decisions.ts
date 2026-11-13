@@ -4,6 +4,7 @@
 import { DECISION_CARDS, getDecisionCard, getOffice, getRegion, STATES } from '../data';
 import { activeLevel, turnNo } from './events';
 import { nudgeApproval } from './governing';
+import { adjustStanding, effectivePlatform, member, PARTY, stanceAgreement } from './parties';
 import { clamp, nudgeFavorability, nudgeRecognition, regionAlignment, relevance } from './opinion';
 import { Rng } from './rng';
 import type { DecisionCard, GameState, IssueId, Pledge, PromiseEvent, RegionId } from './types';
@@ -73,6 +74,10 @@ export interface DecisionImpact {
   approval: Record<RegionId, number>;
   integrity: number;
   funds: number;
+  /** Party standing change (members only). */
+  standing: number;
+  /** Rejecting this card costs standing (a whip vote the party wants applied). */
+  rejectStanding: number;
   promisesKept: IssueId[];
   promisesBroken: IssueId[];
 }
@@ -84,6 +89,8 @@ export function decisionImpact(state: GameState, card: DecisionCard): DecisionIm
     approval: {},
     integrity: card.effects?.integrity ?? 0,
     funds: card.effects?.funds ?? 0,
+    standing: 0,
+    rejectStanding: 0,
     promisesKept: [],
     promisesBroken: [],
   };
@@ -104,6 +111,19 @@ export function decisionImpact(state: GameState, card: DecisionCard): DecisionIm
     } else {
       impact.favorability[id] = DECISION_EFFECT.favorability * fit * DECISION_EFFECT.spillover;
     }
+  }
+
+  const party = member(state);
+  if (party) {
+    const platform = effectivePlatform(party, office.state);
+    const whip = card.partyPriority === party ? PARTY.priorityMultiplier : 1;
+    let agreement = 0;
+    for (const tag of card.tags) {
+      const a = stanceAgreement(state, party, tag.issue, tag.stance);
+      impact.standing += PARTY.perTag * platform[tag.issue].weight * a * whip;
+      agreement += a;
+    }
+    if (card.partyPriority === party && agreement > 0) impact.rejectStanding = PARTY.priorityRejected;
   }
 
   for (const tag of card.tags) {
@@ -144,10 +164,12 @@ export function resolveDecisions(state: GameState, apply: string[]): GameState {
   const home = officeId ? getOffice(officeId).regionIds : [];
   const notes: string[] = [];
   const at = { year: state.clock.year, turn: state.clock.turn };
+  let standing = 0;
 
   for (const id of hand.cardIds) {
     const card = getDecisionCard(id);
     if (!apply.includes(id)) {
+      standing += decisionImpact(state, card).rejectStanding;
       if (card.rejectCost) {
         for (const r of home) {
           if (approval) approval[r] = nudgeApproval(approval[r]!, -card.rejectCost);
@@ -168,6 +190,7 @@ export function resolveDecisions(state: GameState, apply: string[]): GameState {
     }
     integrity += impact.integrity;
     funds += impact.funds;
+    standing += impact.standing;
     for (const issue of impact.promisesKept) promises.push({ ...at, title: card.title, issue, kept: true });
     for (const issue of impact.promisesBroken) promises.push({ ...at, title: card.title, issue, kept: false });
     if (impact.promisesBroken.length) notes.push(`broke a promise with “${card.title}”`);
@@ -176,7 +199,7 @@ export function resolveDecisions(state: GameState, apply: string[]): GameState {
 
   const verb = office ? 'Signed' : 'Backed';
   const titles = apply.map((id) => getDecisionCard(id).title).join(', ');
-  return {
+  return adjustStanding({
     ...state,
     regions,
     record,
@@ -186,5 +209,5 @@ export function resolveDecisions(state: GameState, apply: string[]): GameState {
     career: office && approval ? { ...state.career, office: { ...office, approval } } : state.career,
     decisions: { ...hand, resolved: true, applied: [...apply] },
     log: [...state.log, { ...at, text: `${verb}: ${titles}.${notes.length ? ` You ${notes.join('; ')}.` : ''}` }],
-  };
+  }, standing);
 }

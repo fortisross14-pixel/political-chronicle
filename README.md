@@ -8,10 +8,10 @@ compared.
 - [Game design](docs/DESIGN.md)
 - [POC milestones](docs/MILESTONES.md)
 
-Status: **M5 (governing) done** — win and you govern: 33 mayoral bills and executive actions,
-job approval by region that wears down over time, promises judged against the platform you
-won on, events in office, and an automatic re-election campaign where incumbents are judged
-on approval. Next: M6 (parties & the climb to Governor).
+Status: **M6 (parties & the climb to Governor) done** — join the Democratic Union or the
+Republic Party, build standing, earn party money, request nominations or fight primaries, and
+run for the House, Senate or Governor across all of New York. Next: M7 (stats, Hall of Runs
+& POC polish).
 
 ## Development
 

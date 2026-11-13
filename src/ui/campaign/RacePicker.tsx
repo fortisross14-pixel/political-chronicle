@@ -1,5 +1,5 @@
 import { getOffice } from '../../data';
-import { fileRaceError, raceOptions } from '../../engine';
+import { fileRaceError, nominationStatus, raceOptions } from '../../engine';
 import type { Action, GameState } from '../../engine';
 
 export function RacePicker({ state, dispatch }: { state: GameState; dispatch: (a: Action) => void }) {
@@ -30,12 +30,14 @@ export function RacePicker({ state, dispatch }: { state: GameState; dispatch: (a
               <tr key={o.officeId}>
                 <td>
                   {getOffice(o.officeId).name}
-                  {!o.eligible && <div className="muted small">{o.reason}</div>}
+                  <div className="muted small">{o.eligible ? nominationStatus(state, o.officeId).text : o.reason}</div>
                 </td>
                 <td>Nov {o.electionYear}</td>
                 <td>
                   <button disabled={!!error} title={error} onClick={() => dispatch({ type: 'FILE_RACE', officeId: o.officeId })}>
-                    File
+                    {{ nominee: 'Run as nominee', primary: 'Enter primary', independent: 'Run as independent', nonpartisan: 'File', denied: 'Denied' }[
+                      nominationStatus(state, o.officeId).kind
+                    ]}
                   </button>
                 </td>
               </tr>

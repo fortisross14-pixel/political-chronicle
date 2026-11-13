@@ -1,4 +1,5 @@
 import type { DecisionCard } from '../engine/types';
+import { FEDERAL_OFFICE_CARDS, GOVERNOR_OFFICE_CARDS, HIGHER_CAMPAIGN_CARDS } from './higherCards';
 import { MAYOR_OFFICE_CARDS } from './officeCards';
 
 /** Campaign moments: questionnaires, endorsements, controversies (DESIGN §6.3). */
@@ -105,7 +106,13 @@ export const CAMPAIGN_CARDS: DecisionCard[] = [
   },
 ];
 
-export const DECISION_CARDS: DecisionCard[] = [...CAMPAIGN_CARDS, ...MAYOR_OFFICE_CARDS];
+export const DECISION_CARDS: DecisionCard[] = [
+  ...CAMPAIGN_CARDS,
+  ...MAYOR_OFFICE_CARDS,
+  ...HIGHER_CAMPAIGN_CARDS,
+  ...FEDERAL_OFFICE_CARDS,
+  ...GOVERNOR_OFFICE_CARDS,
+];
 
 export const DECISION_CARDS_BY_ID: Record<string, DecisionCard> = Object.fromEntries(DECISION_CARDS.map((c) => [c.id, c]));
 

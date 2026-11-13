@@ -18,7 +18,11 @@ export function OfficePanel({ state, dispatch }: { state: GameState; dispatch: (
       <div className="panel-head">
         <h2>{office.name}</h2>
         <span className="badge-soft">
-          {campaigning ? 'Re-election year' : yearsLeft <= 1 ? `Re-election campaign starts Jan ${term.termEndsYear}` : `Term ends Nov ${term.termEndsYear}`}
+          {campaigning
+            ? state.career.race!.officeId === term.officeId
+              ? 'Re-election year'
+              : `Running for ${getOffice(state.career.race!.officeId).name} — seat at stake`
+            : yearsLeft <= 1 ? `Re-election campaign starts Jan ${term.termEndsYear}` : `Term ends Nov ${term.termEndsYear}`}
         </span>
       </div>
       <div className="approval-row">
@@ -40,7 +44,8 @@ export function OfficePanel({ state, dispatch }: { state: GameState; dispatch: (
       </div>
       <p className="muted small">
         Approval wears down a little every turn. Sign bills your voters like and that keep your promises; at re-election you are judged on
-        it. Promises this term: <span className="pos">{kept} kept</span>, <span className="neg">{broken} broken</span>.
+        it. Promises this term: <span className="pos">{kept} kept</span>, <span className="neg">{broken} broken</span>. To run for higher office, see
+        My party → Nominations.
       </p>
       <details>
         <summary>The platform you won on</summary>

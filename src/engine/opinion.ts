@@ -47,7 +47,11 @@ export const VOTE_WEIGHTS = {
   approval: 2,
   /** Party fit matters less in nonpartisan mayoral races. */
   partyNonpartisan: 0.4,
-  partyPartisan: 1.2,
+  partyPartisan: 0.4,
+  /** Share of the decided vote in partisan races that follows the party baseline. */
+  partisanBaseline: 0.5,
+  /** Blue baseline = 0.5 − slope × lean. */
+  baselineSlope: 0.3,
   undecided: 0.45,
   temperature: 0.5,
 };
@@ -83,7 +87,23 @@ export function regionIntention(views: VoterView[], regionId: RegionId, level: O
   const exps = views.map((v) => Math.exp(utility(v, regionId, level, partisan) / t));
   exps.push(Math.exp(VOTE_WEIGHTS.undecided / t));
   const total = exps.reduce((a, b) => a + b, 0);
-  return exps.map((e) => e / total);
+  const shares = exps.map((e) => e / total);
+  if (!partisan) return shares;
+  // Partisan races have a floor: part of the decided vote follows party, whoever the candidates are.
+  const undecided = shares.pop()!;
+  const decidedShares = shares.map((s) => s / (1 - undecided));
+  const base = partisanBaseline(views, regionId);
+  const b = VOTE_WEIGHTS.partisanBaseline;
+  return [...decidedShares.map((s, i) => ((1 - b) * s + b * base[i]!) * (1 - undecided)), undecided];
+}
+
+/** Each candidate's share of the vote that follows party in this region (independents get little). */
+export function partisanBaseline(views: VoterView[], regionId: RegionId): number[] {
+  const lean = getRegion(regionId).partisanLean;
+  const blue = clamp(0.5 - VOTE_WEIGHTS.baselineSlope * lean, 0.15, 0.85);
+  const raw = views.map((v) => (v.affiliation === 'DU' ? blue : v.affiliation === 'RP' ? 1 - blue : 0.08));
+  const total = raw.reduce((a, b) => a + b, 0);
+  return raw.map((r) => r / total);
 }
 
 /** Removes "undecided" and renormalizes: how the decided vote splits. */

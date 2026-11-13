@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getDecisionCard, getRegion, ISSUES_BY_ID } from '../../data';
+import { getDecisionCard, getRegion, ISSUES_BY_ID, PARTIES } from '../../data';
 import { decisionError, decisionImpact, DECISIONS_PER_TURN } from '../../engine';
 import type { Action, GameState } from '../../engine';
 import { money } from '../format';
@@ -47,6 +47,8 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
           return (
             <article key={id} className={on ? 'decision-card on' : 'decision-card'}>
               <h3>{card.title}</h3>
+              {card.partyPriority && <span className={`whip ${card.partyPriority.toLowerCase()}`}>{PARTIES[card.partyPriority].nickname} whip vote</span>}
+              {impact.rejectStanding < 0 && <p className="muted small">Your party expects you to sign this ({impact.rejectStanding} standing if you don’t).</p>}
               <p className="small">{card.text}</p>
               <ul className="tags small">
                 {card.tags.map((t) => (
@@ -69,6 +71,12 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
                   <div className="kv-row">
                     <dt>Integrity</dt>
                     <dd className={impact.integrity > 0 ? 'pos' : 'neg'}>{impact.integrity > 0 ? `+${impact.integrity}` : impact.integrity}</dd>
+                  </div>
+                )}
+                {impact.standing !== 0 && (
+                  <div className="kv-row">
+                    <dt>Party standing</dt>
+                    <dd className={impact.standing > 0 ? 'pos' : 'neg'}>{impact.standing > 0 ? `+${impact.standing.toFixed(1)}` : impact.standing.toFixed(1)}</dd>
                   </div>
                 )}
                 {impact.funds !== 0 && (

@@ -1,4 +1,4 @@
-import { ISSUES_BY_ID } from '../../data';
+import { ISSUES_BY_ID, PARTIES } from '../../data';
 import type { Candidate, IssueId, Stance } from '../../engine';
 
 export function stanceLabel(issue: IssueId, stance: Stance): string {
@@ -14,7 +14,8 @@ export function leanTag(lean: number): string {
 }
 
 export function candidateTag(c: Candidate): string {
-  return `${leanTag(c.lean)}${c.incumbent ? ' · incumbent' : ''}`;
+  const side = c.affiliation === 'IND' ? leanTag(c.lean) : PARTIES[c.affiliation].name;
+  return `${side}${c.incumbent ? ' · incumbent' : ''}`;
 }
 
 export function fitLabel(alignment: number): { text: string; tone: 'good' | 'mixed' | 'bad' } {

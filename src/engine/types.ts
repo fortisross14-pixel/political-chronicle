@@ -177,6 +177,18 @@ export interface Race {
   /** Empty until the player picks their platform (DESIGN §2: up to 5 topics). */
   platform: Pledge[];
   opponents: Candidate[];
+  /** A party primary you must win first (DESIGN §7). Decided at the end of the election year's first turn. */
+  primary?: Primary;
+  /** Running as your party's nominee (vs an independent run). */
+  nominee?: PartyId;
+}
+
+export interface Primary {
+  party: PartyId;
+  challenger: string;
+  /** How close the challenger is to the party platform, 0..1. */
+  challengerAlignment: number;
+  challengerRecognition: number;
 }
 
 export interface OfficeTerm {
@@ -206,6 +218,8 @@ export interface Career {
   race?: Race;
   /** Elections lost in a row while out of office. */
   lossStreak: number;
+  /** Relationship with your party, 0..100 (members only). */
+  partyStanding?: number;
 }
 
 // ---------- Cards ----------
@@ -228,6 +242,9 @@ export interface EventCard {
   gaffeRisk: boolean;
   /** Raises funds instead of (or as well as) persuading: Fundraising × this × (0.5 + R). */
   fundraising?: number;
+  /** Raises party standing by this × the Negotiation multiplier. Members only. */
+  partyStanding?: number;
+  requiresParty?: boolean;
   description: string;
 }
 
@@ -246,6 +263,8 @@ export interface DecisionCard {
   tags: Pledge[];
   /** Favorability lost in the jurisdiction if you reject it. */
   rejectCost?: number;
+  /** A whip vote: the party expects members to apply it (or reject it, if its stance opposes the platform). */
+  partyPriority?: PartyId;
   effects?: { funds?: number; integrity?: number };
 }
 
@@ -277,6 +296,7 @@ export interface IncomeBreakdown {
   donors: number;
   salary: number;
   upkeep: number;
+  party: number;
   /** Staff who quit because you couldn't pay them. */
   quit: string[];
 }
@@ -293,6 +313,7 @@ export interface ElectionCandidate {
 export interface ElectionRecord {
   officeId: OfficeId;
   year: number;
+  kind: 'general' | 'primary';
   candidates: ElectionCandidate[];
   /** Vote share per candidate (same order), per region. */
   regionShares: Record<RegionId, number[]>;
@@ -379,4 +400,5 @@ export type Action =
   | { type: 'RESOLVE_DECISIONS'; apply: string[] }
   | { type: 'BUY_CARD'; offerIndex: number }
   | { type: 'DISMISS_RESULT' }
-  | { type: 'RETIRE' };
+  | { type: 'RETIRE' }
+  | { type: 'JOIN_PARTY'; party: PartyId };

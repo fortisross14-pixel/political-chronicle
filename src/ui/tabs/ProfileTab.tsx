@@ -184,7 +184,10 @@ export function ProfileTab({ state }: { state: GameState }) {
                 {[...state.elections].reverse().map((e, i) => (
                   <tr key={i}>
                     <td>{e.year}</td>
-                    <td>{getOffice(e.officeId).name}</td>
+                    <td>
+                      {getOffice(e.officeId).name}
+                      {e.kind === 'primary' && <span className="muted small"> (primary)</span>}
+                    </td>
                     <td className={e.playerWon ? 'pos' : 'neg'}>{e.playerWon ? 'Won' : 'Lost'}</td>
                     <td>{pct(e.totalShares[0]!)}</td>
                     <td>{pct(e.finalPoll)}</td>

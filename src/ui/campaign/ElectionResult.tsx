@@ -8,9 +8,17 @@ export function ElectionResult({ election, dispatch }: { election: ElectionRecor
 
   return (
     <section className={election.playerWon ? 'panel result won' : 'panel result lost'} role="dialog" aria-label="Election result">
-      <h2>{election.playerWon ? `You won! ${office.name}` : `You lost the race for ${office.name}`}</h2>
+      <h2>
+        {election.kind === 'primary'
+          ? election.playerWon
+            ? `You won the primary for ${office.name}`
+            : `You lost the primary for ${office.name}`
+          : election.playerWon
+            ? `You won! ${office.name}`
+            : `You lost the race for ${office.name}`}
+      </h2>
       <p className="muted small">
-        Election Day, November {election.year}. Your final poll: {pct(election.finalPoll)} of decided voters.
+        {election.kind === 'primary' ? `Primary, March ${election.year}. Expected share` : `Election Day, November ${election.year}. Your final poll`}: {pct(election.finalPoll)}{election.kind === 'primary' ? '.' : ' of decided voters.'}
       </p>
       <div className="poll">
         {order.map(({ c, share }) => (
@@ -46,7 +54,11 @@ export function ElectionResult({ election, dispatch }: { election: ElectionRecor
         </table>
       )}
       <p className="small">
-        {election.playerWon
+        {election.kind === 'primary'
+          ? election.playerWon
+            ? 'You are the nominee. The general election is in November.'
+            : 'Your seat, if you hold one, is safe. Build standing and try again next cycle.'
+          : election.playerWon
           ? 'You take office in January. Bills land on your desk every turn; keep your promises and your approval up — at re-election you are judged on both.'
           : 'You can try again next cycle, run for a different office, or retire.'}
       </p>

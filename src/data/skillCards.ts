@@ -12,6 +12,8 @@ export interface SkillCard {
   upkeep?: number;
   /** Party-only cards arrive with parties (M6). */
   requiresParty?: boolean;
+  /** Party standing gained. */
+  standing?: number;
   description: string;
 }
 
@@ -22,7 +24,7 @@ export const SKILL_CARDS: SkillCard[] = [
   { id: 'digital_director', name: 'Hire a digital director', skill: 'digital', pricePerLevel: 6000, energy: 0, upkeep: 2000, description: 'A staffer who lives online. Costs a salary every turn.' },
   { id: 'think_tank', name: 'Think-tank fellowship', skill: 'policy', pricePerLevel: 4000, energy: 2, description: 'A semester of white papers. Sharper debates, clearer previews.' },
   { id: 'donor_gala', name: 'Donor network gala', skill: 'fundraising', pricePerLevel: 8000, energy: 1, description: 'Meet the people who write the big checks — and keep writing them.' },
-  { id: 'party_mentorship', name: 'Mentorship with a party elder', skill: 'negotiation', pricePerLevel: 5000, energy: 1, requiresParty: true, description: 'Learn how deals really get made. Party members only.' },
+  { id: 'party_mentorship', name: 'Mentorship with a party elder', skill: 'negotiation', pricePerLevel: 5000, energy: 1, requiresParty: true, standing: 5, description: 'Learn how deals really get made — and get on the leadership’s radar. +5 party standing.' },
 ];
 
 export const SKILL_CARDS_BY_ID: Record<string, SkillCard> = Object.fromEntries(SKILL_CARDS.map((c) => [c.id, c]));

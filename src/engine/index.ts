@@ -9,4 +9,5 @@ export * from './decisions';
 export * from './campaign';
 export * from './economy';
 export * from './governing';
+export * from './parties';
 export { applyAction, endTurnBlocker } from './reducer';

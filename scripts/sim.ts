@@ -2,7 +2,7 @@
 import { BACKGROUNDS } from '../src/data';
 import { getEventCard } from '../src/data';
 import { buildRunConfig, createRun, eventPrice } from '../src/engine';
-import { botCharacter, careerFunds, hometownWinRate, reelectionRate } from '../src/sim/bot';
+import { botCharacter, careerFunds, climbCareer, hometownWinRate, reelectionRate } from '../src/sim/bot';
 import type { BotStyle } from '../src/sim/bot';
 
 const runs = Number(process.argv[2] ?? 200);
@@ -43,4 +43,26 @@ for (const home of ['ny-north', 'ny-wny']) {
     const r = reelectionRate(botCharacter(home), style, Math.max(60, runs / 2));
     console.log(`${home.padEnd(9)} ${style.padEnd(9)} re-elected ${pct(r.reelected)} of ${r.terms} terms  approval at filing ${pct(r.avgApproval)}  integrity ${Math.round(r.integrity)}`);
   }
+}
+
+console.log('\nThe climb (Watertown-born climber, up to 60 turns ≈ 18 years)');
+for (const [background, party] of [['teacher', undefined], ['lawyer', undefined], ['teacher', 'DU']] as const) {
+  const n = Math.max(40, runs / 3);
+  const tally: Record<string, number> = {};
+  let house = 0;
+  let gov = 0;
+  let years = 0;
+  let tries = 0;
+  let houseFirst = 0;
+  let houseTried = 0;
+  let firstWins = 0;
+  for (let i = 0; i < n; i++) {
+    const r = climbCareer(botCharacter('ny-north', background), 60, `climb-${background}-${i}`, party);
+    tally[r.party] = (tally[r.party] ?? 0) + 1;
+    if (r.reachedHouse) house++;
+    if (r.reachedGovernor) { gov++; years += r.years; }
+    if (r.firstHouseTry !== undefined) { houseTried++; if (r.firstHouseTry) houseFirst++; }
+    if (r.firstGovernorTry !== undefined) { tries++; if (r.firstGovernorTry) firstWins++; }
+  }
+  console.log(`${(background + (party ? ' as Blue' : '')).padEnd(16)} reached House ${pct(house / n)} (first try ${pct(houseFirst / Math.max(1, houseTried))})  Governor ${pct(gov / n)}${gov ? ` (avg ${Math.round(years / gov)} yrs)` : ''}  first Governor try won ${pct(firstWins / Math.max(1, tries))}  parties ${JSON.stringify(tally)}`);
 }

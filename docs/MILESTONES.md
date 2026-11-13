@@ -99,7 +99,7 @@ who flip-flops (verified in the sim harness), and the record screen explains why
 
 ---
 
-## M6 — Parties & the climb to Governor
+## M6 — Parties & the climb to Governor ✅ done
 
 **Goal:** the full vertical slice: Mayor → House → Governor in New York.
 

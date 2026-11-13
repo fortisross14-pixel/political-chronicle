@@ -14,6 +14,7 @@ import {
   playEvent,
   poll,
   previewEvent,
+  nominationStatus,
   raceOptions,
   regionIntention,
 } from './testExports';
@@ -62,10 +63,12 @@ describe('filing & platform', () => {
     expect(platformError(s, WATERTOWN_PLATFORM)).toMatch(/locked/);
   });
 
-  it('only nonpartisan offices are open to an independent', () => {
+  it('an independent may file for any office in the state (partisan ones with a penalty)', () => {
     const s = newRun();
     const options = raceOptions(s);
-    expect(options.filter((o) => o.eligible).map((o) => o.officeId).sort()).toEqual(['mayor-buffalo', 'mayor-nyc', 'mayor-watertown']);
+    expect(options.every((o) => o.eligible)).toBe(true);
+    expect(nominationStatus(s, 'governor-ny').kind).toBe('independent');
+    expect(nominationStatus(s, 'mayor-nyc').kind).toBe('nonpartisan');
     expect(fileRaceError(s, 'mayor-nyc')).toMatch(/already running/);
   });
 });

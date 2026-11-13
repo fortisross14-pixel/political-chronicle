@@ -2,6 +2,8 @@
 import { EVENT_CARDS, getEventCard, getOffice, getRegion, getSkillCard, MARKET_COST_FACTOR, MARKET_WEIGHTS, SKILL_CARDS } from '../data';
 import type { SkillCard } from '../data';
 import { turnNo } from './events';
+import { poll } from './opinion';
+import { adjustStanding, partyFunds } from './parties';
 import { Rng } from './rng';
 import { monthsFactor } from './time';
 import type { EventCard, GameState, IncomeBreakdown, MarketOffer, OfficeLevel, RegionId } from './types';
@@ -63,6 +65,14 @@ export function offerPrice(offer: MarketOffer, state: GameState): number {
 
 // ---------- Income ----------
 
+/** Parties spend where races are close: 1 for a toss-up, down to 0.3 for a blowout; 0.6 between races. */
+export function competitiveness(state: GameState): number {
+  const race = state.career.race;
+  if (!race?.platform.length) return 0.6;
+  const you = poll(state, race).decided[0]!;
+  return Math.max(0.3, 1 - Math.abs(you - 0.5) * 1.2);
+}
+
 export function projectedIncome(state: GameState): Omit<IncomeBreakdown, 'quit'> {
   const f = monthsFactor(state.clock);
   const regions = economicJurisdiction(state);
@@ -77,14 +87,14 @@ export function projectedIncome(state: GameState): Omit<IncomeBreakdown, 'quit'>
   const salary = state.career.office ? SALARY[getOffice(state.career.office.officeId).level] * f : 0;
   const upkeep = state.staff.reduce((s, m) => s + m.upkeep, 0) * f;
   const round = (v: number) => Math.round(v / 100) * 100;
-  return { donors: round(donors), salary: round(salary), upkeep: round(upkeep) };
+  return { donors: round(donors), salary: round(salary), upkeep: round(upkeep), party: partyFunds(state, competitiveness(state)) };
 }
 
 /** Start-of-turn money: donors and salary in, staff salaries out. Unpaid staff quit. */
 export function collectIncome(state: GameState): GameState {
   if (state.ended) return state;
   const income = projectedIncome(state);
-  let funds = state.funds + income.donors + income.salary;
+  let funds = state.funds + income.donors + income.salary + income.party;
   let staff = [...state.staff];
   const skills = { ...state.politician.skills };
   const quit: string[] = [];
@@ -104,7 +114,7 @@ export function collectIncome(state: GameState): GameState {
     funds,
     staff,
     politician: { ...state.politician, skills },
-    lastIncome: { donors: income.donors, salary: income.salary, upkeep, quit },
+    lastIncome: { donors: income.donors, salary: income.salary, upkeep, party: income.party, quit },
     log,
   };
 }
@@ -134,7 +144,9 @@ export function dealMarket(state: GameState): GameState {
   const rng = new Rng(state.rng);
   const skills = rng.shuffle(availableSkillCards(state)).slice(0, MARKET_SKILL_OFFERS);
   const offers: MarketOffer[] = skills.map((c) => ({ kind: 'skill', cardId: c.id }));
-  const eventWeights = EVENT_CARDS.filter((c) => MARKET_WEIGHTS[c.id]).map((c) => [c.id, MARKET_WEIGHTS[c.id]!] as [string, number]);
+  const eventWeights = EVENT_CARDS.filter((c) => MARKET_WEIGHTS[c.id] && (!c.requiresParty || state.career.affiliation !== 'IND')).map(
+    (c) => [c.id, MARKET_WEIGHTS[c.id]!] as [string, number],
+  );
   while (offers.length < MARKET_SIZE) offers.push({ kind: 'event', cardId: weightedPick(rng, eventWeights) });
   return { ...state, rng: rng.state, market: { turnNo: now, offers: rng.shuffle(offers) } };
 }
@@ -174,8 +186,9 @@ export function buyOffer(state: GameState, offerIndex: number): GameState {
   }
   const card = getSkillCard(offer.cardId);
   const skills = { ...state.politician.skills, [card.skill]: state.politician.skills[card.skill] + 1 };
+  const withStanding = card.standing ? adjustStanding(base, card.standing) : base;
   return {
-    ...base,
+    ...withStanding,
     energy: state.energy - card.energy,
     politician: { ...state.politician, skills },
     staff: card.upkeep ? [...state.staff, { cardId: card.id, skill: card.skill, upkeep: card.upkeep }] : state.staff,

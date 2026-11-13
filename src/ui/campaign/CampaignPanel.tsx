@@ -1,5 +1,6 @@
 import { getOffice, ISSUES_BY_ID } from '../../data';
-import { poll } from '../../engine';
+import { PARTIES } from '../../data';
+import { poll, primaryShare } from '../../engine';
 import type { GameState } from '../../engine';
 import { pct } from '../format';
 import { candidateTag, stanceLabel } from './labels';
@@ -25,6 +26,14 @@ export function CampaignPanel({ state }: { state: GameState }) {
               : `Election in ${turnsLeft} turns`}
         </span>
       </div>
+      {race.primary && (
+        <div className="primary-banner">
+          <strong>{PARTIES[race.primary.party].name} primary</strong> vs {race.primary.challenger}, decided at the end of Mar {race.electionYear}. Party voters
+          weigh your fit with the platform, your standing and how well they know you. Your expected share:{' '}
+          <b className={primaryShare(state) >= 0.5 ? 'pos' : 'neg'}>{pct(primaryShare(state))}</b>.
+        </div>
+      )}
+      {race.nominee && <p className="small">You are the {PARTIES[race.nominee].name} nominee.</p>}
       <div className="poll">
         {names.map((name, i) => (
           <div key={name} className={i === 0 ? 'poll-row you' : 'poll-row'}>

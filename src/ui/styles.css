@@ -984,3 +984,76 @@ details summary {
     grid-template-columns: 1fr;
   }
 }
+
+/* Parties (M6) */
+.record-dot.du {
+  background: var(--blue);
+}
+
+.record-dot.rp {
+  background: var(--red);
+}
+
+.record-dot.you {
+  background: var(--accent);
+  z-index: 1;
+}
+
+.record-dot.static {
+  position: relative;
+  display: inline-block;
+  top: 0.1rem;
+  transform: none;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.legend {
+  display: flex;
+  gap: 1rem;
+  margin: 0.25rem 0 0.75rem;
+  color: var(--muted);
+}
+
+.party-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin: 0.5rem 0;
+}
+
+.party-stats > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.party-stats meter {
+  width: 10rem;
+}
+
+.primary-banner {
+  margin: 0.25rem 0 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: rgba(232, 184, 74, 0.08);
+  font-size: 0.9rem;
+}
+
+.whip {
+  align-self: flex-start;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.05rem 0.45rem;
+  border-radius: 6px;
+}
+
+.whip.du {
+  background: rgba(79, 141, 240, 0.2);
+  color: #8ab4f8;
+}
+
+.whip.rp {
+  background: rgba(239, 106, 90, 0.2);
+  color: #f5a397;
+}

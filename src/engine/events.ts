@@ -2,6 +2,7 @@
 import { getBackground, getEventCard, getOffice, getRegion, ISSUES_BY_ID, STATES } from '../data';
 import { alignment, clamp, nudgeFavorability, nudgeRecognition, regionAlignment, relevance, skillMult } from './opinion';
 import { GOVERNING, nudgeApproval } from './governing';
+import { adjustStanding } from './parties';
 import { Rng } from './rng';
 import type { EventCard, GameState, IssueId, OfficeLevel, Pledge, RegionId, Stance } from './types';
 
@@ -104,6 +105,7 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
   else if (state.decisions && !state.decisions.resolved) preview.error = 'Resolve this turn’s decisions first.';
   else if (card.energy > state.energy) preview.error = 'Not enough energy this turn.';
   else if (stance === undefined && !card.fundraising) preview.error = 'Pick one of your platform topics.';
+  else if (card.requiresParty && state.career.affiliation === 'IND') preview.error = 'Party members only.';
 
   if (card.fundraising) {
     const R = state.regions[regionId]!.recognition;
@@ -181,9 +183,10 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
     ? `${preview.card.name} in ${where}: raised $${preview.fundsGain.toLocaleString('en-US')}.`
     : `${preview.card.name} in ${where} on ${ISSUES_BY_ID[issue].name}${gaffe ? ' — a gaffe went viral!' : '.'}`;
 
+  const standingGain = preview.card.partyStanding ?? 0;
   return {
     gaffe,
-    state: {
+    state: adjustStanding({
       ...state,
       rng: rng.state,
       regions,
@@ -194,6 +197,6 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
       energy: state.energy - preview.card.energy,
       eventHistory: [...state.eventHistory, { turnNo: turnNo(state), regionId, issue, ...(preview.card.fundraising ? { fundraiser: true } : {}) }],
       log: [...state.log, { year: state.clock.year, turn: state.clock.turn, text }],
-    },
+    }, standingGain),
   };
 }

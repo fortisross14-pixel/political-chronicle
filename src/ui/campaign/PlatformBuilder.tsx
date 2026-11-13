@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getOffice, getRegion, ISSUES } from '../../data';
-import { alignment, MAX_PLATFORM, platformError, regionWeights } from '../../engine';
+import { alignment, fileRaceError, MAX_PLATFORM, nominationStatus, platformError, raceOptions, regionWeights } from '../../engine';
 import type { Action, GameState, IssueId, Pledge } from '../../engine';
 import { fitLabel, stanceLabel } from './labels';
 
@@ -34,7 +34,21 @@ export function PlatformBuilder({ state, dispatch }: { state: GameState; dispatc
         </span>
       </div>
       {incumbent && (
-        <p className="small">Pre-filled with the platform you won on. Changing sides on a topic reads as a flip-flop.</p>
+        <>
+          <p className="small">Pre-filled with the platform you won on. Changing sides on a topic reads as a flip-flop.</p>
+          {raceOptions(state).some((o) => o.electionYear === state.clock.year && !fileRaceError(state, o.officeId)) && (
+            <div className="row small">
+              <span className="muted">Or run for something else this year instead (you give up this seat):</span>
+              {raceOptions(state)
+                .filter((o) => o.electionYear === state.clock.year && !fileRaceError(state, o.officeId))
+                .map((o) => (
+                  <button key={o.officeId} title={nominationStatus(state, o.officeId).text} onClick={() => dispatch({ type: 'FILE_RACE', officeId: o.officeId })}>
+                    {getOffice(o.officeId).name}
+                  </button>
+                ))}
+            </div>
+          )}
+        </>
       )}
       <p className="muted small">
         Pick up to {MAX_PLATFORM} topics and a side on each. Every event you hold is about one of them, and the decisions you take will be judged

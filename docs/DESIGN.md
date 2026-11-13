@@ -237,12 +237,17 @@ original `/ 2` let a stance on the wrong side of a moderate region still help.)
 ```
 U(candidate, r) = 1.6·F·R            // being known & liked
                 + 0.6·R              // familiarity / viability
-                + 1.2·partyFit       // DU: −lean, RP: +lean, Independent: 0
+                + w·partyFit         // DU: −lean, RP: +lean, Independent: 0;
+                                     // w = 0.4 nonpartisan (mayor), 0.4 partisan
                 + 0.3·incumbent      // AI incumbents; a player incumbent instead gets
                                      // 2·(approval − 0.5): judged on the record
                 − indepPenalty(office)  // 0 mayor, 0.3 House, 0.5 statewide
 
 share(c, r) = softmax over candidates of U / τ  (τ ≈ 0.5), with an "undecided" option
+
+partisan races only: decided share = 0.5 × softmax share + 0.5 × partisan baseline
+  baseline: Blue = clamp(0.5 − 0.3 × lean, 0.15, 0.85), Red = 1 − Blue, independents ~0.08
+  (renormalized) — a floor, so even a famous candidate rarely tops ~75% in a safe seat
 ```
 
 Statewide result = Σ_r population × turnout × share. On election day add polling noise
@@ -487,6 +492,40 @@ Competitive races get more money; safe seats and hopeless races get less.
 - **Request nomination**: lists upcoming races in your state with requirements and your
   odds (grant / primary / denied).
 
+### 8.6 As built (M6)
+
+- **Joining**: both parties invite you after your first race. Starting standing
+  `20 + 40 × alignment`; switching costs 10 integrity and restarts at `10 + 30 × alignment`.
+  You can't change parties mid-way through a partisan race.
+- **Standing**: each applied card tag moves it by `1.5 × weight × agreement` (agreement −1..+1
+  from the effective platform); whip votes (`partyPriority`) count ×3, and rejecting a whip
+  card the party wanted costs 4. Wins +8 (partisan) / +3 (mayor), losses −5, primary ±3,
+  party unity event +4, mentorship +5. Gains scale with Negotiation (`0.8 + 0.05 × skill`).
+- **Party funds** per 3 months: mayor $3k, House $8k, Senate/Governor $20k ×
+  standing/100 × alignment² × competitiveness (1 for a toss-up, 0.3 for a blowout, 0.6
+  between races).
+- **Primaries** (standing within 25 of the threshold): decided at the end of the election
+  year's first turn by party voters:
+  `logistic(4·(alignment − challenger) + 2·(standing − 50)/50 + 1.5·(R − R_challenger) + 1.2·F)`.
+  Losing a primary doesn't cost a seat you hold.
+- **Running from office**: allowed for any partisan office in your state (not another
+  mayoralty). Win and you move up; lose the general and you give up your seat. In a
+  re-election year you can swap the auto-filed re-election for another race until you lock
+  its platform.
+- **Partisan opponents**: a party member faces the other party's nominee; an independent faces
+  both. They run halfway between the local electorate and their party's platform. House: base
+  recognition 0.42, 60% incumbents, 4 events/turn; Senate/Governor: 0.20, 35%, 4 events/turn
+  spread across the state.
+- **Content**: 14 campaign moments for House/Senate/Governor races, 18 federal bills (House and
+  Senate) and 18 Governor actions, with whip votes on both parties' signature bills.
+
+**Balance (M6, `npm run sim`)** — a Watertown-born climber always joins the Reds (fit ~0.85 vs
+~0.45). It wins the North Country House seat on its first try (a popular local mayor in a
+Red +40 district), then the first try for Governor succeeds 22–42%; over ~18 years almost all
+eventually get there because each statewide run builds recognition in NYC. The same path as a
+Blue is brutal: 14% reach the House and 2% the Governor's mansion — the party won't always put
+a Watertown-minded Blue on its ballot, and North Country voters won't elect one.
+
 ---
 
 ## 9. Economy
@@ -494,7 +533,7 @@ Competitive races get more money; safe seats and hopeless races get less.
 | Source | Formula (per turn) |
 |---|---|
 | Donors | `(1k + 1.5k × Fundraising × R̄) × phase × monthsFactor`, where R̄ is your recognition averaged over the jurisdiction (pop × turnout); phase = 1 while running, 0.5 in office, 0.25 out of politics; ×3 for statewide jurisdictions |
-| Party | see §8.4 (M6) |
+| Party | see §8.4 / §8.6 |
 | Fundraising events | dinner and call time, see §6.1 |
 | Salary | token: per 3 months mayor $1k, House $1.5k, Senate/Governor $2k |
 | Staff | − upkeep per 3 months |

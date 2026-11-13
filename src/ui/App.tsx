@@ -105,7 +105,7 @@ export function App() {
         )}
         {tab === 'government' && <GovernmentTab state={state} dispatch={dispatch} />}
         {tab === 'profile' && <ProfileTab state={state} />}
-        {tab === 'party' && <PartyTab state={state} />}
+        {tab === 'party' && <PartyTab state={state} dispatch={dispatch} />}
       </main>
     </div>
   );

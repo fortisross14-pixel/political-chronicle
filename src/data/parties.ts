@@ -13,7 +13,7 @@ export const PARTIES: Record<PartyId, Party> = {
   DU: {
     id: 'DU',
     name: 'Democratic Union',
-    nickname: 'the Blues',
+    nickname: 'Blues',
     mascot: 'the Mule',
     color: '#2f6fd6',
     platform: platform({
@@ -38,7 +38,7 @@ export const PARTIES: Record<PartyId, Party> = {
   RP: {
     id: 'RP',
     name: 'Republic Party',
-    nickname: 'the Reds',
+    nickname: 'Reds',
     mascot: 'the Mammoth',
     color: '#d6402f',
     platform: platform({

@@ -59,6 +59,11 @@ export const EVENT_CARDS: EventCard[] = [
     description: 'Rubber chicken and big checks. Raises Fundraising × $4k × (0.5 + your local recognition).',
   },
   {
+    id: 'party_unity', name: 'Party unity event', basic: false, cost: 20000, energy: 2, medium: 'inPerson', skills: ['negotiation'],
+    reach: 0.05, persuasion: 0.03, spillover: 0, gaffeRisk: false, partyStanding: 4, requiresParty: true,
+    description: 'Headline a party dinner and campaign for the ticket. +4 party standing (more with Negotiation).',
+  },
+  {
     id: 'debate', name: 'Televised debate', basic: false, cost: 0, energy: 2, medium: 'tv', skills: ['policy', 'oratory'],
     reach: 0.18, persuasion: 0.15, spillover: 0.6, gaffeRisk: true,
     description: 'Face your opponents live. High reward, real risk.',
@@ -82,6 +87,7 @@ export const MARKET_WEIGHTS: Record<string, number> = {
   podcast_tour: 2,
   fundraising_dinner: 2,
   arena_rally: 1,
+  party_unity: 2,
 };
 
 /** Media markets differ in price: an ad in NYC costs far more than one in Watertown. */

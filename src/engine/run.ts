@@ -7,7 +7,7 @@ import { seedFromString } from './rng';
 import { nextElectionYear, turnsInYear } from './time';
 import type { Career, GameState, Politician, RegionId, RegionStanding, Skills, Snapshot } from './types';
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 export const MAX_AGE_ENDS_RUN = 85;
 export const DEFAULT_START_YEAR = 2027;
 
@@ -115,6 +115,7 @@ export function takeSnapshot(state: GameState): Snapshot {
     raceOfficeId: state.career.race?.officeId,
     poll: state.career.race?.platform.length ? poll(state, state.career.race).decided[0] : undefined,
     approval: averageApproval(state),
+    partyStanding: state.career.partyStanding,
     regions: Object.fromEntries(Object.entries(state.regions).map(([id, s]) => [id, { ...s }])),
   };
 }

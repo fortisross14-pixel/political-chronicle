@@ -3,6 +3,11 @@ import { BASIC_CARD_IDS, getDecisionCard, getOffice, getRegion, ISSUE_IDS } from
 import {
   activePlatform,
   applyAction,
+  fileRaceError,
+  hometownMayoralty,
+  invitations,
+  joinError,
+  raceOptions,
   buyError,
   offerPrice,
   autoAllocate,
@@ -14,10 +19,11 @@ import {
   regionWeights,
   relevance,
 } from '../engine';
-import type { CreationInput, GameState, IssueId, Pledge } from '../engine';
+import type { CreationInput, GameState, IssueId, PartyId, Pledge } from '../engine';
 
 /** 'flipflop' campaigns sensibly but, in office, signs bills that break its promises. */
-export type BotStyle = 'sensible' | 'idle' | 'contrarian' | 'investor' | 'flipflop';
+/** 'climber' plays like 'sensible', joins its best-fitting party and runs for higher office. */
+export type BotStyle = 'sensible' | 'idle' | 'contrarian' | 'investor' | 'flipflop' | 'climber';
 
 /** Platform fitted to the race's voters (or deliberately against them). */
 export function botPlatform(state: GameState, style: BotStyle): Pledge[] {
@@ -65,7 +71,8 @@ function decide(state: GameState, style: BotStyle): string[] {
       const impact = decisionImpact(state, getDecisionCard(id));
       const fav = Object.entries(impact.favorability).reduce((s, [r, v]) => s + (weights[r] ?? 0) * v, 0);
       const appr = Object.entries(impact.approval).reduce((s, [r, v]) => s + (weights[r] ?? 0) * v, 0);
-      return { id, value: fav + appr + impact.integrity * 0.002 + impact.funds * moneyWeight(style) };
+      const party = style === 'climber' ? impact.standing * 0.004 : 0;
+      return { id, value: fav + appr + party + impact.integrity * 0.002 + impact.funds * moneyWeight(style) };
     })
     .sort((a, b) => b.value - a.value);
   const good = ranked.filter((r) => r.value > 0).map((r) => r.id);
@@ -137,15 +144,44 @@ function playEvents(state: GameState, style: BotStyle): GameState {
   return s;
 }
 
+const LADDER: Record<string, number> = { mayor: 0, house: 1, senate: 2, governor: 3 };
+
+/** Join the best-fitting party once noticed; file for the next rung when a race opens this year. */
+let forcedParty: PartyId | undefined;
+
+function climb(state: GameState): GameState {
+  let s = state;
+  if (s.career.affiliation === 'IND' && s.elections.length && !s.career.race) {
+    const best = invitations(s)
+      .filter((i) => !forcedParty || i.party === forcedParty)
+      .sort((a, b) => b.alignment - a.alignment)[0];
+    if (best && !joinError(s, best.party)) s = applyAction(s, { type: 'JOIN_PARTY', party: best.party });
+  }
+  const office = s.career.office;
+  const autoReelection = s.career.race?.officeId === office?.officeId && !s.career.race?.platform.length;
+  if (!office || (s.career.race && !autoReelection) || s.clock.turn !== 0 || s.career.affiliation === 'IND') return s;
+  const rung = LADDER[getOffice(office.officeId).level]!;
+  const home = s.politician.birthRegionId;
+  const targets = raceOptions(s)
+    .filter((o) => o.eligible && o.electionYear === s.clock.year && !fileRaceError(s, o.officeId))
+    .map((o) => getOffice(o.officeId))
+    .filter((o) => LADDER[o.level]! > rung && (o.level !== 'house' || o.regionIds.includes(home)) && o.level !== 'senate')
+    .sort((a, b) => LADDER[a.level]! - LADDER[b.level]!);
+  const next = targets[0];
+  return next ? applyAction(s, { type: 'FILE_RACE', officeId: next.id }) : s;
+}
+
 /** One full turn: dismiss results, file/platform if needed, decide, shop, campaign, end turn. */
 export function playTurn(state: GameState, style: BotStyle): GameState {
   let s = state;
   if (s.ended) return s;
   if (s.pendingResult !== undefined) s = applyAction(s, { type: 'DISMISS_RESULT' });
   if (s.ended) return s;
+  if (style === 'climber') s = climb(s);
   if (!s.career.race && !s.career.office) {
-    const officeId = s.elections.at(-1)?.officeId ?? 'mayor-watertown';
-    s = applyAction(s, { type: 'FILE_RACE', officeId });
+    const last = [...s.elections].reverse().find((e) => e.kind === 'general');
+    const officeId = last && !getOffice(last.officeId).partisan ? last.officeId : (hometownMayoralty(s.politician.birthRegionId) ?? 'mayor-watertown');
+    if (!fileRaceError(s, officeId)) s = applyAction(s, { type: 'FILE_RACE', officeId });
   }
   if (s.career.race && !s.career.race.platform.length) s = applyAction(s, { type: 'SET_PLATFORM', platform: botPlatform(s, style) });
   if (s.decisions && !s.decisions.resolved) s = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: decide(s, style) });
@@ -222,6 +258,41 @@ export function reelectionRate(input: CreationInput, style: BotStyle, runs: numb
     if (s.elections[1]?.playerWon) reelected++;
   }
   return { reelected: reelected / Math.max(1, terms), terms, avgApproval: approval / Math.max(1, terms), integrity: integrity / Math.max(1, terms) };
+}
+
+export interface ClimbResult {
+  highest: string;
+  party: string;
+  reachedHouse: boolean;
+  reachedGovernor: boolean;
+  /** Result of the first general election for Governor, if any. */
+  firstGovernorTry?: boolean;
+  houseTries: number;
+  firstHouseTry?: boolean;
+  years: number;
+}
+
+/** A whole career for the climber, up to `turns` turns. */
+export function climbCareer(input: CreationInput, turns: number, seed: string, party?: PartyId): ClimbResult {
+  forcedParty = party;
+  let s = createRun(buildRunConfig(input, seed));
+  let highest = 'none';
+  for (let i = 0; i < turns && !s.ended; i++) {
+    s = playTurn(s, 'climber');
+    const level = s.career.office ? getOffice(s.career.office.officeId).level : undefined;
+    if (level && (highest === 'none' || LADDER[level]! > LADDER[highest]!)) highest = level;
+    if (highest === 'governor') break;
+  }
+  return {
+    highest,
+    party: s.career.affiliation,
+    reachedHouse: highest === 'house' || highest === 'governor',
+    reachedGovernor: highest === 'governor',
+    firstGovernorTry: s.elections.find((e) => e.kind === 'general' && e.officeId === 'governor-ny')?.playerWon,
+    firstHouseTry: s.elections.find((e) => e.kind === 'general' && getOffice(e.officeId).level === 'house')?.playerWon,
+    houseTries: s.elections.filter((e) => e.kind === 'general' && getOffice(e.officeId).level === 'house').length,
+    years: s.clock.year - 2027,
+  };
 }
 
 export { poll };

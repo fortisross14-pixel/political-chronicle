@@ -1,4 +1,5 @@
-import { fileRace, opponentsAct, resolveElection, setPlatform } from './campaign';
+import { fileRace, isPrimaryTurn, opponentsAct, resolveElection, resolvePrimary, setPlatform } from './campaign';
+import { joinParty } from './parties';
 import { dealDecisions, resolveDecisions } from './decisions';
 import { buyOffer, collectIncome, dealMarket } from './economy';
 import { playEvent } from './events';
@@ -37,6 +38,8 @@ export function applyAction(state: GameState, action: Action): GameState {
       return buyOffer(state, action.offerIndex);
     case 'DISMISS_RESULT':
       return { ...state, pendingResult: undefined };
+    case 'JOIN_PARTY':
+      return joinParty(state, action.party);
     case 'RETIRE':
       if (state.ended) return state;
       return {
@@ -57,7 +60,8 @@ function endTurn(state: GameState): GameState {
   if (s.career.race) s = { ...s, career: { ...s.career, race: opponentsAct(rng, s.career.race) } };
   s = { ...s, snapshots: [...s.snapshots, takeSnapshot(s)] };
 
-  if (s.career.race && isElectionTurn(s.clock, s.career)) s = resolveElection(s, rng);
+  if (isPrimaryTurn(s)) s = resolvePrimary(s, rng);
+  else if (s.career.race && isElectionTurn(s.clock, s.career)) s = resolveElection(s, rng);
 
   const months = monthsPerTurn(s.clock.turnsThisYear);
   let { year, turn, turnsThisYear } = s.clock;
