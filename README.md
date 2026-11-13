@@ -8,5 +8,22 @@ compared.
 - [Game design](docs/DESIGN.md)
 - [POC milestones](docs/MILESTONES.md)
 
-Status: redesign in progress. The previous "chronicle" simulator has been removed; M1
-(foundation) rebuilds the app scaffold.
+Status: **M1 (foundation) done** — engine skeleton, New York data, turn clock, save/load and
+the 3-tab shell. Next: M2 (character creation & profile).
+
+## Development
+
+Requires Node 20+.
+
+```bash
+npm install
+npm run dev        # local dev server
+npm run check      # typecheck + tests + production build (what CI runs)
+```
+
+Layout:
+
+- `src/engine/` — pure TypeScript game rules (no React): types, seeded RNG, turn clock, reducer
+- `src/data/` — world data: issues, parties, New York regions and offices
+- `src/storage/` — localStorage save/load
+- `src/ui/` — React app (start screen, header, Government / My profile / My party tabs)

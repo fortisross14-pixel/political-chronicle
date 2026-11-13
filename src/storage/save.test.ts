@@ -1,0 +1,26 @@
+// @vitest-environment jsdom
+import { beforeEach, describe, expect, it } from 'vitest';
+import { applyAction, createRun, defaultPolitician } from '../engine';
+import { SAVE_KEY, clearSave, loadGame, saveGame } from './save';
+
+describe('save / load', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('round-trips a run in progress', () => {
+    let state = createRun({ seed: 'save', politician: defaultPolitician(), startingFunds: 15_000 });
+    state = applyAction(applyAction(state, { type: 'END_TURN' }), { type: 'END_TURN' });
+    expect(saveGame(state)).toBe(true);
+    expect(loadGame()).toEqual(state);
+  });
+
+  it('returns null when nothing is saved, after clearing, or for an old schema', () => {
+    expect(loadGame()).toBeNull();
+    saveGame(createRun({ seed: 'x', politician: defaultPolitician(), startingFunds: 0 }));
+    clearSave();
+    expect(loadGame()).toBeNull();
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ schemaVersion: 0, state: {} }));
+    expect(loadGame()).toBeNull();
+    localStorage.setItem(SAVE_KEY, '{not json');
+    expect(loadGame()).toBeNull();
+  });
+});

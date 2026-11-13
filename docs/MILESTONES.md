@@ -8,7 +8,7 @@ Each milestone ends with something playable or testable and a green build.
 
 ---
 
-## M1 — Foundation & engine skeleton
+## M1 — Foundation & engine skeleton ✅ done
 
 **Goal:** the empty game runs, advances turns, saves and loads.
 
