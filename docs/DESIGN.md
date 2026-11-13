@@ -11,16 +11,17 @@
 
 1. **The balancing act.** Voters reward you for doing what you promised and for
    positions that fit *their* region. Your party rewards you for sticking to *its*
-   platform. In a red state as a Democrat (or a blue city as a Republican) those
+   platform. In a red state as a Blue (or a blue city as a Red) those
    pull in different directions. That tension is the game.
 2. **Where × What × How.** Every campaign action is a choice of *location*, *issue*
    (one of your 5 platform topics) and *medium* (TV, social, arena rally...). The same
    message can win one region and lose another.
 3. **Money buys options.** Funds buy event cards (to campaign) and skill cards (to grow
    your politician). Fundraising is a resource loop, not a side activity.
-4. **Short turns, long careers.** One quarter = one turn. A turn should take 1–3 minutes.
+4. **Short turns, long careers.** 3 turns per year, 4 in an election year (§2.1). A turn
+   should take 1–3 minutes.
    A full career is 40–120 turns.
-5. **Every run is data.** All stats are snapshotted every quarter; finished careers go to
+5. **Every run is data.** All stats are snapshotted every turn; finished careers go to
    the Hall of Runs for comparison.
 
 ---
@@ -31,13 +32,13 @@
 Create politician ─► Pick a race ─► Choose up to 5 platform topics (with stance)
         ▲                                  │
         │                                  ▼
-        │                  ┌──────── QUARTER TURN ────────┐
+        │                  ┌──────────── TURN ────────────┐
         │                  │ 1. Income (donors, party, salary)
         │                  │ 2. Draw 3 decision cards → apply 1–3, reject rest
         │                  │ 3. Spend Energy + Funds: play event cards
         │                  │    (location + platform topic)
         │                  │ 4. Buy cards in the Market (events / skills)
-        │                  │ 5. Opponents act, polls update, end quarter
+        │                  │ 5. Opponents act, polls update, end turn
         │                  └──────────────────────────────┘
         │                                  │
         │                           Election day
@@ -49,8 +50,20 @@ Create politician ─► Pick a race ─► Choose up to 5 platform topics (with
                                                     request a higher nomination
 ```
 
-The same quarter structure is used while **campaigning** and while **governing**; only
+The same turn structure is used while **campaigning** and while **governing**; only
 the flavour of the decision cards and what gets scored changes.
+
+### 2.1 Time: turns per year
+
+- A **normal year has 3 turns** (Jan–Apr, May–Aug, Sep–Dec).
+- An **election year has 4 turns** (one per quarter, the last ending on Election Day in
+  November). An election year is any year in which a race you hold or are running for is
+  decided.
+- Each turn deals 3 decision cards, so a 4-year mayoral term is 3 + 3 + 3 + 4 = **13 turns**.
+- Turn-length-dependent values (income, upkeep, opinion decay, aging) scale by the turn's
+  months: `monthsFactor = months / 3` (1.33 in a 4-month turn, 1.0 in an election-year turn).
+- A **campaign is the election year's 4 turns.** For a first run (not in office) you file at
+  the start of an election year.
 
 ---
 
@@ -83,18 +96,18 @@ Each skill runs **1–10**. Skill multiplier used everywhere: `skillMult = 0.6 +
 | **Digital** | Social-media campaigns, podcasts, viral reach & spillover |
 | **Policy** (intelligence) | Debates, credibility (persuasion multiplier), previews the regional effect of decision cards before you apply them |
 | **Negotiation** | Party standing gains, endorsements, legislative deal cards |
-| **Fundraising** | Donor income per quarter, fundraising events |
+| **Fundraising** | Donor income per turn, fundraising events |
 
 Derived (not trained directly):
 
-- **Energy** – action points per quarter. `Energy = 6 at age ≤ 40`, −1 per 10 years after.
+- **Energy** – action points per turn. `Energy = 6 at age ≤ 40`, −1 per 10 years after.
   Event cards cost 1–3 Energy.
 - **Integrity** – 0–100 reputation for keeping promises (see §6.3).
 - **Recognition / Favorability** – per region (see §5).
 
 ### 3.3 Aging & career end
 
-Age advances 0.25 per quarter. A run ends when you **retire**, **lose three elections in a
+Age advances by the turn's length in months / 12. A run ends when you **retire**, **lose three elections in a
 row** while out of office, or reach age 85. (Post-POC: also when you become President.)
 
 ---
@@ -114,7 +127,7 @@ interface Region {
   type: "urban" | "suburban" | "midsize" | "rural";
   population: number;       // used to weight statewide races
   turnout: number;          // 0..1
-  partisanLean: number;     // -1 (strong D) .. +1 (strong R)
+  partisanLean: number;     // -1 (strong DU / blue) .. +1 (strong RP / red)
   issueOpinion: Record<IssueId, number>;   // -2..+2 average stance
   issueSalience: Record<IssueId, number>;  // 0..1 how much they care
   media: { tv; cable; social; inPerson; radio }; // 0.5..1.5 effectiveness
@@ -222,7 +235,7 @@ A +2 stance in a region averaging −2 has alignment −1: talking about it ther
 ```
 U(candidate, r) = 1.6·F·R            // being known & liked
                 + 0.6·R              // familiarity / viability
-                + 1.2·partyFit       // D: −lean, R: +lean, Independent: 0
+                + 1.2·partyFit       // DU: −lean, RP: +lean, Independent: 0
                 + 0.3·incumbent
                 − indepPenalty(office)  // 0 mayor, 0.3 House, 0.5 statewide
 
@@ -237,7 +250,7 @@ vote intention per region as a diverging colour (you vs. the leading opponent).
 
 Each race spawns 1–2 AI candidates with a party, 5 platform topics, recognition,
 favorability, funds and a simple strategy (play their strongest issue in their best
-region each quarter). Opponent quality scales with office level. Incumbents start with
+region each turn). Opponent quality scales with office level. Incumbents start with
 high recognition.
 
 ---
@@ -279,7 +292,7 @@ F      = clamp(F + ΔF × (1 − |F|), −1, 1)
 - **Spillover** applies the same formula at the stated percentage to the other regions of
   the state — **using each region's own alignment**. Your loud NYC message on LGBTQ
   rights is also heard in Watertown.
-- **Fatigue**: same topic in the same region again within 2 quarters → ×0.7 per repeat.
+- **Fatigue**: same topic in the same region again within 2 turns → ×0.7 per repeat.
 - **Credibility** = `0.7 + 0.03 × Policy + 0.3 × consistency`, where consistency is how well
   this stance matches your Record (flip-flopping is less persuasive).
 - **Gaffe**: small chance on TV/cable/debate (`8% − 0.6% × Media Savvy`) of a negative swing.
@@ -296,17 +309,17 @@ Bought in the Market, applied immediately, permanent.
 | Speech coach | +1 Oratory | $15k × current level |
 | Improv & retail-politics workshop | +1 Charisma | $15k × level |
 | Media training | +1 Media Savvy | $15k × level |
-| Hire a digital director | +1 Digital, $5k/quarter upkeep | $20k × level |
-| Think-tank fellowship | +1 Policy, costs 2 Energy this quarter | $10k × level |
+| Hire a digital director | +1 Digital, $5k/turn upkeep | $20k × level |
+| Think-tank fellowship | +1 Policy, costs 2 Energy this turn | $10k × level |
 | Mentorship with a party elder | +1 Negotiation, +5 party standing | requires party member |
 | Donor network gala | +1 Fundraising | $25k × level |
 
 Skill cards have a level cap per office (mayor ≤ 6, House ≤ 8, statewide ≤ 10) so growth
 is paced by career progress.
 
-### 6.3 Decision cards (the quarterly 3)
+### 6.3 Decision cards (3 per turn)
 
-Every quarter you are dealt **3 decision cards**. You must **apply at least 1 and up to 3**;
+every turn you are dealt **3 decision cards**. You must **apply at least 1 and up to 3**;
 the rest are rejected. You cannot pass.
 
 - **While campaigning** they are *campaign moments*: interest-group questionnaires,
@@ -321,7 +334,7 @@ interface DecisionCard {
   title: string;
   offices: OfficeLevel[];           // where it can be drawn
   tags: { issue: IssueId; stance: number }[];  // what applying it means
-  partyPriority?: "D" | "R";        // marked as a whip vote for that party
+  partyPriority?: "DU" | "RP";        // marked as a whip vote for that party
   rejectCost?: number;              // some cards hurt to reject (crisis response)
   effects?: { funds?: number; integrity?: number; regions?: Partial<Record<RegionId, number>> };
 }
@@ -347,15 +360,18 @@ the puzzle: 3 bad options means picking the least bad one.
 
 | Office | Jurisdiction | Term | Campaign length | Partisan? | How to get on the ballot |
 |---|---|---|---|---|---|
-| Mayor | 1 region | 16 quarters | 4 quarters | No (independent OK) | Open — just file |
-| U.S. House | 1 region | 8 quarters | 4 quarters | Yes | Party nomination (standing ≥ 40) or primary |
-| U.S. Senate | state | 24 quarters | 6 quarters | Yes | Party nomination (standing ≥ 60) or primary |
-| Governor | state | 16 quarters | 6 quarters | Yes | Party nomination (standing ≥ 60) or primary |
-| *President (post-POC)* | nation | 16 quarters | 8 quarters | Yes | Presidential primaries (standing ≥ 75 + national recognition) |
+| Mayor | 1 region | 4 yrs = 13 turns | election year (4 turns) | No (independent OK) | Open — just file |
+| U.S. House | 1 region | 2 yrs = 7 turns | election year (4 turns) | Yes | Party nomination (standing ≥ 40) or primary |
+| U.S. Senate | state | 6 yrs = 19 turns | election year (4 turns) | Yes | Party nomination (standing ≥ 60) or primary |
+| Governor | state | 4 yrs = 13 turns | election year (4 turns) | Yes | Party nomination (standing ≥ 60) or primary |
+| *President (post-POC)* | nation | 4 yrs = 13 turns | election year (4 turns) + primaries | Yes | Presidential primaries (standing ≥ 75 + national recognition) |
+
+House members are always in a 3-turn year followed by a 4-turn campaign year. Statewide
+races are bigger, so the opponent starts stronger rather than the campaign being longer.
 
 - **Losing** returns you to the race picker: retry the same race next cycle, pick another
   race you're eligible for, or retire.
-- **Winning** starts the term. In the final `campaign length` quarters of a term you are
+- **Winning** starts the term. In the election year (final 4 turns) of a term you are
   in re-election mode (event cards target the election again) unless you have requested
   a different office.
 - **Moving between offices**: once in office you can, from the Party tab, request a
@@ -370,8 +386,14 @@ the puzzle: 3 bad options means picking the least bad one.
 
 ## 8. Parties
 
-Two parties in the POC: **Democratic (D)** and **Republican (R)**, with stylised
-platforms (a −2..+2 position and a priority weight on each issue). Independent is a
+Two **fictional** parties in the POC, easy to map to real life but not the real ones:
+
+| Party | Short | Colour | Mascot | Vibe |
+|---|---|---|---|---|
+| **Democratic Union** | DU, "the Blues" | blue | the Mule | centre-left coalition of cities, unions and progressives |
+| **Republic Party** | RP, "the Reds" | red | the Mammoth | centre-right coalition of business, rural and religious voters |
+
+Both have stylised platforms (a −2..+2 position and a priority weight on each issue). Independent is a
 valid affiliation but gets no party funds and pays the `indepPenalty` above mayor.
 
 ### 8.1 Joining
@@ -387,7 +409,7 @@ platform_eff = 0.7 × nationalPlatform + 0.3 × stateChapterPlatform   // NY Dem
 alignment    = 1 − Σ_i w_i·|record_i − platform_eff_i| / (4 Σ_i w_i)   // 0..1, issues in your Record only
 ```
 
-The state chapter blend is what makes "Democrat in a red state" playable: the local party
+The state chapter blend is what makes "a Blue in a red state" playable: the local party
 tolerates more deviation than the national one.
 
 ### 8.3 Standing (relationship)
@@ -399,7 +421,7 @@ platform in events, losing winnable races.
 
 ### 8.4 Party funds
 
-Paid every quarter to members:
+Paid every turn to members:
 
 ```
 partyFunds = officeBase × (standing / 100) × alignment² × competitiveness(race)
@@ -411,7 +433,7 @@ Competitive races get more money; safe seats and hopeless races get less.
 
 - Side-by-side: your Record vs. party platform, issue by issue (with the state chapter
   shown).
-- Standing, alignment, last quarters' party funds.
+- Standing, alignment, party funds over recent turns.
 - **Request nomination**: lists upcoming races in your state with requirements and your
   odds (grant / primary / denied).
 
@@ -419,7 +441,7 @@ Competitive races get more money; safe seats and hopeless races get less.
 
 ## 9. Economy
 
-| Source | Formula (per quarter) |
+| Source | Formula (per turn) |
 |---|---|
 | Donors | `2k + 3k × Fundraising × Σ_r (R_r × pop_r) / statePop` (scaled ×3 statewide) |
 | Party | see §8.4 |
@@ -429,7 +451,7 @@ Competitive races get more money; safe seats and hopeless races get less.
 Spending: event cards, skill cards, staff upkeep. Funds carry over between races; a
 losing campaign that overspent leaves you broke for the next one.
 
-Card Market: each quarter shows **6 offers** (rotating) drawn from the event and skill
+Card Market: each turn shows **6 offers** (rotating) drawn from the event and skill
 pools, filtered by office level, plus the always-available Basic cards. Hand limit 8.
 
 ---
@@ -443,11 +465,11 @@ Top-level tabs (plus a header with date, office, funds, energy, integrity):
   intention, recognition, favorability, approval, partisan lean, issue salience for a
   selected topic.
 - **Region panel**: demographics flavour, top 3 issues, media mix, your R/F there.
-- **Decision tray**: this quarter's 3 decision cards with apply / reject, and the
+- **Decision tray**: this turn's 3 decision cards with apply / reject, and the
   "apply at least 1" rule enforced.
 - **Hand & Market**: event cards (drag onto a region → pick topic → confirm) and the
   Market.
-- **End quarter** button.
+- **End turn** button.
 
 ### 10.2 My profile (sub-tabs)
 - **Overview** – portrait, age, background, current office, key numbers.
@@ -469,7 +491,7 @@ Top-level tabs (plus a header with date, office, funds, energy, integrity):
 
 ## 11. Statistics & runs
 
-- Every quarter the engine appends a `Snapshot` (date, office, funds, energy, integrity,
+- every turn the engine appends a `Snapshot` (date, office, funds, energy, integrity,
   skills, party standing & alignment, per-region R/F/approval, vote intention if
   campaigning).
 - Every election appends an `ElectionRecord` (office, candidates, per-region results).

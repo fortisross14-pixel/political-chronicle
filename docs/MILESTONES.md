@@ -10,20 +10,20 @@ Each milestone ends with something playable or testable and a green build.
 
 ## M1 — Foundation & engine skeleton
 
-**Goal:** the empty game runs, advances quarters, saves and loads.
+**Goal:** the empty game runs, advances turns, saves and loads.
 
 - Vite + React + TypeScript scaffold, Vitest, lint, GitHub Pages deploy workflow.
 - Folder layout: `src/engine`, `src/data`, `src/ui`.
 - Core types: `GameState`, `Region`, `State`, `Issue`, `Party`, `Office`, `Card`, `Snapshot`.
 - POC data: New York, its 4 regions (lean, issue opinion & salience, media mix), 16 issues,
   2 parties with national + NY chapter platforms, the office list.
-- Engine: seeded RNG, `applyAction(state, action)` reducer, quarter clock (date + aging),
-  snapshot appended every quarter.
+- Engine: seeded RNG, `applyAction(state, action)` reducer, turn clock (3 turns per year, 4 in election years; date + aging),
+  snapshot appended every turn.
 - Autosave/load to localStorage; "New run / Continue" screen.
 - App shell with the 3 tabs (Government, My profile, My party) as placeholders and a
   header (date, funds, energy).
 
-**Done when:** you can start a dummy run, press *End quarter* repeatedly, reload the page
+**Done when:** you can start a dummy run, press *End turn* repeatedly, reload the page
 and continue; engine tests pass in CI.
 
 ---
@@ -55,7 +55,7 @@ NYC lawyer) start with visibly different skills, energy, funds and regional reco
   effect preview; recognition/favorability resolution, spillover, fatigue, gaffes.
 - Opinion model and **vote-intention map layer**; polls panel.
 - AI opponent(s) with platform and simple strategy.
-- Campaign-moment decision cards: 3 per quarter, apply 1–3 (≈15 cards).
+- Campaign-moment decision cards: 3 per turn, apply 1–3 (≈15 cards).
 - Election day resolution with noise, results screen, `ElectionRecord` stored.
 - After a loss: retry / choose another mayoralty / retire.
 
@@ -69,8 +69,8 @@ election math.
 
 **Goal:** money becomes the engine of choices.
 
-- Funds income each quarter (donors, salary) and fundraising event cards.
-- **Card Market**: 6 rotating offers per quarter, buy event cards & skill cards, hand limit.
+- Funds income each turn (donors, salary) and fundraising event cards.
+- **Card Market**: 6 rotating offers per turn, buy event cards & skill cards, hand limit.
 - Full event card set from the design (TV, cable interview, social campaign, podcast,
   arena rally, debate, radio, town hall, fundraising dinner).
 - Skill cards with level costs, caps per office, upkeep (digital director).
@@ -91,7 +91,7 @@ hometown) within ±10%.
   reject costs and region effects; Policy skill controls preview precision.
 - **Record** updates, **promise keeping** & **Integrity**, consistency → credibility.
 - Event cards usable in office (maintain approval, build recognition beyond your region).
-- Re-election flow in the last 4 quarters of a term (or retire / run elsewhere).
+- Re-election flow in the election year (last 4 turns) of a term (or retire / run elsewhere).
 - **Ideals & record** sub-tab: platform, Record across 16 issues, promises kept/broken log.
 
 **Done when:** a mayor who keeps promises gets re-elected noticeably more often than one
@@ -105,7 +105,7 @@ who flip-flops (verified in the sim harness), and the record screen explains why
 
 - Party invitations, joining/switching, national + state-chapter platform blend.
 - Alignment and **Standing** mechanics, party-priority (whip) decision cards.
-- Party funds per quarter; Party unity event & mentorship cards.
+- Party funds per turn; Party unity event & mentorship cards.
 - **My party** tab: platform comparison, standing, alignment, funds, nomination requests.
 - Nomination thresholds and **primaries** (party electorate).
 - House race in a region and **statewide races** (Senate, Governor) across all 4 regions,
