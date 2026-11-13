@@ -8,8 +8,9 @@ compared.
 - [Game design](docs/DESIGN.md)
 - [POC milestones](docs/MILESTONES.md)
 
-Status: **M1 (foundation) done** — engine skeleton, New York data, turn clock, save/load and
-the 3-tab shell. Next: M2 (character creation & profile).
+Status: **M2 (character creation & profile) done** — creator (age, gender, birthplace,
+8 backgrounds, skill points), clickable New York map with lean / recognition / favorability
+layers and a region panel. Next: M3 (first campaign: running for mayor).
 
 ## Development
 
@@ -24,6 +25,6 @@ npm run check      # typecheck + tests + production build (what CI runs)
 Layout:
 
 - `src/engine/` — pure TypeScript game rules (no React): types, seeded RNG, turn clock, reducer
-- `src/data/` — world data: issues, parties, New York regions and offices
+- `src/data/` — world data: issues, parties, backgrounds, New York regions and offices
 - `src/storage/` — localStorage save/load
-- `src/ui/` — React app (start screen, header, Government / My profile / My party tabs)
+- `src/ui/` — React app (start screen, character creator, header, map, Government / My profile / My party tabs)

@@ -1,50 +1,42 @@
-import { ISSUES_BY_ID, OFFICES, REGIONS, STATES } from '../../data';
+import { useState } from 'react';
+import { OFFICES, STATES } from '../../data';
 import { nextElectionYear } from '../../engine';
-import type { GameState, IssueId, Region } from '../../engine';
-import { leanLabel, pct, signed } from '../format';
-
-function topIssues(region: Region, n = 3): IssueId[] {
-  return (Object.entries(region.issueSalience) as [IssueId, number][])
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, n)
-    .map(([id]) => id);
-}
+import type { GameState, RegionId } from '../../engine';
+import { RegionPanel } from '../map/RegionPanel';
+import { MAP_LAYERS, StateMap } from '../map/StateMap';
+import type { MapLayer } from '../map/StateMap';
 
 export function GovernmentTab({ state }: { state: GameState }) {
   const ny = STATES.NY!;
-  const regions = REGIONS.filter((r) => r.state === ny.id);
+  const [layer, setLayer] = useState<MapLayer>('lean');
+  const [selected, setSelected] = useState<RegionId>(state.politician.birthRegionId);
   const raceOffice = state.career.race?.officeId;
 
   return (
     <div className="stack">
       <section className="panel">
-        <h2>{ny.name}</h2>
-        <p className="muted small">The interactive map and vote-intention layers arrive in M2–M3.</p>
-        <div className="region-grid">
-          {regions.map((r) => {
-            const you = state.regions[r.id]!;
-            const isHome = r.id === state.politician.birthRegionId;
-            return (
-              <article key={r.id} className="region-card">
-                <header>
-                  <h3>{r.name}</h3>
-                  <span className={`lean ${r.partisanLean < 0 ? 'blue' : 'red'}`}>{leanLabel(r.partisanLean)}</span>
-                </header>
-                <p className="muted small">
-                  {r.seatCity} · {r.type} · {(r.population / 1_000_000).toFixed(1)}M people{isHome && ' · your hometown'}
-                </p>
-                <p className="small">{r.blurb}</p>
-                <dl className="kv">
-                  <dt>Recognition</dt>
-                  <dd>{pct(you.recognition)}</dd>
-                  <dt>Favorability</dt>
-                  <dd>{signed(you.favorability)}</dd>
-                  <dt>Top issues</dt>
-                  <dd>{topIssues(r).map((id) => ISSUES_BY_ID[id].name).join(', ')}</dd>
-                </dl>
-              </article>
-            );
-          })}
+        <div className="panel-head">
+          <h2>{ny.name}</h2>
+          <div className="segmented" role="radiogroup" aria-label="Map layer">
+            {MAP_LAYERS.map((l) => (
+              <button
+                key={l.id}
+                role="radio"
+                aria-checked={layer === l.id}
+                className={layer === l.id ? 'active' : undefined}
+                onClick={() => setLayer(l.id)}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="map-layout">
+          <div>
+            <StateMap state={state} layer={layer} selected={selected} onSelect={setSelected} />
+            <p className="muted small">Schematic map, not to scale. Click a region for details. The vote-intention layer arrives with campaigns (M3).</p>
+          </div>
+          <RegionPanel state={state} regionId={selected} />
         </div>
       </section>
 

@@ -3,6 +3,8 @@ import { NEW_YORK, NY_OFFICES, NY_REGIONS } from './newYork';
 
 export { ISSUES, ISSUE_IDS, ISSUES_BY_ID, MAYOR_RELEVANCE_FACTOR } from './issues';
 export { PARTIES, PARTY_IDS } from './parties';
+export { BACKGROUNDS, BACKGROUNDS_BY_ID, getBackground } from './backgrounds';
+export type { Background } from './backgrounds';
 
 export const STATES: Record<StateId, UsState> = { NY: NEW_YORK };
 

@@ -1,0 +1,65 @@
+import { getRegion } from '../../data';
+import type { GameState, RegionId } from '../../engine';
+import { favorabilityColor, leanColor, recognitionColor } from './colors';
+import { NY_SHAPES, NY_VIEWBOX } from './nyShapes';
+
+export type MapLayer = 'lean' | 'recognition' | 'favorability';
+
+export const MAP_LAYERS: { id: MapLayer; label: string }[] = [
+  { id: 'lean', label: 'Partisan lean' },
+  { id: 'recognition', label: 'Your recognition' },
+  { id: 'favorability', label: 'Your favorability' },
+];
+
+interface Props {
+  state: GameState;
+  layer: MapLayer;
+  selected: RegionId;
+  onSelect: (id: RegionId) => void;
+}
+
+export function StateMap({ state, layer, selected, onSelect }: Props) {
+  const fill = (id: RegionId) => {
+    if (layer === 'lean') return leanColor(getRegion(id).partisanLean);
+    const you = state.regions[id]!;
+    return layer === 'recognition' ? recognitionColor(you.recognition) : favorabilityColor(you.favorability);
+  };
+  // Draw the selected region last so its outline sits on top.
+  const order = Object.keys(NY_SHAPES).sort((a, b) => Number(a === selected) - Number(b === selected));
+
+  return (
+    <svg className="state-map" viewBox={NY_VIEWBOX} role="group" aria-label="Map of New York regions">
+      {order.map((id) => {
+        const shape = NY_SHAPES[id]!;
+        const region = getRegion(id);
+        const isSelected = id === selected;
+        const isHome = id === state.politician.birthRegionId;
+        return (
+          <g
+            key={id}
+            className={isSelected ? 'map-region selected' : 'map-region'}
+            role="button"
+            tabIndex={0}
+            aria-pressed={isSelected}
+            aria-label={region.name}
+            onClick={() => onSelect(id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelect(id);
+              }
+            }}
+          >
+            {shape.polygons.map((points, i) => (
+              <polygon key={i} points={points} fill={fill(id)} />
+            ))}
+            <circle cx={shape.city.x} cy={shape.city.y} r={isHome ? 4.5 : 3} className={isHome ? 'city home' : 'city'} />
+            <text x={shape.label.x} y={shape.label.y} className="map-label" textAnchor="middle">
+              {region.seatCity === 'New York City' ? 'NYC' : region.seatCity}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}

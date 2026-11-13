@@ -1,17 +1,7 @@
 import { useState } from 'react';
-import { getRegion } from '../../data';
-import { ageOf, energyForAge } from '../../engine';
-import type { GameState, SkillId } from '../../engine';
-
-const SKILL_LABELS: Record<SkillId, string> = {
-  oratory: 'Oratory',
-  charisma: 'Charisma',
-  media: 'Media Savvy',
-  digital: 'Digital',
-  policy: 'Policy',
-  negotiation: 'Negotiation',
-  fundraising: 'Fundraising',
-};
+import { getBackground, getRegion, ISSUES_BY_ID } from '../../data';
+import { ageOf, energyForAge, SKILL_HINTS, SKILL_IDS, SKILL_LABELS } from '../../engine';
+import type { GameState } from '../../engine';
 
 type SubTab = 'overview' | 'skills' | 'ideals' | 'history' | 'stats';
 
@@ -49,7 +39,9 @@ export function ProfileTab({ state }: { state: GameState }) {
             <dt>Hometown</dt>
             <dd>{getRegion(p.birthRegionId).seatCity}</dd>
             <dt>Background</dt>
-            <dd>{p.backgroundId}</dd>
+            <dd>{getBackground(p.backgroundId).name}</dd>
+            <dt>Credible on</dt>
+            <dd>{getBackground(p.backgroundId).credibleIssues.map((i) => ISSUES_BY_ID[i].name).join(', ')}</dd>
             <dt>Energy per turn</dt>
             <dd>{energyForAge(age)}</dd>
           </dl>
@@ -71,9 +63,9 @@ export function ProfileTab({ state }: { state: GameState }) {
         <section className="panel">
           <h2>Skills</h2>
           <ul className="skills">
-            {(Object.keys(SKILL_LABELS) as SkillId[]).map((id) => (
+            {SKILL_IDS.map((id) => (
               <li key={id}>
-                <span>{SKILL_LABELS[id]}</span>
+                <span title={SKILL_HINTS[id]}>{SKILL_LABELS[id]}</span>
                 <meter min={0} max={10} value={p.skills[id]} />
                 <span className="num">{p.skills[id]}/10</span>
               </li>

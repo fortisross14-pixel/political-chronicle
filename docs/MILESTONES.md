@@ -28,7 +28,7 @@ and continue; engine tests pass in CI.
 
 ---
 
-## M2 — Character creation & profile
+## M2 — Character creation & profile ✅ done
 
 **Goal:** create a politician whose choices matter mechanically.
 

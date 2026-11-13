@@ -25,7 +25,6 @@ export function StartScreen({ saved, onContinue, onNewRun }: Props) {
           Hall of Runs
         </button>
       </div>
-      <p className="muted small">Milestone 1 build: a placeholder politician is used until the creator lands in M2.</p>
     </div>
   );
 }

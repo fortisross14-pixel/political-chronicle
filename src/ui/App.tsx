@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { applyAction, createRun, defaultPolitician } from '../engine';
+import { applyAction, buildRunConfig, createRun } from '../engine';
 import type { Action, GameState } from '../engine';
 import { clearSave, loadGame, saveGame } from '../storage/save';
+import { Creator } from './Creator';
 import { Header } from './Header';
 import { StartScreen } from './StartScreen';
 import { GovernmentTab } from './tabs/GovernmentTab';
@@ -24,6 +25,7 @@ export function App() {
   const [state, setState] = useState<GameState | null>(null);
   const [saved, setSaved] = useState<GameState | null>(() => loadGame());
   const [tab, setTab] = useState<TabId>('government');
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     if (state) saveGame(state);
@@ -31,14 +33,27 @@ export function App() {
 
   const dispatch = (action: Action) => setState((s) => (s ? applyAction(s, action) : s));
 
+  if (!state && creating) {
+    return (
+      <Creator
+        onCancel={() => setCreating(false)}
+        onCreate={(input) => {
+          setTab('government');
+          setCreating(false);
+          setState(createRun(buildRunConfig(input, randomSeed())));
+        }}
+      />
+    );
+  }
+
   if (!state) {
     return (
       <StartScreen
         saved={saved}
         onContinue={() => saved && setState(saved)}
         onNewRun={() => {
-          setTab('government');
-          setState(createRun({ seed: randomSeed(), politician: defaultPolitician(), startingFunds: 15_000 }));
+          if (saved && !window.confirm('Starting a new run replaces your saved run. Continue?')) return;
+          setCreating(true);
         }}
       />
     );
