@@ -1,0 +1,180 @@
+// Event cards: pick a region and one of your platform topics (DESIGN §6.1).
+import { getBackground, getEventCard, getOffice, getRegion, ISSUES_BY_ID, MARKET_COST_FACTOR, STATES } from '../data';
+import { alignment, clamp, nudgeFavorability, nudgeRecognition, regionAlignment, relevance, skillMult } from './opinion';
+import { Rng } from './rng';
+import type { EventCard, GameState, IssueId, OfficeLevel, RegionId, Stance } from './types';
+
+export const HOMETOWN_EVENT_BONUS = 1.25;
+export const CREDIBLE_ISSUE_BONUS = 1.15;
+export const FATIGUE = 0.7;
+
+export interface RegionEffect {
+  regionId: RegionId;
+  dRecognition: number;
+  dFavorability: number;
+  /** Share of the full effect: 1 for the target, the spillover rate elsewhere. */
+  share: number;
+  alignment: number;
+}
+
+export interface EventPreview {
+  card: EventCard;
+  cost: number;
+  energy: number;
+  stance?: Stance;
+  fundsGain: number;
+  gaffeChance: number;
+  fatigue: number;
+  effects: RegionEffect[];
+  error?: string;
+}
+
+export function turnNo(state: GameState): number {
+  return state.snapshots.length;
+}
+
+/** The office level the player is currently acting at. */
+export function activeLevel(state: GameState): OfficeLevel {
+  const id = state.career.race?.officeId ?? state.career.office?.officeId;
+  return id ? getOffice(id).level : 'mayor';
+}
+
+export function stanceFor(state: GameState, issue: IssueId): Stance | undefined {
+  return state.career.race?.platform.find((p) => p.issue === issue)?.stance ?? state.record[issue];
+}
+
+export function eventCost(card: EventCard, regionId: RegionId): number {
+  return Math.round((card.cost * MARKET_COST_FACTOR[getRegion(regionId).type]) / 500) * 500;
+}
+
+export function credibility(state: GameState, issue: IssueId, stance: Stance): number {
+  const record = state.record[issue];
+  const consistency = record === undefined ? 1 : clamp(alignment(stance, record), 0, 1);
+  const base = (0.7 + 0.03 * state.politician.skills.policy + 0.3 * consistency) / 1.15;
+  const credible = getBackground(state.politician.backgroundId).credibleIssues.includes(issue);
+  return base * (credible ? CREDIBLE_ISSUE_BONUS : 1);
+}
+
+export function fatigueFor(state: GameState, regionId: RegionId, issue: IssueId): number {
+  const now = turnNo(state);
+  const repeats = state.eventHistory.filter((e) => e.regionId === regionId && e.issue === issue && e.turnNo >= now - 1).length;
+  return FATIGUE ** repeats;
+}
+
+export function gaffeChance(card: EventCard, state: GameState): number {
+  return card.gaffeRisk ? Math.max(0.01, 0.08 - 0.006 * state.politician.skills.media) : 0;
+}
+
+/** Resolves a card from the hand (number uid) or a basic card (string id). */
+export function resolveCardRef(state: GameState, ref: number | string): EventCard | undefined {
+  if (typeof ref === 'string') {
+    const card = getEventCard(ref);
+    return card.basic ? card : undefined;
+  }
+  const inst = state.hand.find((c) => c.uid === ref);
+  return inst ? getEventCard(inst.cardId) : undefined;
+}
+
+/** Expected effect, without the gaffe roll. */
+export function previewEvent(state: GameState, ref: number | string, regionId: RegionId, issue: IssueId): EventPreview {
+  const card = resolveCardRef(state, ref);
+  if (!card) throw new Error(`Card not available: ${ref}`);
+  const cost = eventCost(card, regionId);
+  const stance = stanceFor(state, issue);
+  const level = activeLevel(state);
+  const region = getRegion(regionId);
+  const skills = state.politician.skills;
+  const fatigue = fatigueFor(state, regionId, issue);
+  const preview: EventPreview = {
+    card,
+    cost,
+    energy: card.energy,
+    stance,
+    fundsGain: 0,
+    gaffeChance: gaffeChance(card, state),
+    fatigue,
+    effects: [],
+  };
+
+  if (state.ended) preview.error = 'Your career is over.';
+  else if (!state.career.race || !state.career.race.platform.length) preview.error = 'You need a race and a platform first.';
+  else if (state.decisions && !state.decisions.resolved) preview.error = 'Resolve this turn’s decisions first.';
+  else if (card.energy > state.energy) preview.error = 'Not enough energy this turn.';
+  else if (cost > state.funds) preview.error = 'Not enough funds.';
+  else if (stance === undefined && !card.fundraising) preview.error = 'Pick one of your platform topics.';
+
+  if (card.fundraising) {
+    const R = state.regions[regionId]!.recognition;
+    preview.fundsGain = Math.round((card.fundraising * skills.fundraising * (0.5 + R)) / 100) * 100;
+  }
+  if (stance === undefined || (card.reach === 0 && card.persuasion === 0)) return preview;
+
+  const hometown = regionId === state.politician.birthRegionId ? HOMETOWN_EVENT_BONUS : 1;
+  const mult = skillMult(skills, card.skills) * hometown * fatigue;
+  const cred = credibility(state, issue, stance);
+  const targets: [RegionId, number][] = [[regionId, 1]];
+  if (card.spillover > 0) {
+    for (const id of STATES[region.state]!.regionIds) if (id !== regionId) targets.push([id, card.spillover]);
+  }
+
+  for (const [id, share] of targets) {
+    const r = getRegion(id);
+    const m = r.media[card.medium] * mult * share;
+    const align = regionAlignment(id, issue, stance);
+    const you = state.regions[id]!;
+    const gain = card.reach * m;
+    const dF = card.persuasion * m * r.issueSalience[issue] * align * relevance(issue, level) * cred;
+    preview.effects.push({
+      regionId: id,
+      share,
+      alignment: align,
+      dRecognition: nudgeRecognition(you.recognition, gain) - you.recognition,
+      dFavorability: nudgeFavorability(you.favorability, dF) - you.favorability,
+    });
+  }
+  return preview;
+}
+
+export interface EventOutcome {
+  state: GameState;
+  gaffe: boolean;
+}
+
+export function playEvent(state: GameState, ref: number | string, regionId: RegionId, issue: IssueId): EventOutcome {
+  const preview = previewEvent(state, ref, regionId, issue);
+  if (preview.error) throw new Error(preview.error);
+  const rng = new Rng(state.rng);
+  const gaffe = rng.chance(preview.gaffeChance);
+  const regions = { ...state.regions };
+
+  for (const e of preview.effects) {
+    const you = regions[e.regionId]!;
+    let favorability = you.favorability + e.dFavorability;
+    if (gaffe) {
+      const r = getRegion(e.regionId);
+      const penalty = preview.card.persuasion * r.media[preview.card.medium] * e.share * 0.6;
+      favorability = nudgeFavorability(you.favorability, -penalty);
+    }
+    regions[e.regionId] = { recognition: you.recognition + e.dRecognition, favorability };
+  }
+
+  const hand = typeof ref === 'number' ? state.hand.filter((c) => c.uid !== ref) : state.hand;
+  const where = getRegion(regionId).seatCity;
+  const text = preview.card.fundraising
+    ? `${preview.card.name} in ${where}: raised $${preview.fundsGain.toLocaleString('en-US')}.`
+    : `${preview.card.name} in ${where} on ${ISSUES_BY_ID[issue].name}${gaffe ? ' — a gaffe went viral!' : '.'}`;
+
+  return {
+    gaffe,
+    state: {
+      ...state,
+      rng: rng.state,
+      regions,
+      hand,
+      funds: state.funds - preview.cost + preview.fundsGain,
+      energy: state.energy - preview.card.energy,
+      eventHistory: preview.card.fundraising ? state.eventHistory : [...state.eventHistory, { turnNo: turnNo(state), regionId, issue }],
+      log: [...state.log, { year: state.clock.year, turn: state.clock.turn, text }],
+    },
+  };
+}

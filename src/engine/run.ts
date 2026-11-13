@@ -1,9 +1,12 @@
 import { getOffice, getRegion, OFFICES, REGIONS } from '../data';
+import { fileRace } from './campaign';
+import { poll } from './opinion';
 import { seedFromString } from './rng';
 import { nextElectionYear, turnsInYear } from './time';
 import type { Career, GameState, Politician, RegionId, RegionStanding, Skills, Snapshot } from './types';
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
+export const MAX_AGE_ENDS_RUN = 85;
 export const DEFAULT_START_YEAR = 2027;
 
 export const BASE_RECOGNITION = 0.05;
@@ -65,34 +68,32 @@ export function createRun(config: NewRunConfig): GameState {
   const { politician } = config;
   getRegion(politician.birthRegionId); // validates birthplace
   const earliest = config.earliestYear ?? DEFAULT_START_YEAR;
-
   const raceOfficeId = config.raceOfficeId ?? hometownMayoralty(politician.birthRegionId);
-  const career: Career = { affiliation: 'IND' };
-  let startYear = earliest;
-  if (raceOfficeId) {
-    startYear = nextElectionYear(getOffice(raceOfficeId), earliest);
-    career.race = { officeId: raceOfficeId, electionYear: startYear };
-  }
+  // Start in the first race's election year, so the career opens with a campaign.
+  const startYear = raceOfficeId ? nextElectionYear(getOffice(raceOfficeId), earliest) : earliest;
 
-  const clock = { year: startYear, turn: 0, turnsThisYear: turnsInYear(career, startYear), monthsElapsed: 0 };
-  const state: GameState = {
+  const career: Career = { affiliation: 'IND', lossStreak: 0 };
+  const base: GameState = {
     schemaVersion: SCHEMA_VERSION,
     runId: `run-${config.seed}`,
     rng: seedFromString(config.seed),
-    clock,
+    clock: { year: startYear, turn: 0, turnsThisYear: turnsInYear(career, startYear), monthsElapsed: 0 },
     politician: { ...politician, skills: { ...politician.skills } },
     career,
     funds: config.startingFunds,
     energy: energyForAge(politician.startAge),
     integrity: STARTING_INTEGRITY,
     regions: initialRegions(politician.birthRegionId),
+    record: {},
+    hand: [],
+    nextCardUid: 1,
+    recentDecisionIds: [],
+    eventHistory: [],
+    elections: [],
     snapshots: [],
-    log: [],
+    log: [{ year: startYear, turn: 0, text: `${politician.name} enters public life.` }],
   };
-  return {
-    ...state,
-    log: [{ year: clock.year, turn: 0, text: raceOfficeId ? `Filed as an independent for ${getOffice(raceOfficeId).name}.` : 'Started a new career.' }],
-  };
+  return raceOfficeId ? fileRace(base, raceOfficeId) : base;
 }
 
 export function takeSnapshot(state: GameState): Snapshot {
@@ -108,6 +109,7 @@ export function takeSnapshot(state: GameState): Snapshot {
     affiliation: state.career.affiliation,
     officeId: state.career.office?.officeId,
     raceOfficeId: state.career.race?.officeId,
+    poll: state.career.race?.platform.length ? poll(state, state.career.race).decided[0] : undefined,
     regions: Object.fromEntries(Object.entries(state.regions).map(([id, s]) => [id, { ...s }])),
   };
 }

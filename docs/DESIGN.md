@@ -225,10 +225,12 @@ Mayor races start with you at `R ≈ 0.05` (0.30 in your hometown).
 For a stance `x` on issue `i` in region `r` with average opinion `o`:
 
 ```
-alignment(x, r, i) = 1 − |x − o| / 2          // range −1 .. +1
+alignment(x, r, i) = clamp(1 − |x − o| / 1.5, −1, +1)
 ```
 
 A +2 stance in a region averaging −2 has alignment −1: talking about it there *hurts*.
+Being 1.5 points away from voters is neutral; anything further costs you. (Tuned in M3: the
+original `/ 2` let a stance on the wrong side of a moderate region still help.)
 
 ### 5.2 Vote intention
 
@@ -248,10 +250,15 @@ vote intention per region as a diverging colour (you vs. the leading opponent).
 
 ### 5.3 Opponents
 
-Each race spawns 1–2 AI candidates with a party, 5 platform topics, recognition,
-favorability, funds and a simple strategy (play their strongest issue in their best
-region each turn). Opponent quality scales with office level. Incumbents start with
-high recognition.
+Each race spawns 1–2 AI candidates (2 in an urban mayoral race) with a lean, 5 platform topics
+fitted to the local electorate, recognition and favorability, and a simple strategy: each
+turn they hold 2–3 events on their best-fitting topic. 40% of the time the main opponent is
+an incumbent (+0.25 recognition, +0.3 utility). Opponent quality will scale with office
+level from M6.
+
+**Balance (M3, `npm run sim`)** — a simple sensible bot wins its hometown mayoral race about
+65% in Watertown, 78% in Buffalo and 49% in NYC; a bot that never campaigns wins 0%, and one
+that campaigns against its voters 0–24%.
 
 ---
 
@@ -268,6 +275,7 @@ Played from your hand: **pick a region** (in the race's jurisdiction — later a
 |---|---|---|---|---|---|---|---|
 | Door-knocking *(Basic)* | $0 | 2 | inPerson | Charisma | 0.04 | 0.06 | none |
 | Free social post *(Basic)* | $0 | 1 | social | Digital | 0.03 | 0.02 | 20% state |
+| Call time *(Basic)* | $0 | 1 | — | Fundraising | 0 | 0 | → +Fundraising × $1.5k × (0.5 + R) |
 | Town hall | $5k | 2 | inPerson | Charisma | 0.06 | 0.10 | none |
 | Local radio interview | $8k | 1 | radio | Media | 0.08 | 0.05 | none |
 | Local TV ad buy | $40k | 1 | tv | Media | 0.15 | 0.06 | 15% state |
@@ -279,10 +287,14 @@ Played from your hand: **pick a region** (in the race's jurisdiction — later a
 | Fundraising dinner | $10k | 2 | inPerson | Fundraising | 0.02 | 0 | → +$ (Fundraising × recognition) |
 | Party unity event | $20k | 2 | inPerson | Negotiation | 0.05 | 0.03 | → +Party standing |
 
+**Prices** scale with the media market: rural ×0.6, midsize ×0.8, suburban ×1.0, urban ×1.5
+(an NYC TV buy costs $60k, a Watertown one $24k). Until the Market (M4), filing for a race deals
+a starter hand of 8 consumable cards.
+
 **Resolution** for the target region `r`, topic `i`, your stance `x`:
 
 ```
-m      = media[r][card.medium] × skillMult × fatigue × hometownBonus
+m      = media[r][card.medium] × skillMult × fatigue × hometownBonus (1.25)
 ΔR     = card.reach × m × (1 − R)
 ΔF     = card.persuasion × m × salience[r][i] × alignment(x, r, i)
          × relevance(i, office) × credibility
@@ -293,8 +305,9 @@ F      = clamp(F + ΔF × (1 − |F|), −1, 1)
   the state — **using each region's own alignment**. Your loud NYC message on LGBTQ
   rights is also heard in Watertown.
 - **Fatigue**: same topic in the same region again within 2 turns → ×0.7 per repeat.
-- **Credibility** = `0.7 + 0.03 × Policy + 0.3 × consistency`, where consistency is how well
-  this stance matches your Record (flip-flopping is less persuasive).
+- **Credibility** = `(0.7 + 0.03 × Policy + 0.3 × consistency) / 1.15`, ×1.15 on your
+  background's credible issues, where consistency is how well this stance matches your Record
+  (flip-flopping is less persuasive).
 - **Gaffe**: small chance on TV/cable/debate (`8% − 0.6% × Media Savvy`) of a negative swing.
 
 The UI previews the *expected* effect in each region before you confirm (coarse for low

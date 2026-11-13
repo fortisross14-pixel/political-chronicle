@@ -1,0 +1,10 @@
+// Fictional names for AI candidates.
+export const FIRST_NAMES = [
+  'Dana', 'Marcus', 'Elena', 'Victor', 'Priya', 'Tom', 'Grace', 'Luis', 'Hannah', 'Derek',
+  'Monica', 'Ray', 'Keisha', 'Frank', 'Sofia', 'Walt', 'Nadia', 'Glen', 'Teresa', 'Omar',
+];
+
+export const LAST_NAMES = [
+  'Kowalski', 'Brennan', 'Okafor', 'Delgado', 'Whitaker', 'Nakamura', 'Russo', 'Fitzgerald', 'Abernathy', 'Castillo',
+  'Lindqvist', 'Haddad', 'McAllister', 'Petrakis', 'Sullivan', 'Achebe', 'Moreau', 'Gallagher', 'Ramaswamy', 'Doyle',
+];

@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { getOffice } from '../data';
 import {
   ageOf,
-  applyAction,
-  createRun,
   defaultPolitician,
   energyForAge,
   isOfficeElectionYear,
@@ -14,17 +12,7 @@ import {
   seedFromString,
   turnLabel,
 } from '.';
-import type { GameState } from '.';
-
-function newRun(overrides: Partial<Parameters<typeof createRun>[0]> = {}): GameState {
-  return createRun({ seed: 'test', politician: defaultPolitician(), startingFunds: 15_000, ...overrides });
-}
-
-function endTurns(state: GameState, n: number): GameState {
-  let s = state;
-  for (let i = 0; i < n; i++) s = applyAction(s, { type: 'END_TURN' });
-  return s;
-}
+import { newRun, passTurns as endTurns, readyRun } from './testUtils';
 
 describe('rng', () => {
   it('is deterministic for a seed', () => {
@@ -69,7 +57,9 @@ describe('createRun', () => {
   it('starts as an independent filed for the hometown mayoralty in its election year', () => {
     const s = newRun();
     expect(s.career.affiliation).toBe('IND');
-    expect(s.career.race).toEqual({ officeId: 'mayor-watertown', electionYear: 2027 });
+    expect(s.career.race).toMatchObject({ officeId: 'mayor-watertown', electionYear: 2027, platform: [] });
+    expect(s.career.race?.opponents.length).toBeGreaterThan(0);
+    expect(s.hand.length).toBeGreaterThan(0);
     expect(s.clock).toEqual({ year: 2027, turn: 0, turnsThisYear: 4, monthsElapsed: 0 });
   });
 
@@ -92,7 +82,7 @@ describe('createRun', () => {
 
 describe('turn clock', () => {
   it('election year has 4 three-month turns, then normal years have 3 four-month turns', () => {
-    let s = newRun();
+    let s = readyRun();
     expect(turnLabel(s.clock)).toBe('Jan–Mar 2027');
     expect(monthsFactor(s.clock)).toBe(1);
     s = endTurns(s, 3);
@@ -106,19 +96,20 @@ describe('turn clock', () => {
   });
 
   it('closes the race after Election Day and logs it', () => {
-    const s = endTurns(newRun(), 4);
+    const s = endTurns(readyRun(), 4);
     expect(s.career.race).toBeUndefined();
-    expect(s.log.at(-1)?.text).toMatch(/Election Day/);
+    expect(s.elections).toHaveLength(1);
+    expect(s.log.some((l) => /Elected|Lost the race/.test(l.text))).toBe(true);
   });
 
   it('ages the politician by turn length', () => {
-    const s = endTurns(newRun(), 4 + 3); // one election year + one normal year
+    const s = endTurns(readyRun(), 4 + 3); // one election year + one normal year
     expect(s.clock.monthsElapsed).toBe(24);
     expect(ageOf(s)).toBe(34);
   });
 
   it('appends one snapshot per turn, recording the turn that ended', () => {
-    const s = endTurns(newRun(), 5);
+    const s = endTurns(readyRun(), 5);
     expect(s.snapshots).toHaveLength(5);
     expect(s.snapshots[0]).toMatchObject({ year: 2027, turn: 0, turnsThisYear: 4, raceOfficeId: 'mayor-watertown' });
     expect(s.snapshots[4]).toMatchObject({ year: 2028, turn: 0, turnsThisYear: 3 });
@@ -126,9 +117,9 @@ describe('turn clock', () => {
   });
 
   it('does not mutate the previous state', () => {
-    const before = newRun();
+    const before = readyRun();
     const copy = structuredClone(before);
-    applyAction(before, { type: 'END_TURN' });
+    endTurns(before, 1);
     expect(before).toEqual(copy);
   });
 });

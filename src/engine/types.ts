@@ -151,9 +151,32 @@ export interface Clock {
   monthsElapsed: number;
 }
 
+/** A platform topic: an issue and the stance you defend on it. */
+export interface Pledge {
+  issue: IssueId;
+  /** −2, −1, +1 or +2. */
+  stance: Stance;
+}
+
+export interface Candidate {
+  id: string;
+  name: string;
+  affiliation: Affiliation;
+  /** −1 Blue-leaning .. +1 Red-leaning; drives party fit even in nonpartisan races. */
+  lean: number;
+  platform: Pledge[];
+  incumbent: boolean;
+  /** Campaign events per turn. */
+  activity: number;
+  regions: Record<RegionId, RegionStanding>;
+}
+
 export interface Race {
   officeId: OfficeId;
   electionYear: number;
+  /** Empty until the player picks their platform (DESIGN §2: up to 5 topics). */
+  platform: Pledge[];
+  opponents: Candidate[];
 }
 
 export interface Career {
@@ -162,6 +185,78 @@ export interface Career {
   office?: { officeId: OfficeId; termEndsYear: number };
   /** Race the player is currently running in, if any. */
   race?: Race;
+  /** Elections lost in a row while out of office. */
+  lossStreak: number;
+}
+
+// ---------- Cards ----------
+
+export interface EventCard {
+  id: string;
+  name: string;
+  /** Basic cards are always available and never consumed. */
+  basic: boolean;
+  cost: number;
+  energy: number;
+  medium: MediaChannel;
+  /** One skill, or several that are averaged (e.g. a debate). */
+  skills: SkillId[];
+  reach: number;
+  persuasion: number;
+  /** Share of the effect heard in the state's other regions. */
+  spillover: number;
+  /** Can go wrong on camera. */
+  gaffeRisk: boolean;
+  /** Raises funds instead of (or as well as) persuading: Fundraising × this × (0.5 + R). */
+  fundraising?: number;
+  description: string;
+}
+
+export interface CardInstance {
+  uid: number;
+  cardId: string;
+}
+
+export interface DecisionCard {
+  id: string;
+  title: string;
+  text: string;
+  context: 'campaign' | 'office';
+  levels: OfficeLevel[];
+  /** What applying the card means. */
+  tags: Pledge[];
+  /** Favorability lost in the jurisdiction if you reject it. */
+  rejectCost?: number;
+  effects?: { funds?: number; integrity?: number };
+}
+
+export interface DecisionHand {
+  /** Global turn number the hand was dealt for. */
+  turnNo: number;
+  cardIds: string[];
+  resolved: boolean;
+  applied: string[];
+}
+
+// ---------- Elections ----------
+
+export interface ElectionCandidate {
+  name: string;
+  isPlayer: boolean;
+  affiliation: Affiliation;
+  lean: number;
+}
+
+export interface ElectionRecord {
+  officeId: OfficeId;
+  year: number;
+  candidates: ElectionCandidate[];
+  /** Vote share per candidate (same order), per region. */
+  regionShares: Record<RegionId, number[]>;
+  totalShares: number[];
+  /** Final pre-election poll for the player (share of decided voters). */
+  finalPoll: number;
+  playerWon: boolean;
 }
 
 export interface Snapshot {
@@ -176,6 +271,8 @@ export interface Snapshot {
   affiliation: Affiliation;
   officeId?: OfficeId;
   raceOfficeId?: OfficeId;
+  /** Player's share of decided voters in the race's jurisdiction, if campaigning. */
+  poll?: number;
   partyStanding?: number;
   regions: Record<RegionId, RegionStanding>;
 }
@@ -184,6 +281,12 @@ export interface LogEntry {
   year: number;
   turn: number;
   text: string;
+}
+
+export interface EventPlay {
+  turnNo: number;
+  regionId: RegionId;
+  issue: IssueId;
 }
 
 export interface GameState {
@@ -198,8 +301,27 @@ export interface GameState {
   energy: number;
   integrity: number;
   regions: Record<RegionId, RegionStanding>;
+  /** Your public record per issue (−2..+2), built from pledges and applied decisions. */
+  record: Partial<Record<IssueId, Stance>>;
+  hand: CardInstance[];
+  nextCardUid: number;
+  decisions?: DecisionHand;
+  /** Recently dealt decision cards, to avoid repeats. */
+  recentDecisionIds: string[];
+  eventHistory: EventPlay[];
+  elections: ElectionRecord[];
+  /** Index into `elections` of a result the player hasn't dismissed yet. */
+  pendingResult?: number;
+  ended?: { reason: 'retired' | 'losses' | 'age'; year: number };
   snapshots: Snapshot[];
   log: LogEntry[];
 }
 
-export type Action = { type: 'END_TURN' };
+export type Action =
+  | { type: 'END_TURN' }
+  | { type: 'FILE_RACE'; officeId: OfficeId }
+  | { type: 'SET_PLATFORM'; platform: Pledge[] }
+  | { type: 'PLAY_EVENT'; cardUid: number | string; regionId: RegionId; issue: IssueId }
+  | { type: 'RESOLVE_DECISIONS'; apply: string[] }
+  | { type: 'DISMISS_RESULT' }
+  | { type: 'RETIRE' };

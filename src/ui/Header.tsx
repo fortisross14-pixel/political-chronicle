@@ -1,5 +1,5 @@
 import { getOffice } from '../data';
-import { ageOf, isElectionYear, turnLabel } from '../engine';
+import { ageOf, endTurnBlocker, isElectionYear, turnLabel } from '../engine';
 import type { GameState } from '../engine';
 import { money } from './format';
 
@@ -13,6 +13,7 @@ interface Props {
 export function Header({ state, onEndTurn, onMainMenu, onAbandon }: Props) {
   const { clock, career, politician } = state;
   const electionYear = isElectionYear(career, clock.year);
+  const blocker = endTurnBlocker(state);
   const status = career.office
     ? getOffice(career.office.officeId).name
     : career.race
@@ -34,6 +35,7 @@ export function Header({ state, onEndTurn, onMainMenu, onAbandon }: Props) {
           {electionYear && <span className="badge">Election year</span>}
         </span>
       </div>
+      {blocker && !state.ended && <span className="blocker small">{blocker}</span>}
       <dl className="stats">
         <div>
           <dt>Funds</dt>
@@ -49,7 +51,7 @@ export function Header({ state, onEndTurn, onMainMenu, onAbandon }: Props) {
         </div>
       </dl>
       <div className="header-actions">
-        <button className="primary" onClick={onEndTurn}>
+        <button className="primary" onClick={onEndTurn} disabled={!!blocker} title={blocker}>
           End turn
         </button>
         <button onClick={onMainMenu}>Menu</button>

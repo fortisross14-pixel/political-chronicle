@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { getBackground, getRegion, ISSUES_BY_ID } from '../../data';
+import { getBackground, getOffice, getRegion, ISSUES, ISSUES_BY_ID } from '../../data';
+import { stanceLabel } from '../campaign/labels';
+import { pct } from '../format';
 import { ageOf, energyForAge, SKILL_HINTS, SKILL_IDS, SKILL_LABELS } from '../../engine';
 import type { GameState } from '../../engine';
 
@@ -77,14 +79,70 @@ export function ProfileTab({ state }: { state: GameState }) {
       {sub === 'ideals' && (
         <section className="panel">
           <h2>Ideals & record</h2>
-          <p className="muted">Your 5 platform topics and voting record arrive with the first campaign (M3).</p>
+          {state.career.race?.platform.length ? (
+            <>
+              <h3>Current platform — {getOffice(state.career.race.officeId).name}</h3>
+              <ul>
+                {state.career.race.platform.map((p) => (
+                  <li key={p.issue}>
+                    <strong>{ISSUES_BY_ID[p.issue].name}:</strong> {stanceLabel(p.issue, p.stance)}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="muted small">No active platform.</p>
+          )}
+          <h3>Public record</h3>
+          <p className="muted small">Built from your pledges and the decisions you backed. Straying from it makes you less credible.</p>
+          <ul className="record">
+            {ISSUES.filter((i) => state.record[i.id] !== undefined).map((i) => {
+              const v = state.record[i.id]!;
+              return (
+                <li key={i.id}>
+                  <span>{i.name}</span>
+                  <span className="record-axis" aria-label={`${i.name} record ${v.toFixed(1)}`}>
+                    <span className="record-dot" style={{ left: `${((v + 2) / 4) * 100}%` }} />
+                  </span>
+                  <span className="muted small">{Math.abs(v) < 0.35 ? 'Mixed' : stanceLabel(i.id, Math.abs(v) >= 1.5 ? Math.sign(v) * 2 : Math.sign(v))}</span>
+                </li>
+              );
+            })}
+          </ul>
+          {Object.keys(state.record).length === 0 && <p className="muted">No record yet.</p>}
+          <p className="small">Integrity: {state.integrity}/100</p>
         </section>
       )}
 
       {sub === 'history' && (
         <section className="panel">
           <h2>Election history</h2>
-          <p className="muted">No elections yet.</p>
+          {state.elections.length === 0 ? (
+            <p className="muted">No elections yet.</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Year</th>
+                  <th>Office</th>
+                  <th>Result</th>
+                  <th>Your share</th>
+                  <th>Final poll</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...state.elections].reverse().map((e, i) => (
+                  <tr key={i}>
+                    <td>{e.year}</td>
+                    <td>{getOffice(e.officeId).name}</td>
+                    <td className={e.playerWon ? 'pos' : 'neg'}>{e.playerWon ? 'Won' : 'Lost'}</td>
+                    <td>{pct(e.totalShares[0]!)}</td>
+                    <td>{pct(e.finalPoll)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </section>
       )}
 

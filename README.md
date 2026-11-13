@@ -8,9 +8,10 @@ compared.
 - [Game design](docs/DESIGN.md)
 - [POC milestones](docs/MILESTONES.md)
 
-Status: **M2 (character creation & profile) done** — creator (age, gender, birthplace,
-8 backgrounds, skill points), clickable New York map with lean / recognition / favorability
-layers and a region panel. Next: M3 (first campaign: running for mayor).
+Status: **M3 (first playable) done** — run for mayor as an independent: pick a 5-topic
+platform, hold events (region + topic), back 1–3 decision cards per turn, watch the
+vote-intention map, face AI opponents and win or lose on Election Day. Next: M4 (economy,
+Market & skill growth).
 
 ## Development
 
@@ -20,11 +21,13 @@ Requires Node 20+.
 npm install
 npm run dev        # local dev server
 npm run check      # typecheck + tests + production build (what CI runs)
+npm run sim        # balance harness: bot win rates (optional arg: runs, default 200)
 ```
 
 Layout:
 
 - `src/engine/` — pure TypeScript game rules (no React): types, seeded RNG, turn clock, reducer
 - `src/data/` — world data: issues, parties, backgrounds, New York regions and offices
+- `src/sim/` — balance bot used by tests and `npm run sim`
 - `src/storage/` — localStorage save/load
 - `src/ui/` — React app (start screen, character creator, header, map, Government / My profile / My party tabs)

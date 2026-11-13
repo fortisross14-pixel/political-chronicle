@@ -25,3 +25,46 @@ export function nextInt(state: number, min: number, max: number): [value: number
   const [f, next] = nextFloat(state);
   return [min + Math.floor(f * (max - min + 1)), next];
 }
+
+/**
+ * Mutable cursor over the seeded RNG, for code that needs several draws in a row.
+ * Read `.state` back into GameState when done.
+ */
+export class Rng {
+  constructor(public state: number) {}
+
+  float(): number {
+    const [v, next] = nextFloat(this.state);
+    this.state = next;
+    return v;
+  }
+
+  int(min: number, max: number): number {
+    return min + Math.floor(this.float() * (max - min + 1));
+  }
+
+  chance(p: number): boolean {
+    return this.float() < p;
+  }
+
+  /** Standard normal via Box–Muller. */
+  gaussian(mean = 0, sd = 1): number {
+    const u = Math.max(this.float(), 1e-12);
+    const v = this.float();
+    return mean + sd * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  pick<T>(items: readonly T[]): T {
+    if (!items.length) throw new Error('pick from empty list');
+    return items[Math.floor(this.float() * items.length)]!;
+  }
+
+  shuffle<T>(items: readonly T[]): T[] {
+    const out = [...items];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(this.float() * (i + 1));
+      [out[i], out[j]] = [out[j]!, out[i]!];
+    }
+    return out;
+  }
+}

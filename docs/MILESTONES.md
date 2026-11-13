@@ -45,7 +45,7 @@ NYC lawyer) start with visibly different skills, energy, funds and regional reco
 
 ---
 
-## M3 — First campaign: running for mayor (first playable)
+## M3 — First campaign: running for mayor (first playable) ✅ done
 
 **Goal:** a complete mayoral race as an independent, win or lose.
 

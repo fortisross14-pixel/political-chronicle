@@ -31,7 +31,16 @@ export function App() {
     if (state) saveGame(state);
   }, [state]);
 
-  const dispatch = (action: Action) => setState((s) => (s ? applyAction(s, action) : s));
+  const [error, setError] = useState<string | null>(null);
+  const dispatch = (action: Action) => {
+    if (!state) return;
+    try {
+      setState(applyAction(state, action));
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
 
   if (!state && creating) {
     return (
@@ -89,7 +98,12 @@ export function App() {
         ))}
       </nav>
       <main className="content">
-        {tab === 'government' && <GovernmentTab state={state} />}
+        {error && (
+          <div className="toast" role="alert">
+            {error} <button onClick={() => setError(null)}>OK</button>
+          </div>
+        )}
+        {tab === 'government' && <GovernmentTab state={state} dispatch={dispatch} />}
         {tab === 'profile' && <ProfileTab state={state} />}
         {tab === 'party' && <PartyTab state={state} />}
       </main>
