@@ -20,8 +20,8 @@ export const OPPONENT = {
   baseFavorability: 0.05,
   favorabilitySpread: 0.1,
   incumbentFavorability: 0.05,
-  reachPerEvent: 0.05,
-  persuasionPerEvent: 0.04,
+  reachPerEvent: 0.06,
+  persuasionPerEvent: 0.055,
 };
 
 // ---------- Eligibility ----------
@@ -102,7 +102,7 @@ export function generateOpponents(rng: Rng, officeId: OfficeId): Candidate[] {
       regions[r.id] = inRace
         ? {
             recognition: clamp(
-              OPPONENT.baseRecognition + rng.float() * OPPONENT.recognitionSpread + (incumbent ? OPPONENT.incumbentRecognition : 0) + (seat.type === 'urban' ? 0.05 : 0),
+              OPPONENT.baseRecognition + rng.float() * OPPONENT.recognitionSpread + (incumbent ? OPPONENT.incumbentRecognition : 0) + (seat.type === 'urban' || seat.type === 'midsize' ? 0.06 : 0) - (i > 0 ? 0.12 : 0),
               0,
               0.95,
             ),
@@ -118,7 +118,7 @@ export function generateOpponents(rng: Rng, officeId: OfficeId): Candidate[] {
       lean: Math.round(lean * 10) / 10,
       platform: opponentPlatform(rng, seat.id, lean, office.level),
       incumbent,
-      activity: seat.type === 'urban' && i === 0 ? 3 : 2,
+      activity: seat.type === 'urban' && i > 0 ? 1 : 2,
       regions,
     });
   }

@@ -5,7 +5,9 @@ export { ISSUES, ISSUE_IDS, ISSUES_BY_ID, MAYOR_RELEVANCE_FACTOR } from './issue
 export { PARTIES, PARTY_IDS } from './parties';
 export { BACKGROUNDS, BACKGROUNDS_BY_ID, getBackground } from './backgrounds';
 export type { Background } from './backgrounds';
-export { EVENT_CARDS, EVENT_CARDS_BY_ID, BASIC_CARD_IDS, STARTER_HAND, MARKET_COST_FACTOR, getEventCard } from './eventCards';
+export { EVENT_CARDS, EVENT_CARDS_BY_ID, BASIC_CARD_IDS, STARTER_HAND, MARKET_COST_FACTOR, MARKET_WEIGHTS, getEventCard } from './eventCards';
+export { SKILL_CARDS, SKILL_CARDS_BY_ID, getSkillCard } from './skillCards';
+export type { SkillCard } from './skillCards';
 export { DECISION_CARDS, DECISION_CARDS_BY_ID, getDecisionCard } from './decisionCards';
 export { FIRST_NAMES, LAST_NAMES } from './names';
 

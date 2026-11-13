@@ -37,9 +37,20 @@ export function Header({ state, onEndTurn, onMainMenu, onAbandon }: Props) {
       </div>
       {blocker && !state.ended && <span className="blocker small">{blocker}</span>}
       <dl className="stats">
-        <div>
+        <div
+          title={
+            state.lastIncome
+              ? `This turn: donors +${money(state.lastIncome.donors)}, salary +${money(state.lastIncome.salary)}, staff −${money(state.lastIncome.upkeep)}`
+              : undefined
+          }
+        >
           <dt>Funds</dt>
-          <dd>{money(state.funds)}</dd>
+          <dd>
+            {money(state.funds)}
+            {state.lastIncome && (
+              <span className="income small"> +{money(state.lastIncome.donors + state.lastIncome.salary - state.lastIncome.upkeep)}</span>
+            )}
+          </dd>
         </div>
         <div>
           <dt>Energy</dt>

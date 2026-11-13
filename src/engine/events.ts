@@ -1,5 +1,5 @@
 // Event cards: pick a region and one of your platform topics (DESIGN §6.1).
-import { getBackground, getEventCard, getOffice, getRegion, ISSUES_BY_ID, MARKET_COST_FACTOR, STATES } from '../data';
+import { getBackground, getEventCard, getOffice, getRegion, ISSUES_BY_ID, STATES } from '../data';
 import { alignment, clamp, nudgeFavorability, nudgeRecognition, regionAlignment, relevance, skillMult } from './opinion';
 import { Rng } from './rng';
 import type { EventCard, GameState, IssueId, OfficeLevel, RegionId, Stance } from './types';
@@ -7,6 +7,7 @@ import type { EventCard, GameState, IssueId, OfficeLevel, RegionId, Stance } fro
 export const HOMETOWN_EVENT_BONUS = 1.25;
 export const CREDIBLE_ISSUE_BONUS = 1.15;
 export const FATIGUE = 0.7;
+export const FUNDRAISING_FATIGUE = 0.5;
 
 export interface RegionEffect {
   regionId: RegionId;
@@ -19,7 +20,6 @@ export interface RegionEffect {
 
 export interface EventPreview {
   card: EventCard;
-  cost: number;
   energy: number;
   stance?: Stance;
   fundsGain: number;
@@ -43,10 +43,6 @@ export function stanceFor(state: GameState, issue: IssueId): Stance | undefined 
   return state.career.race?.platform.find((p) => p.issue === issue)?.stance ?? state.record[issue];
 }
 
-export function eventCost(card: EventCard, regionId: RegionId): number {
-  return Math.round((card.cost * MARKET_COST_FACTOR[getRegion(regionId).type]) / 500) * 500;
-}
-
 export function credibility(state: GameState, issue: IssueId, stance: Stance): number {
   const record = state.record[issue];
   const consistency = record === undefined ? 1 : clamp(alignment(stance, record), 0, 1);
@@ -57,7 +53,7 @@ export function credibility(state: GameState, issue: IssueId, stance: Stance): n
 
 export function fatigueFor(state: GameState, regionId: RegionId, issue: IssueId): number {
   const now = turnNo(state);
-  const repeats = state.eventHistory.filter((e) => e.regionId === regionId && e.issue === issue && e.turnNo >= now - 1).length;
+  const repeats = state.eventHistory.filter((e) => !e.fundraiser && e.regionId === regionId && e.issue === issue && e.turnNo >= now - 1).length;
   return FATIGUE ** repeats;
 }
 
@@ -79,7 +75,6 @@ export function resolveCardRef(state: GameState, ref: number | string): EventCar
 export function previewEvent(state: GameState, ref: number | string, regionId: RegionId, issue: IssueId): EventPreview {
   const card = resolveCardRef(state, ref);
   if (!card) throw new Error(`Card not available: ${ref}`);
-  const cost = eventCost(card, regionId);
   const stance = stanceFor(state, issue);
   const level = activeLevel(state);
   const region = getRegion(regionId);
@@ -87,7 +82,6 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
   const fatigue = fatigueFor(state, regionId, issue);
   const preview: EventPreview = {
     card,
-    cost,
     energy: card.energy,
     stance,
     fundsGain: 0,
@@ -100,12 +94,13 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
   else if (!state.career.race || !state.career.race.platform.length) preview.error = 'You need a race and a platform first.';
   else if (state.decisions && !state.decisions.resolved) preview.error = 'Resolve this turn’s decisions first.';
   else if (card.energy > state.energy) preview.error = 'Not enough energy this turn.';
-  else if (cost > state.funds) preview.error = 'Not enough funds.';
   else if (stance === undefined && !card.fundraising) preview.error = 'Pick one of your platform topics.';
 
   if (card.fundraising) {
     const R = state.regions[regionId]!.recognition;
-    preview.fundsGain = Math.round((card.fundraising * skills.fundraising * (0.5 + R)) / 100) * 100;
+    // Donors tire of being asked: each earlier fundraiser this turn halves the next one.
+    const asks = state.eventHistory.filter((e) => e.turnNo === turnNo(state) && e.fundraiser).length;
+    preview.fundsGain = Math.round((card.fundraising * skills.fundraising * (0.5 + R) * FUNDRAISING_FATIGUE ** asks) / 100) * 100;
   }
   if (stance === undefined || (card.reach === 0 && card.persuasion === 0)) return preview;
 
@@ -171,9 +166,10 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
       rng: rng.state,
       regions,
       hand,
-      funds: state.funds - preview.cost + preview.fundsGain,
+      // Cards are paid for in the Market; playing one costs only energy.
+      funds: state.funds + preview.fundsGain,
       energy: state.energy - preview.card.energy,
-      eventHistory: preview.card.fundraising ? state.eventHistory : [...state.eventHistory, { turnNo: turnNo(state), regionId, issue }],
+      eventHistory: [...state.eventHistory, { turnNo: turnNo(state), regionId, issue, ...(preview.card.fundraising ? { fundraiser: true } : {}) }],
       log: [...state.log, { year: state.clock.year, turn: state.clock.turn, text }],
     },
   };

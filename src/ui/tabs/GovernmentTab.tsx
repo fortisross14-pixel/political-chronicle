@@ -5,6 +5,7 @@ import { CampaignPanel } from '../campaign/CampaignPanel';
 import { DecisionTray } from '../campaign/DecisionTray';
 import { ElectionResult } from '../campaign/ElectionResult';
 import { HandPanel } from '../campaign/HandPanel';
+import { MarketPanel } from '../campaign/MarketPanel';
 import { PlatformBuilder } from '../campaign/PlatformBuilder';
 import { RacePicker } from '../campaign/RacePicker';
 import { RegionPanel } from '../map/RegionPanel';
@@ -105,6 +106,7 @@ export function GovernmentTab({ state, dispatch }: Props) {
       {campaigning && (
         <HandPanel key={`${race!.officeId}-${race!.electionYear}`} state={state} dispatch={dispatch} regionId={selected} onRegionChange={setSelected} />
       )}
+      <MarketPanel state={state} dispatch={dispatch} />
     </div>
   );
 }

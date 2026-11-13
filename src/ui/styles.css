@@ -923,3 +923,38 @@ details summary {
   background: var(--panel);
   border-top: 1px solid var(--border);
 }
+
+/* Market (M4) */
+.market-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.market-card.skill {
+  border-color: #3b5a7a;
+}
+
+.market-card button {
+  margin-top: auto;
+}
+
+.kind {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.market-card.skill .kind {
+  color: #8ab4e8;
+}
+
+.income {
+  color: #5fd3b9;
+  font-weight: 500;
+}

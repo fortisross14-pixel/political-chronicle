@@ -7,4 +7,5 @@ export * from './opinion';
 export * from './events';
 export * from './decisions';
 export * from './campaign';
+export * from './economy';
 export { applyAction, endTurnBlocker } from './reducer';

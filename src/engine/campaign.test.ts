@@ -7,7 +7,7 @@ import {
   decided,
   decisionError,
   endTurnBlocker,
-  eventCost,
+  eventPrice,
   fileRaceError,
   getEventCardSafe,
   platformError,
@@ -108,23 +108,22 @@ describe('event cards', () => {
     return applyAction(s, { type: 'RESOLVE_DECISIONS', apply: [s.decisions!.cardIds[0]!] });
   }
 
-  it('a well-aligned town hall raises recognition and favorability, costs funds and energy', () => {
+  it('a well-aligned town hall raises recognition and favorability and costs only energy', () => {
     const s = resolved();
     const townHall = s.hand.find((c) => c.cardId === 'town_hall')!;
     const pv = previewEvent(s, townHall.uid, 'ny-north', 'guns');
     expect(pv.error).toBeUndefined();
-    expect(pv.cost).toBe(eventCost(getEventCardSafe('town_hall'), 'ny-north'));
     const { state: after } = playEvent(s, townHall.uid, 'ny-north', 'guns');
     expect(after.regions['ny-north']!.recognition).toBeGreaterThan(s.regions['ny-north']!.recognition);
     expect(after.regions['ny-north']!.favorability).toBeGreaterThan(s.regions['ny-north']!.favorability);
-    expect(after.funds).toBe(s.funds - pv.cost);
+    expect(after.funds).toBe(s.funds);
     expect(after.energy).toBe(s.energy - 2);
     expect(after.hand.find((c) => c.uid === townHall.uid)).toBeUndefined();
   });
 
   it('the same message backfires where voters disagree (spillover uses each region’s own view)', () => {
-    const s = resolved();
-    const cable = s.hand.find((c) => c.cardId === 'cable_interview')!;
+    const s = { ...resolved(), hand: [{ uid: 999, cardId: 'cable_interview' }] };
+    const cable = s.hand[0]!;
     const pv = previewEvent(s, cable.uid, 'ny-north', 'guns'); // gun rights +2
     const north = pv.effects.find((e) => e.regionId === 'ny-north')!;
     const nyc = pv.effects.find((e) => e.regionId === 'ny-nyc')!;
@@ -144,7 +143,8 @@ describe('event cards', () => {
 
   it('NYC media costs more than Watertown media', () => {
     const tv = getEventCardSafe('local_tv_ad');
-    expect(eventCost(tv, 'ny-nyc')).toBeGreaterThan(eventCost(tv, 'ny-north'));
+    const nyc = newRun({ politician: { ...newRun().politician, birthRegionId: 'ny-nyc' } });
+    expect(eventPrice(tv, nyc)).toBeGreaterThan(eventPrice(tv, newRun()));
   });
 
   it('basic cards are never consumed; call time raises money', () => {

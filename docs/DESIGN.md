@@ -256,9 +256,9 @@ turn they hold 2–3 events on their best-fitting topic. 40% of the time the mai
 an incumbent (+0.25 recognition, +0.3 utility). Opponent quality will scale with office
 level from M6.
 
-**Balance (M3, `npm run sim`)** — a simple sensible bot wins its hometown mayoral race about
-65% in Watertown, 78% in Buffalo and 49% in NYC; a bot that never campaigns wins 0%, and one
-that campaigns against its voters 0–24%.
+Opponents hold 2 events per turn (NYC's minor second candidate holds 1), each worth
+reach 0.06 and persuasion 0.055 × salience × alignment; mid-size and urban opponents start
+better known. See §9 for current win rates.
 
 ---
 
@@ -287,9 +287,15 @@ Played from your hand: **pick a region** (in the race's jurisdiction — later a
 | Fundraising dinner | $10k | 2 | inPerson | Fundraising | 0.02 | 0 | → +$ (Fundraising × recognition) |
 | Party unity event | $20k | 2 | inPerson | Negotiation | 0.05 | 0.03 | → +Party standing |
 
-**Prices** scale with the media market: rural ×0.6, midsize ×0.8, suburban ×1.0, urban ×1.5
-(an NYC TV buy costs $60k, a Watertown one $24k). Until the Market (M4), filing for a race deals
-a starter hand of 8 consumable cards.
+**You pay when you buy, not when you play.** The Cost column is the Market price; holding the
+event then costs only Energy. Prices scale with the media market of your race (or office, or
+hometown): rural ×0.6, midsize ×0.8, suburban ×1.0, urban ×1.5, so an NYC TV buy costs $60k and
+a Watertown one $24k. Filing for a race deals a free starter hand (town hall, radio interview,
+televised debate); debates are only ever dealt, never sold.
+
+The fundraising dinner raises `Fundraising × $4k × (0.5 + R)` and call time
+`Fundraising × $1.5k × (0.5 + R)`; each earlier fundraiser in the same turn halves the next
+(donors tire of being asked), and fundraisers don't tire voters of your topics.
 
 **Resolution** for the target region `r`, topic `i`, your stance `x`:
 
@@ -319,13 +325,16 @@ Bought in the Market, applied immediately, permanent.
 
 | Card | Effect | Cost |
 |---|---|---|
-| Speech coach | +1 Oratory | $15k × current level |
-| Improv & retail-politics workshop | +1 Charisma | $15k × level |
-| Media training | +1 Media Savvy | $15k × level |
-| Hire a digital director | +1 Digital, $5k/turn upkeep | $20k × level |
-| Think-tank fellowship | +1 Policy, costs 2 Energy this turn | $10k × level |
-| Mentorship with a party elder | +1 Negotiation, +5 party standing | requires party member |
-| Donor network gala | +1 Fundraising | $25k × level |
+| Speech coach | +1 Oratory | $5k × current level |
+| Retail-politics workshop | +1 Charisma, 1 Energy now | $5k × level |
+| Media training | +1 Media Savvy | $5k × level |
+| Hire a digital director | +1 Digital, $2k per 3 months salary (quits, taking the point, if unpaid) | $6k × level |
+| Think-tank fellowship | +1 Policy, costs 2 Energy this turn | $4k × level |
+| Mentorship with a party elder | +1 Negotiation, +5 party standing | requires party member (M6) |
+| Donor network gala | +1 Fundraising, 1 Energy now | $8k × level |
+
+(Prices cut to about a third of the first draft in M4 so a mayoral campaign budget of
+$20–70k can afford one or two.)
 
 Skill cards have a level cap per office (mayor ≤ 6, House ≤ 8, statewide ≤ 10) so growth
 is paced by career progress.
@@ -456,16 +465,24 @@ Competitive races get more money; safe seats and hopeless races get less.
 
 | Source | Formula (per turn) |
 |---|---|
-| Donors | `2k + 3k × Fundraising × Σ_r (R_r × pop_r) / statePop` (scaled ×3 statewide) |
-| Party | see §8.4 |
-| Fundraising dinner card | `Fundraising × 8k × R_region` |
-| Salary | small, flavour |
+| Donors | `(1k + 1.5k × Fundraising × R̄) × phase × monthsFactor`, where R̄ is your recognition averaged over the jurisdiction (pop × turnout); phase = 1 while running, 0.5 in office, 0.25 out of politics; ×3 for statewide jurisdictions |
+| Party | see §8.4 (M6) |
+| Fundraising events | dinner and call time, see §6.1 |
+| Salary | token: per 3 months mayor $1k, House $1.5k, Senate/Governor $2k |
+| Staff | − upkeep per 3 months |
 
-Spending: event cards, skill cards, staff upkeep. Funds carry over between races; a
-losing campaign that overspent leaves you broke for the next one.
+Income lands at the start of each turn (shown next to Funds in the header). Spending: event
+cards, skill cards, staff. Funds carry over between races; a losing campaign that overspent
+leaves you broke for the next one.
 
-Card Market: each turn shows **6 offers** (rotating) drawn from the event and skill
-pools, filtered by office level, plus the always-available Basic cards. Hand limit 8.
+Card Market: each turn shows **6 offers** — 2 skill cards (below your cap, party-only cards
+hidden from independents) and 4 event cards drawn by weight (town hall and radio most
+common, arena rally rarest) — plus the always-available Basic cards. Hand limit 8.
+
+**Balance (M4, `npm run sim`)** — sensible bot hometown mayoral win rates: Watertown ~70%,
+Buffalo ~80%, NYC ~57% (≈69% average; target 70% ±10). Over ~6 years a bot that invests in
+Fundraising reaches arena-rally money ($72k in Watertown) about 23% of the time vs ~0% for
+one that doesn't.
 
 ---
 

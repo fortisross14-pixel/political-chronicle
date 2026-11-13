@@ -54,6 +54,11 @@ export const EVENT_CARDS: EventCard[] = [
     description: 'Fill an arena. Expensive, exhausting, unforgettable.',
   },
   {
+    id: 'fundraising_dinner', name: 'Fundraising dinner', basic: false, cost: 10000, energy: 2, medium: 'inPerson', skills: ['fundraising'],
+    reach: 0.02, persuasion: 0, spillover: 0, gaffeRisk: false, fundraising: 4000,
+    description: 'Rubber chicken and big checks. Raises Fundraising × $4k × (0.5 + your local recognition).',
+  },
+  {
     id: 'debate', name: 'Televised debate', basic: false, cost: 0, energy: 2, medium: 'tv', skills: ['policy', 'oratory'],
     reach: 0.18, persuasion: 0.15, spillover: 0.6, gaffeRisk: true,
     description: 'Face your opponents live. High reward, real risk.',
@@ -64,8 +69,20 @@ export const EVENT_CARDS_BY_ID: Record<string, EventCard> = Object.fromEntries(E
 
 export const BASIC_CARD_IDS = EVENT_CARDS.filter((c) => c.basic).map((c) => c.id);
 
-/** Dealt when filing for a race, until the Market arrives (M4). */
-export const STARTER_HAND = ['town_hall', 'town_hall', 'radio_interview', 'local_tv_ad', 'cable_interview', 'social_campaign', 'podcast_tour', 'debate'];
+/** Dealt free when filing for a race; everything else is bought in the Market. */
+export const STARTER_HAND = ['town_hall', 'radio_interview', 'debate'];
+
+/** Relative chance of each card appearing in the Market. Debates are dealt, never sold. */
+export const MARKET_WEIGHTS: Record<string, number> = {
+  town_hall: 3,
+  radio_interview: 3,
+  local_tv_ad: 2,
+  cable_interview: 2,
+  social_campaign: 2,
+  podcast_tour: 2,
+  fundraising_dinner: 2,
+  arena_rally: 1,
+};
 
 /** Media markets differ in price: an ad in NYC costs far more than one in Watertown. */
 export const MARKET_COST_FACTOR: Record<RegionType, number> = {

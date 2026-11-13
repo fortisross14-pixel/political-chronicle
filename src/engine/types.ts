@@ -238,6 +238,30 @@ export interface DecisionHand {
   applied: string[];
 }
 
+export interface MarketOffer {
+  kind: 'event' | 'skill';
+  cardId: string;
+}
+
+export interface Market {
+  turnNo: number;
+  offers: MarketOffer[];
+}
+
+export interface StaffMember {
+  cardId: string;
+  skill: SkillId;
+  upkeep: number;
+}
+
+export interface IncomeBreakdown {
+  donors: number;
+  salary: number;
+  upkeep: number;
+  /** Staff who quit because you couldn't pay them. */
+  quit: string[];
+}
+
 // ---------- Elections ----------
 
 export interface ElectionCandidate {
@@ -287,6 +311,8 @@ export interface EventPlay {
   turnNo: number;
   regionId: RegionId;
   issue: IssueId;
+  /** Fundraisers don't tire voters of a topic, but they do tire donors. */
+  fundraiser?: boolean;
 }
 
 export interface GameState {
@@ -306,6 +332,11 @@ export interface GameState {
   hand: CardInstance[];
   nextCardUid: number;
   decisions?: DecisionHand;
+  market?: Market;
+  /** Hired staff from skill cards with upkeep. */
+  staff: StaffMember[];
+  /** Funds received/paid at the start of the current turn. */
+  lastIncome?: IncomeBreakdown;
   /** Recently dealt decision cards, to avoid repeats. */
   recentDecisionIds: string[];
   eventHistory: EventPlay[];
@@ -323,5 +354,6 @@ export type Action =
   | { type: 'SET_PLATFORM'; platform: Pledge[] }
   | { type: 'PLAY_EVENT'; cardUid: number | string; regionId: RegionId; issue: IssueId }
   | { type: 'RESOLVE_DECISIONS'; apply: string[] }
+  | { type: 'BUY_CARD'; offerIndex: number }
   | { type: 'DISMISS_RESULT' }
   | { type: 'RETIRE' };

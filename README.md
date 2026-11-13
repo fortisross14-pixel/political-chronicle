@@ -8,10 +8,10 @@ compared.
 - [Game design](docs/DESIGN.md)
 - [POC milestones](docs/MILESTONES.md)
 
-Status: **M3 (first playable) done** — run for mayor as an independent: pick a 5-topic
-platform, hold events (region + topic), back 1–3 decision cards per turn, watch the
-vote-intention map, face AI opponents and win or lose on Election Day. Next: M4 (economy,
-Market & skill growth).
+Status: **M4 (economy, Market & skill growth) done** — donor income and salary each turn,
+a 6-offer Market to buy event and skill cards (paid at purchase, played for energy), staff
+with salaries, fundraising dinners and call time, skill caps by office, and a balance pass
+measured by the bot. Next: M5 (governing).
 
 ## Development
 

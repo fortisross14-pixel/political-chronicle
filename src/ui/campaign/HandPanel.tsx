@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BASIC_CARD_IDS, getEventCard, getRegion, ISSUES_BY_ID, STATES } from '../../data';
-import { eventCost, previewEvent } from '../../engine';
+import { previewEvent } from '../../engine';
 import type { Action, EventCard, GameState, IssueId, RegionId } from '../../engine';
 import { money } from '../format';
 import { effectLabel, PRECISE_PREVIEW_POLICY, stanceLabel } from './labels';
@@ -48,7 +48,9 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
     <section className="panel">
       <div className="panel-head">
         <h2>Campaign events</h2>
-        <span className="muted small">Energy {state.energy} · Funds {money(state.funds)}</span>
+        <span className="muted small">
+          Energy {state.energy} · {state.hand.length} card{state.hand.length === 1 ? '' : 's'} in hand — buy more in the Market below
+        </span>
       </div>
       <div className="hand">
         {entries.map((e) => (
@@ -63,8 +65,8 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
               {e.count && e.count > 1 ? ` ×${e.count}` : ''}
             </span>
             <span className="muted small">
-              {MEDIUM_LABEL[e.card.medium]} · ⚡{e.card.energy} · {e.card.cost ? money(eventCost(e.card, regionId)) : 'free'}
-              {e.card.basic ? ' · basic' : ''}
+              {MEDIUM_LABEL[e.card.medium]} · ⚡{e.card.energy}
+              {e.card.basic ? ' · always available' : ' · one use'}
             </span>
           </button>
         ))}
@@ -128,7 +130,7 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
             disabled={!!preview.error}
             onClick={() => dispatch({ type: 'PLAY_EVENT', cardUid: entry.ref, regionId, issue })}
           >
-            Hold event ({preview.cost ? money(preview.cost) : 'free'}, ⚡{preview.energy})
+            Hold event (⚡{preview.energy})
           </button>
           {preview.error && <span className="muted small">{preview.error}</span>}
         </div>

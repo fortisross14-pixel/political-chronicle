@@ -1,11 +1,12 @@
 import { getOffice, getRegion, OFFICES, REGIONS } from '../data';
 import { fileRace } from './campaign';
+import { dealMarket } from './economy';
 import { poll } from './opinion';
 import { seedFromString } from './rng';
 import { nextElectionYear, turnsInYear } from './time';
 import type { Career, GameState, Politician, RegionId, RegionStanding, Skills, Snapshot } from './types';
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 export const MAX_AGE_ENDS_RUN = 85;
 export const DEFAULT_START_YEAR = 2027;
 
@@ -88,12 +89,13 @@ export function createRun(config: NewRunConfig): GameState {
     hand: [],
     nextCardUid: 1,
     recentDecisionIds: [],
+    staff: [],
     eventHistory: [],
     elections: [],
     snapshots: [],
     log: [{ year: startYear, turn: 0, text: `${politician.name} enters public life.` }],
   };
-  return raceOfficeId ? fileRace(base, raceOfficeId) : base;
+  return dealMarket(raceOfficeId ? fileRace(base, raceOfficeId) : base);
 }
 
 export function takeSnapshot(state: GameState): Snapshot {

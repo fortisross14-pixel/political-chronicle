@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { getBackground, getOffice, getRegion, ISSUES, ISSUES_BY_ID } from '../../data';
 import { stanceLabel } from '../campaign/labels';
 import { pct } from '../format';
-import { ageOf, energyForAge, SKILL_HINTS, SKILL_IDS, SKILL_LABELS } from '../../engine';
+import { getSkillCard } from '../../data';
+import { ageOf, energyForAge, skillCap, SKILL_HINTS, SKILL_IDS, SKILL_LABELS } from '../../engine';
+import { money } from '../format';
 import type { GameState } from '../../engine';
 
 type SubTab = 'overview' | 'skills' | 'ideals' | 'history' | 'stats';
@@ -73,6 +75,21 @@ export function ProfileTab({ state }: { state: GameState }) {
               </li>
             ))}
           </ul>
+          <p className="muted small">
+            Skill cards in the Market raise a skill by 1. At your current level you can train up to {skillCap(state)} (House: 8, Senate/Governor: 10).
+          </p>
+          {state.staff.length > 0 && (
+            <>
+              <h3>Staff</h3>
+              <ul>
+                {state.staff.map((m) => (
+                  <li key={m.cardId}>
+                    {getSkillCard(m.cardId).name.replace(/^Hire an? /, '')} — {money(m.upkeep)} per 3 months
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </section>
       )}
 

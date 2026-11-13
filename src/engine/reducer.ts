@@ -1,6 +1,7 @@
 import { getOffice } from '../data';
 import { fileRace, opponentsAct, resolveElection, setPlatform } from './campaign';
 import { dealDecisions, resolveDecisions } from './decisions';
+import { buyOffer, collectIncome, dealMarket } from './economy';
 import { playEvent } from './events';
 import { Rng } from './rng';
 import { ageOf, energyForAge, MAX_AGE_ENDS_RUN, takeSnapshot } from './run';
@@ -32,6 +33,8 @@ export function applyAction(state: GameState, action: Action): GameState {
       return playEvent(state, action.cardUid, action.regionId, action.issue).state;
     case 'RESOLVE_DECISIONS':
       return resolveDecisions(state, action.apply);
+    case 'BUY_CARD':
+      return buyOffer(state, action.offerIndex);
     case 'DISMISS_RESULT':
       return { ...state, pendingResult: undefined };
     case 'RETIRE':
@@ -78,5 +81,6 @@ function endTurn(state: GameState): GameState {
   if (s.career.office && !s.career.race && s.clock.turn === 0 && s.clock.year === s.career.office.termEndsYear) {
     s = { ...s, log: [...s.log, { year, turn, text: `Your term as ${getOffice(s.career.office.officeId).name} ends this year. Re-election arrives in M5.` }] };
   }
-  return s.ended ? { ...s, decisions: undefined } : dealDecisions(s);
+  if (s.ended) return { ...s, decisions: undefined, market: undefined };
+  return dealMarket(dealDecisions(collectIncome(s)));
 }

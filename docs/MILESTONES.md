@@ -65,7 +65,7 @@ election math.
 
 ---
 
-## M4 — Economy, Market & skill growth
+## M4 — Economy, Market & skill growth ✅ done
 
 **Goal:** money becomes the engine of choices.
 
