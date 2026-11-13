@@ -1,8 +1,8 @@
-import { getOffice } from '../data';
 import { fileRace, opponentsAct, resolveElection, setPlatform } from './campaign';
 import { dealDecisions, resolveDecisions } from './decisions';
 import { buyOffer, collectIncome, dealMarket } from './economy';
 import { playEvent } from './events';
+import { governTick, isReelectionYear } from './governing';
 import { Rng } from './rng';
 import { ageOf, energyForAge, MAX_AGE_ENDS_RUN, takeSnapshot } from './run';
 import { isElectionTurn, monthsPerTurn, turnsInYear } from './time';
@@ -78,9 +78,9 @@ function endTurn(state: GameState): GameState {
       log: [...s.log, { year, turn, text: `At ${Math.floor(age)}, it is time to step away from public life.` }],
     };
   }
-  if (s.career.office && !s.career.race && s.clock.turn === 0 && s.clock.year === s.career.office.termEndsYear) {
-    s = { ...s, log: [...s.log, { year, turn, text: `Your term as ${getOffice(s.career.office.officeId).name} ends this year. Re-election arrives in M5.` }] };
-  }
   if (s.ended) return { ...s, decisions: undefined, market: undefined };
-  return dealMarket(dealDecisions(collectIncome(s)));
+  s = governTick(collectIncome(s));
+  // The last year of a term opens the re-election campaign (or retire instead).
+  if (s.career.office && !s.career.race && s.clock.turn === 0 && isReelectionYear(s)) s = fileRace(s, s.career.office.officeId);
+  return dealMarket(dealDecisions(s));
 }

@@ -179,10 +179,29 @@ export interface Race {
   opponents: Candidate[];
 }
 
+export interface OfficeTerm {
+  officeId: OfficeId;
+  /** Year of the election that ends this term. */
+  termEndsYear: number;
+  /** Job approval per region of the jurisdiction, 0..1. */
+  approval: Record<RegionId, number>;
+  /** The platform you won on: what your promises are judged against. */
+  platform: Pledge[];
+  startedYear: number;
+}
+
+export interface PromiseEvent {
+  year: number;
+  turn: number;
+  title: string;
+  issue: IssueId;
+  kept: boolean;
+}
+
 export interface Career {
   affiliation: Affiliation;
   /** Office currently held, if any. */
-  office?: { officeId: OfficeId; termEndsYear: number };
+  office?: OfficeTerm;
   /** Race the player is currently running in, if any. */
   race?: Race;
   /** Elections lost in a row while out of office. */
@@ -297,6 +316,8 @@ export interface Snapshot {
   raceOfficeId?: OfficeId;
   /** Player's share of decided voters in the race's jurisdiction, if campaigning. */
   poll?: number;
+  /** Average job approval across the jurisdiction, if in office. */
+  approval?: number;
   partyStanding?: number;
   regions: Record<RegionId, RegionStanding>;
 }
@@ -341,6 +362,8 @@ export interface GameState {
   recentDecisionIds: string[];
   eventHistory: EventPlay[];
   elections: ElectionRecord[];
+  /** Every applied decision that kept or broke a platform promise. */
+  promises: PromiseEvent[];
   /** Index into `elections` of a result the player hasn't dismissed yet. */
   pendingResult?: number;
   ended?: { reason: 'retired' | 'losses' | 'age'; year: number };

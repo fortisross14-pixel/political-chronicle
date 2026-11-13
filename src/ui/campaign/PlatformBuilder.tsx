@@ -11,7 +11,10 @@ export function PlatformBuilder({ state, dispatch }: { state: GameState; dispatc
   const race = state.career.race!;
   const office = getOffice(race.officeId);
   const weights = regionWeights(race.officeId);
-  const [picks, setPicks] = useState<Partial<Record<IssueId, number>>>({});
+  const incumbent = state.career.office?.officeId === race.officeId ? state.career.office : undefined;
+  const [picks, setPicks] = useState<Partial<Record<IssueId, number>>>(() =>
+    incumbent ? Object.fromEntries(incumbent.platform.map((p) => [p.issue, p.stance])) : {},
+  );
 
   const avg = (issue: IssueId, key: 'issueOpinion' | 'issueSalience') =>
     office.regionIds.reduce((sum, id) => sum + getRegion(id)[key][issue] * weights[id]!, 0);
@@ -25,11 +28,14 @@ export function PlatformBuilder({ state, dispatch }: { state: GameState; dispatc
   return (
     <section className="panel">
       <div className="panel-head">
-        <h2>Your platform — {office.name}</h2>
+        <h2>{incumbent ? 'Re-election platform' : 'Your platform'} — {office.name}</h2>
         <span className={full ? 'muted' : 'points-left'}>
           {platform.length}/{MAX_PLATFORM} topics
         </span>
       </div>
+      {incumbent && (
+        <p className="small">Pre-filled with the platform you won on. Changing sides on a topic reads as a flip-flop.</p>
+      )}
       <p className="muted small">
         Pick up to {MAX_PLATFORM} topics and a side on each. Every event you hold is about one of them, and the decisions you take will be judged
         against these promises. Sorted by how much {office.regionIds.length === 1 ? getRegion(office.regionIds[0]!).seatCity : 'the electorate'}{' '}

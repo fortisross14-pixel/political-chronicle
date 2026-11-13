@@ -186,7 +186,8 @@ describe('Election Day', () => {
       const s = applyAction(playCampaign(newRun({ seed: `e-${i}` }), 'sensible').state, { type: 'DISMISS_RESULT' });
       if (s.elections[0]!.playerWon) {
         won = true;
-        expect(s.career.office).toEqual({ officeId: 'mayor-watertown', termEndsYear: 2031 });
+        expect(s.career.office).toMatchObject({ officeId: 'mayor-watertown', termEndsYear: 2031, startedYear: 2028 });
+        expect(s.career.office!.approval['ny-north']).toBeGreaterThan(0.3);
       } else {
         lost = true;
         expect(s.career.office).toBeUndefined();

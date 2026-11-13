@@ -43,6 +43,8 @@ export const VOTE_WEIGHTS = {
   liked: 1.6,
   known: 0.6,
   incumbent: 0.3,
+  /** An incumbent with a job-approval record is judged on it instead: weight × (approval − 0.5). */
+  approval: 2,
   /** Party fit matters less in nonpartisan mayoral races. */
   partyNonpartisan: 0.4,
   partyPartisan: 1.2,
@@ -57,6 +59,8 @@ export interface VoterView {
   lean: number;
   affiliation: Affiliation;
   incumbent: boolean;
+  /** Job approval in this region, when the candidate is the sitting officeholder with a record. */
+  approval?: number;
 }
 
 export function utility(view: VoterView, regionId: RegionId, level: OfficeLevel, partisan: boolean): number {
@@ -68,7 +72,7 @@ export function utility(view: VoterView, regionId: RegionId, level: OfficeLevel,
     w.liked * F * R +
     w.known * R +
     (partisan ? w.partyPartisan : w.partyNonpartisan) * partyFit +
-    (view.incumbent ? w.incumbent : 0) -
+    (view.approval !== undefined ? w.approval * (view.approval - 0.5) : view.incumbent ? w.incumbent : 0) -
     indep
   );
 }
@@ -96,6 +100,7 @@ export function raceViews(state: GameState, race: Race, regionId: RegionId): Vot
     lean: affiliationLean(state.career.affiliation),
     affiliation: state.career.affiliation,
     incumbent: state.career.office?.officeId === race.officeId,
+    approval: state.career.office?.officeId === race.officeId ? state.career.office.approval[regionId] : undefined,
   };
   return [player, ...race.opponents.map((c) => candidateView(c, regionId))];
 }

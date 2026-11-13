@@ -1,12 +1,13 @@
 import { getOffice, getRegion, OFFICES, REGIONS } from '../data';
 import { fileRace } from './campaign';
 import { dealMarket } from './economy';
+import { averageApproval } from './governing';
 import { poll } from './opinion';
 import { seedFromString } from './rng';
 import { nextElectionYear, turnsInYear } from './time';
 import type { Career, GameState, Politician, RegionId, RegionStanding, Skills, Snapshot } from './types';
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 export const MAX_AGE_ENDS_RUN = 85;
 export const DEFAULT_START_YEAR = 2027;
 
@@ -92,6 +93,7 @@ export function createRun(config: NewRunConfig): GameState {
     staff: [],
     eventHistory: [],
     elections: [],
+    promises: [],
     snapshots: [],
     log: [{ year: startYear, turn: 0, text: `${politician.name} enters public life.` }],
   };
@@ -112,6 +114,7 @@ export function takeSnapshot(state: GameState): Snapshot {
     officeId: state.career.office?.officeId,
     raceOfficeId: state.career.race?.officeId,
     poll: state.career.race?.platform.length ? poll(state, state.career.race).decided[0] : undefined,
+    approval: averageApproval(state),
     regions: Object.fromEntries(Object.entries(state.regions).map(([id, s]) => [id, { ...s }])),
   };
 }

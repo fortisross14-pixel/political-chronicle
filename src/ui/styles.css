@@ -958,3 +958,29 @@ details summary {
   color: #5fd3b9;
   font-weight: 500;
 }
+
+/* Office (M5) */
+.approval-row {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 1.25rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.big-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.approval-regions {
+  display: grid;
+  gap: 0.3rem;
+}
+
+@media (max-width: 640px) {
+  .approval-row {
+    grid-template-columns: 1fr;
+  }
+}

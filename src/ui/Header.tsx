@@ -1,5 +1,5 @@
 import { getOffice } from '../data';
-import { ageOf, endTurnBlocker, isElectionYear, turnLabel } from '../engine';
+import { ageOf, averageApproval, endTurnBlocker, isElectionYear, turnLabel } from '../engine';
 import type { GameState } from '../engine';
 import { money } from './format';
 
@@ -14,8 +14,9 @@ export function Header({ state, onEndTurn, onMainMenu, onAbandon }: Props) {
   const { clock, career, politician } = state;
   const electionYear = isElectionYear(career, clock.year);
   const blocker = endTurnBlocker(state);
+  const approval = averageApproval(state);
   const status = career.office
-    ? getOffice(career.office.officeId).name
+    ? `${getOffice(career.office.officeId).name} · ${Math.round(approval! * 100)}% approval${career.race ? ' · running again' : ''}`
     : career.race
       ? `Candidate · ${getOffice(career.race.officeId).name}`
       : 'Private citizen';

@@ -8,10 +8,10 @@ compared.
 - [Game design](docs/DESIGN.md)
 - [POC milestones](docs/MILESTONES.md)
 
-Status: **M4 (economy, Market & skill growth) done** — donor income and salary each turn,
-a 6-offer Market to buy event and skill cards (paid at purchase, played for energy), staff
-with salaries, fundraising dinners and call time, skill caps by office, and a balance pass
-measured by the bot. Next: M5 (governing).
+Status: **M5 (governing) done** — win and you govern: 33 mayoral bills and executive actions,
+job approval by region that wears down over time, promises judged against the platform you
+won on, events in office, and an automatic re-election campaign where incumbents are judged
+on approval. Next: M6 (parties & the climb to Governor).
 
 ## Development
 

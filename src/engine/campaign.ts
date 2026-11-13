@@ -3,6 +3,7 @@ import { FIRST_NAMES, getOffice, getRegion, LAST_NAMES, OFFICES, REGIONS, STARTE
 import { dealDecisions } from './decisions';
 import { clamp, decided, nudgeFavorability, nudgeRecognition, poll, raceViews, regionAlignment, regionIntention, regionWeights, relevance } from './opinion';
 import { Rng } from './rng';
+import { newTerm } from './governing';
 import { nextElectionYear, turnsInYear } from './time';
 import type { Affiliation, Candidate, ElectionRecord, GameState, IssueId, OfficeId, Pledge, Race, RegionId } from './types';
 
@@ -17,6 +18,8 @@ export const OPPONENT = {
   recognitionSpread: 0.15,
   incumbentChance: 0.4,
   incumbentRecognition: 0.25,
+  /** Whoever takes on a sitting mayor is a serious, well-known challenger. */
+  challengerRecognition: 0.25,
   baseFavorability: 0.05,
   favorabilitySpread: 0.1,
   incumbentFavorability: 0.05,
@@ -55,7 +58,9 @@ export function raceOptions(state: GameState): RaceOption[] {
 export function fileRaceError(state: GameState, officeId: OfficeId): string | undefined {
   if (state.ended) return 'Your career is over.';
   if (state.career.race) return 'You are already running.';
-  if (state.career.office) return 'Running from office arrives in M5.';
+  const held = state.career.office;
+  if (held && held.officeId !== officeId) return 'Running for a different office needs a party (M6).';
+  if (held && state.clock.year !== held.termEndsYear) return `Re-election opens in ${held.termEndsYear}.`;
   if (state.pendingResult !== undefined) return 'Review the last election first.';
   const option = raceOptions(state).find((o) => o.officeId === officeId);
   if (!option) return 'That office is not available.';
@@ -78,7 +83,7 @@ function opponentPlatform(rng: Rng, regionId: RegionId, lean: number, level: Ret
   });
 }
 
-export function generateOpponents(rng: Rng, officeId: OfficeId): Candidate[] {
+export function generateOpponents(rng: Rng, officeId: OfficeId, playerIsIncumbent = false): Candidate[] {
   const office = getOffice(officeId);
   const seat = getRegion(office.regionIds[0]!);
   const count = office.level === 'mayor' && seat.type === 'urban' ? 2 : 1;
@@ -94,7 +99,7 @@ export function generateOpponents(rng: Rng, officeId: OfficeId): Candidate[] {
     const regionSide = Math.abs(seat.partisanLean) > 0.15 ? Math.sign(seat.partisanLean) : rng.chance(0.5) ? 1 : -1;
     const lean = i === 0 ? regionSide : -regionSide * (rng.chance(0.5) ? 1 : 0.5);
     const affiliation: Affiliation = office.partisan ? (lean < 0 ? 'DU' : 'RP') : 'IND';
-    const incumbent = i === 0 && rng.chance(OPPONENT.incumbentChance);
+    const incumbent = !playerIsIncumbent && i === 0 && rng.chance(OPPONENT.incumbentChance);
 
     const regions: Candidate['regions'] = {};
     for (const r of REGIONS) {
@@ -102,7 +107,7 @@ export function generateOpponents(rng: Rng, officeId: OfficeId): Candidate[] {
       regions[r.id] = inRace
         ? {
             recognition: clamp(
-              OPPONENT.baseRecognition + rng.float() * OPPONENT.recognitionSpread + (incumbent ? OPPONENT.incumbentRecognition : 0) + (seat.type === 'urban' || seat.type === 'midsize' ? 0.06 : 0) - (i > 0 ? 0.12 : 0),
+              OPPONENT.baseRecognition + rng.float() * OPPONENT.recognitionSpread + (incumbent ? OPPONENT.incumbentRecognition : 0) + (playerIsIncumbent && i === 0 ? OPPONENT.challengerRecognition : 0) + (seat.type === 'urban' || seat.type === 'midsize' ? 0.06 : 0) - (i > 0 ? 0.12 : 0),
               0,
               0.95,
             ),
@@ -118,7 +123,7 @@ export function generateOpponents(rng: Rng, officeId: OfficeId): Candidate[] {
       lean: Math.round(lean * 10) / 10,
       platform: opponentPlatform(rng, seat.id, lean, office.level),
       incumbent,
-      activity: seat.type === 'urban' && i > 0 ? 1 : 2,
+      activity: (seat.type === 'urban' && i > 0 ? 1 : 2) + (playerIsIncumbent && i === 0 ? 1 : 0),
       regions,
     });
   }
@@ -168,7 +173,7 @@ export function fileRace(state: GameState, officeId: OfficeId): GameState {
     officeId,
     electionYear: electionYearIfFiled(state, officeId),
     platform: [],
-    opponents: generateOpponents(rng, officeId),
+    opponents: generateOpponents(rng, officeId, state.career.office?.officeId === officeId),
   };
   const career = { ...state.career, race };
   // At the start of a year the calendar can still become a 4-turn election year.
@@ -182,7 +187,17 @@ export function fileRace(state: GameState, officeId: OfficeId): GameState {
     career,
     hand: [...state.hand, ...dealt],
     nextCardUid: uid,
-    log: [...state.log, { year: clock.year, turn: clock.turn, text: `Filed as an independent for ${getOffice(officeId).name} (${race.electionYear}).` }],
+    log: [
+      ...state.log,
+      {
+        year: clock.year,
+        turn: clock.turn,
+        text:
+          state.career.office?.officeId === officeId
+            ? `Running for re-election as ${getOffice(officeId).name} (${race.electionYear}).`
+            : `Filed as an independent for ${getOffice(officeId).name} (${race.electionYear}).`,
+      },
+    ],
   };
 }
 
@@ -248,8 +263,13 @@ export function resolveElection(state: GameState, rng: Rng): GameState {
   const career = {
     ...rest,
     lossStreak,
-    ...(playerWon ? { office: { officeId: race.officeId, termEndsYear: race.electionYear + office.termYears } } : {}),
+    office: playerWon
+      ? newTerm(race.officeId, race.electionYear, regionShares, race.platform)
+      : rest.office?.officeId === race.officeId
+        ? undefined // voted out
+        : rest.office,
   };
+  if (!career.office) delete career.office;
   const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
   const text = playerWon
     ? `Elected ${office.name} with ${pct(totalShares[0]!)}!`

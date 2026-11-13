@@ -4,10 +4,11 @@ import type { GameState, RegionId } from '../../engine';
 import { favorabilityColor, leanColor, recognitionColor } from './colors';
 import { NY_SHAPES, NY_VIEWBOX } from './nyShapes';
 
-export type MapLayer = 'vote' | 'lean' | 'recognition' | 'favorability';
+export type MapLayer = 'vote' | 'approval' | 'lean' | 'recognition' | 'favorability';
 
 export const MAP_LAYERS: { id: MapLayer; label: string }[] = [
   { id: 'vote', label: 'Vote intention' },
+  { id: 'approval', label: 'Job approval' },
   { id: 'lean', label: 'Partisan lean' },
   { id: 'recognition', label: 'Your recognition' },
   { id: 'favorability', label: 'Your favorability' },
@@ -31,6 +32,10 @@ export function StateMap({ state, layer, selected, onSelect }: Props) {
       const d = decided(shares);
       return favorabilityColor((d[0]! - Math.max(...d.slice(1))) * 2);
     }
+    if (layer === 'approval') {
+      const a = state.career.office?.approval[id];
+      return a === undefined ? '#253247' : favorabilityColor((a - 0.5) * 3);
+    }
     if (layer === 'lean') return leanColor(getRegion(id).partisanLean);
     const you = state.regions[id]!;
     return layer === 'recognition' ? recognitionColor(you.recognition) : favorabilityColor(you.favorability);
@@ -48,7 +53,7 @@ export function StateMap({ state, layer, selected, onSelect }: Props) {
         return (
           <g
             key={id}
-            className={`map-region${isSelected ? ' selected' : ''}${layer === 'vote' && !inRace(id) ? ' dim' : ''}`}
+            className={`map-region${isSelected ? ' selected' : ''}${(layer === 'vote' && !inRace(id)) || (layer === 'approval' && state.career.office?.approval[id] === undefined) ? ' dim' : ''}`}
             role="button"
             tabIndex={0}
             aria-pressed={isSelected}
@@ -68,6 +73,11 @@ export function StateMap({ state, layer, selected, onSelect }: Props) {
             <text x={shape.label.x} y={shape.label.y} className="map-label" textAnchor="middle">
               {region.seatCity === 'New York City' ? 'NYC' : region.seatCity}
             </text>
+            {layer === 'approval' && state.career.office?.approval[id] !== undefined && (
+              <text x={shape.label.x} y={shape.label.y + 14} className="map-label sub" textAnchor="middle">
+                {Math.round(state.career.office.approval[id]! * 100)}% approve
+              </text>
+            )}
             {layer === 'vote' && intention[id] && (
               <text x={shape.label.x} y={shape.label.y + 14} className="map-label sub" textAnchor="middle">
                 You {Math.round(decided(intention[id]!)[0]! * 100)}%

@@ -47,7 +47,7 @@ export function ElectionResult({ election, dispatch }: { election: ElectionRecor
       )}
       <p className="small">
         {election.playerWon
-          ? 'You take office in January. Governing — bills, approval and re-election — arrives in M5; for now the term simply runs.'
+          ? 'You take office in January. Bills land on your desk every turn; keep your promises and your approval up — at re-election you are judged on both.'
           : 'You can try again next cycle, run for a different office, or retire.'}
       </p>
       <button className="primary" onClick={() => dispatch({ type: 'DISMISS_RESULT' })}>

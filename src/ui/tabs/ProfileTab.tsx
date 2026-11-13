@@ -107,7 +107,7 @@ export function ProfileTab({ state }: { state: GameState }) {
                 ))}
               </ul>
             </>
-          ) : (
+          ) : state.career.office ? null : (
             <p className="muted small">No active platform.</p>
           )}
           <h3>Public record</h3>
@@ -128,6 +128,39 @@ export function ProfileTab({ state }: { state: GameState }) {
           </ul>
           {Object.keys(state.record).length === 0 && <p className="muted">No record yet.</p>}
           <p className="small">Integrity: {state.integrity}/100</p>
+          {state.career.office && (
+            <>
+              <h3>Platform you won on — {getOffice(state.career.office.officeId).name}</h3>
+              <ul>
+                {state.career.office.platform.map((p) => (
+                  <li key={p.issue}>
+                    <strong>{ISSUES_BY_ID[p.issue].name}:</strong> {stanceLabel(p.issue, p.stance)}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          <h3>Promises</h3>
+          {state.promises.length === 0 ? (
+            <p className="muted small">Nothing you've backed has touched a promise yet.</p>
+          ) : (
+            <>
+              <p className="small">
+                <span className="pos">{state.promises.filter((p) => p.kept).length} kept</span> ·{' '}
+                <span className="neg">{state.promises.filter((p) => !p.kept).length} broken</span>
+              </p>
+              <ul className="log">
+                {[...state.promises].reverse().map((p, i) => (
+                  <li key={i}>
+                    <span className="muted">
+                      {p.year} T{p.turn + 1}
+                    </span>{' '}
+                    <span className={p.kept ? 'pos' : 'neg'}>{p.kept ? 'Kept' : 'Broke'}</span> your {ISSUES_BY_ID[p.issue].name} promise — “{p.title}”
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </section>
       )}
 

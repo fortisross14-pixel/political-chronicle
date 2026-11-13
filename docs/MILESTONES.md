@@ -82,7 +82,7 @@ hometown) within ±10%.
 
 ---
 
-## M5 — Governing: decision cards in office
+## M5 — Governing: decision cards in office ✅ done
 
 **Goal:** winning leads to a meaningful term, not a victory screen.
 

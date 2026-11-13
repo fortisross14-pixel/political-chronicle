@@ -9,13 +9,15 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
   const hand = state.decisions!;
   const [chosen, setChosen] = useState<string[]>([]);
   const precise = state.politician.skills.policy >= PRECISE_PREVIEW_POLICY;
+  const inOffice = !!state.career.office;
+  const title = inOffice ? 'Bills on your desk' : 'Decisions this turn';
 
   if (hand.resolved) {
     return (
       <section className="panel">
-        <h2>Decisions this turn</h2>
+        <h2>{title}</h2>
         <p className="muted small">
-          You backed {hand.applied.map((id) => `“${getDecisionCard(id).title}”`).join(', ')}. New cards next turn.
+          You {inOffice ? 'signed' : 'backed'} {hand.applied.map((id) => `“${getDecisionCard(id).title}”`).join(', ')}. New cards next turn.
         </p>
       </section>
     );
@@ -25,15 +27,23 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
   return (
     <section className="panel">
       <div className="panel-head">
-        <h2>Decisions this turn</h2>
-        <span className="muted small">Back 1–{DECISIONS_PER_TURN}; the rest are declined.</span>
+        <h2>{title}</h2>
+        <span className="muted small">
+          {inOffice ? `Sign 1–${DECISIONS_PER_TURN}; the rest are shelved.` : `Back 1–${DECISIONS_PER_TURN}; the rest are declined.`}
+        </span>
       </div>
       <div className="decision-grid">
         {hand.cardIds.map((id) => {
           const card = getDecisionCard(id);
           const impact = decisionImpact(state, card);
           const on = chosen.includes(id);
-          const regions = Object.entries(impact.favorability).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+          // Approval first (in office), then how the rest of the state hears it.
+          const regions: [string, number, string][] = [
+            ...Object.entries(impact.approval).map(([r, v]) => [r, v, 'approval'] as [string, number, string]),
+            ...Object.entries(impact.favorability)
+              .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+              .map(([r, v]) => [r, v, ''] as [string, number, string]),
+          ];
           return (
             <article key={id} className={on ? 'decision-card on' : 'decision-card'}>
               <h3>{card.title}</h3>
@@ -46,9 +56,12 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
                 ))}
               </ul>
               <dl className="kv small">
-                {regions.slice(0, 4).map(([r, v]) => (
+                {regions.slice(0, 4).map(([r, v, kind]) => (
                   <div key={r} className="kv-row">
-                    <dt>{getRegion(r).seatCity}</dt>
+                    <dt>
+                      {getRegion(r).seatCity}
+                      {kind && ' approval'}
+                    </dt>
                     <dd className={v >= 0 ? 'pos' : 'neg'}>{effectLabel(v, precise)}</dd>
                   </div>
                 ))}
@@ -67,13 +80,13 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
               </dl>
               {impact.promisesKept.length > 0 && <p className="fit good small">Keeps a campaign promise</p>}
               {impact.promisesBroken.length > 0 && <p className="fit bad small">Breaks a campaign promise</p>}
-              {card.rejectCost && <p className="muted small">Declining costs you some goodwill.</p>}
+              {card.rejectCost && <p className="muted small">{inOffice ? 'Shelving this will cost approval.' : 'Declining costs you some goodwill.'}</p>}
               <button
                 className={on ? 'primary' : undefined}
                 aria-pressed={on}
                 onClick={() => setChosen(on ? chosen.filter((c) => c !== id) : [...chosen, id])}
               >
-                {on ? 'Backing ✓' : 'Back this'}
+                {on ? (inOffice ? 'Signing ✓' : 'Backing ✓') : inOffice ? 'Sign this' : 'Back this'}
               </button>
             </article>
           );

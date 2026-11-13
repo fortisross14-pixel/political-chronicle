@@ -2,7 +2,7 @@
 import { BACKGROUNDS } from '../src/data';
 import { getEventCard } from '../src/data';
 import { buildRunConfig, createRun, eventPrice } from '../src/engine';
-import { botCharacter, careerFunds, hometownWinRate } from '../src/sim/bot';
+import { botCharacter, careerFunds, hometownWinRate, reelectionRate } from '../src/sim/bot';
 import type { BotStyle } from '../src/sim/bot';
 
 const runs = Number(process.argv[2] ?? 200);
@@ -35,4 +35,12 @@ for (const style of ['sensible', 'investor'] as BotStyle[]) {
     if (r.peak >= rallyPrice) rally++;
   }
   console.log(`${style.padEnd(10)} Fundraising ${(fr / n).toFixed(1)}  avg funds $${Math.round(funds / n / 1000)}k  could afford a $${rallyPrice / 1000}k rally: ${pct(rally / n)}`);
+}
+
+console.log('\nRe-election after a first term (sensible campaigns, governing style varies)');
+for (const home of ['ny-north', 'ny-wny']) {
+  for (const style of ['sensible', 'flipflop'] as BotStyle[]) {
+    const r = reelectionRate(botCharacter(home), style, Math.max(60, runs / 2));
+    console.log(`${home.padEnd(9)} ${style.padEnd(9)} re-elected ${pct(r.reelected)} of ${r.terms} terms  approval at filing ${pct(r.avgApproval)}  integrity ${Math.round(r.integrity)}`);
+  }
 }

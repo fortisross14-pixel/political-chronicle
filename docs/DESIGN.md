@@ -238,7 +238,8 @@ original `/ 2` let a stance on the wrong side of a moderate region still help.)
 U(candidate, r) = 1.6·F·R            // being known & liked
                 + 0.6·R              // familiarity / viability
                 + 1.2·partyFit       // DU: −lean, RP: +lean, Independent: 0
-                + 0.3·incumbent
+                + 0.3·incumbent      // AI incumbents; a player incumbent instead gets
+                                     // 2·(approval − 0.5): judged on the record
                 − indepPenalty(office)  // 0 mayor, 0.3 House, 0.5 statewide
 
 share(c, r) = softmax over candidates of U / τ  (τ ≈ 0.5), with an "undecided" option
@@ -341,7 +342,7 @@ is paced by career progress.
 
 ### 6.3 Decision cards (3 per turn)
 
-every turn you are dealt **3 decision cards**. You must **apply at least 1 and up to 3**;
+Every turn you are dealt **3 decision cards**. You must **apply at least 1 and up to 3**;
 the rest are rejected. You cannot pass.
 
 - **While campaigning** they are *campaign moments*: interest-group questionnaires,
@@ -375,6 +376,33 @@ interface DecisionCard {
 
 **Rejecting** is neutral except for `rejectCost` cards. Choosing *which* card to apply is
 the puzzle: 3 bad options means picking the least bad one.
+
+### 6.4 Governing (M5)
+
+In office, decision cards are bills and executive actions (33 for mayors: budgets, police,
+zoning, transit, plants and pipelines, schools, social issues, crises such as a blizzard or
+a burst water main, and ethics calls). They move **job approval** in your jurisdiction
+instead of favorability; the rest of the state still hears them (30% favorability spillover).
+
+- **Approval** starts at `0.5 + (vote share − 0.5) × 0.6 + 0.08` (honeymoon), clamped 0.3–0.8.
+  Each signed bill moves it by `0.04 × Σ salience × alignment × relevance`, with diminishing
+  returns; shelving a crisis card costs its `rejectCost` in approval.
+- **Promises** are judged against the platform you won on: kept +0.02 approval and +2
+  integrity; broken −0.08 approval and −5 integrity. Every kept/broken promise is logged.
+- **Wear**: approval loses 0.025 per 3 months on its own — governing is hard.
+- **Favorability follows approval**: each turn F moves 25% of the way toward
+  `(approval − 0.5) × 1.5 + (integrity − 50) / 250`.
+- **Events in office** use the platform you won on and move approval by half their
+  favorability effect.
+- **Re-election** opens automatically at the start of the term's last year (a 4-turn year);
+  the platform builder is pre-filled with your winning platform. You keep governing while
+  you campaign. The main challenger of a sitting mayor starts better known (+0.25) and
+  campaigns harder (+1 event per turn). Losing ends the term.
+
+**Balance (M5, `npm run sim`)** — re-election after a first term: a bot that keeps its
+promises is re-elected ~100% (approval ~62% at filing); one that signs promise-breaking
+bills ~2% in Watertown and ~32% in moderate Buffalo (approval 31–42%). Random events and
+scandals (post-POC) should make safe incumbents less certain.
 
 ---
 

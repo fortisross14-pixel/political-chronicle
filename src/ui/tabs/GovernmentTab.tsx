@@ -6,6 +6,7 @@ import { DecisionTray } from '../campaign/DecisionTray';
 import { ElectionResult } from '../campaign/ElectionResult';
 import { HandPanel } from '../campaign/HandPanel';
 import { MarketPanel } from '../campaign/MarketPanel';
+import { OfficePanel } from '../campaign/OfficePanel';
 import { PlatformBuilder } from '../campaign/PlatformBuilder';
 import { RacePicker } from '../campaign/RacePicker';
 import { RegionPanel } from '../map/RegionPanel';
@@ -21,11 +22,16 @@ export function GovernmentTab({ state, dispatch }: Props) {
   const ny = STATES.NY!;
   const race = state.career.race;
   const campaigning = !!race?.platform.length;
-  const [layer, setLayer] = useState<MapLayer>(campaigning ? 'vote' : 'lean');
+  const inOffice = !!state.career.office;
+  const canHoldEvents = campaigning || (inOffice && !race);
+  const [layer, setLayer] = useState<MapLayer>(campaigning ? 'vote' : inOffice ? 'approval' : 'lean');
   const [selected, setSelected] = useState<RegionId>(race ? getOffice(race.officeId).regionIds[0]! : state.politician.birthRegionId);
   useEffect(() => {
     if (campaigning) setLayer('vote');
-  }, [campaigning]);
+    else if (inOffice) setLayer('approval');
+  }, [campaigning, inOffice]);
+  const available = MAP_LAYERS.filter((l) => (l.id !== 'vote' || campaigning) && (l.id !== 'approval' || inOffice));
+  const shownLayer = available.some((l) => l.id === layer) ? layer : 'lean';
   const pending = state.pendingResult !== undefined ? state.elections[state.pendingResult] : undefined;
 
   const map = (
@@ -33,7 +39,7 @@ export function GovernmentTab({ state, dispatch }: Props) {
       <div className="panel-head">
         <h2>{ny.name}</h2>
         <div className="segmented" role="radiogroup" aria-label="Map layer">
-          {MAP_LAYERS.filter((l) => l.id !== 'vote' || campaigning).map((l) => (
+          {available.map((l) => (
             <button
               key={l.id}
               role="radio"
@@ -48,10 +54,11 @@ export function GovernmentTab({ state, dispatch }: Props) {
       </div>
       <div className="map-layout">
         <div>
-          <StateMap state={state} layer={layer === 'vote' && !campaigning ? 'lean' : layer} selected={selected} onSelect={setSelected} />
+          <StateMap state={state} layer={shownLayer} selected={selected} onSelect={setSelected} />
           <p className="muted small">
             Schematic map, not to scale. Click a region for details.
-            {layer === 'vote' && ' Teal: you lead the field there; orange: you trail.'}
+            {shownLayer === 'vote' && ' Teal: you lead the field there; orange: you trail.'}
+            {shownLayer === 'approval' && ' Teal: voters approve of your job; orange: they don’t.'}
           </p>
         </div>
         <RegionPanel state={state} regionId={selected} />
@@ -91,20 +98,18 @@ export function GovernmentTab({ state, dispatch }: Props) {
     <div className="stack">
       {race && !race.platform.length && <PlatformBuilder key={`${race.officeId}-${race.electionYear}`} state={state} dispatch={dispatch} />}
       {campaigning && <CampaignPanel state={state} />}
-      {!race && state.career.office && (
-        <section className="panel">
-          <h2>{getOffice(state.career.office.officeId).name}</h2>
-          <p className="muted small">
-            Your term runs until {state.career.office.termEndsYear}. Governing — bills, approval ratings and re-election — arrives in M5. For now, end turns to
-            serve your term.
-          </p>
-        </section>
-      )}
+      {inOffice && <OfficePanel state={state} dispatch={dispatch} />}
       {!race && !state.career.office && <RacePicker state={state} dispatch={dispatch} />}
       {state.decisions && <DecisionTray key={state.decisions.turnNo} state={state} dispatch={dispatch} />}
       {map}
-      {campaigning && (
-        <HandPanel key={`${race!.officeId}-${race!.electionYear}`} state={state} dispatch={dispatch} regionId={selected} onRegionChange={setSelected} />
+      {canHoldEvents && (
+        <HandPanel
+          key={race ? `${race.officeId}-${race.electionYear}` : `office-${state.career.office!.termEndsYear}`}
+          state={state}
+          dispatch={dispatch}
+          regionId={selected}
+          onRegionChange={setSelected}
+        />
       )}
       <MarketPanel state={state} dispatch={dispatch} />
     </div>

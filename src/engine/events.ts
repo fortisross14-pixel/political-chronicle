@@ -1,8 +1,9 @@
 // Event cards: pick a region and one of your platform topics (DESIGN §6.1).
 import { getBackground, getEventCard, getOffice, getRegion, ISSUES_BY_ID, STATES } from '../data';
 import { alignment, clamp, nudgeFavorability, nudgeRecognition, regionAlignment, relevance, skillMult } from './opinion';
+import { GOVERNING, nudgeApproval } from './governing';
 import { Rng } from './rng';
-import type { EventCard, GameState, IssueId, OfficeLevel, RegionId, Stance } from './types';
+import type { EventCard, GameState, IssueId, OfficeLevel, Pledge, RegionId, Stance } from './types';
 
 export const HOMETOWN_EVENT_BONUS = 1.25;
 export const CREDIBLE_ISSUE_BONUS = 1.15;
@@ -39,8 +40,15 @@ export function activeLevel(state: GameState): OfficeLevel {
   return id ? getOffice(id).level : 'mayor';
 }
 
+/** The topics you can campaign on: your race platform, or in office the platform you won on. */
+export function activePlatform(state: GameState): Pledge[] {
+  const race = state.career.race;
+  if (race?.platform.length) return race.platform;
+  return state.career.office?.platform ?? [];
+}
+
 export function stanceFor(state: GameState, issue: IssueId): Stance | undefined {
-  return state.career.race?.platform.find((p) => p.issue === issue)?.stance ?? state.record[issue];
+  return activePlatform(state).find((p) => p.issue === issue)?.stance ?? state.record[issue];
 }
 
 export function credibility(state: GameState, issue: IssueId, stance: Stance): number {
@@ -91,7 +99,8 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
   };
 
   if (state.ended) preview.error = 'Your career is over.';
-  else if (!state.career.race || !state.career.race.platform.length) preview.error = 'You need a race and a platform first.';
+  else if (state.career.race && !state.career.race.platform.length) preview.error = 'Choose your platform first.';
+  else if (!activePlatform(state).length) preview.error = 'You need a race or an office first.';
   else if (state.decisions && !state.decisions.resolved) preview.error = 'Resolve this turn’s decisions first.';
   else if (card.energy > state.energy) preview.error = 'Not enough energy this turn.';
   else if (stance === undefined && !card.fundraising) preview.error = 'Pick one of your platform topics.';
@@ -153,6 +162,19 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
     regions[e.regionId] = { recognition: you.recognition + e.dRecognition, favorability };
   }
 
+  // In office, showing up for your constituents also moves job approval.
+  let career = state.career;
+  const office = career.office;
+  if (office) {
+    const approval = { ...office.approval };
+    for (const e of preview.effects) {
+      if (approval[e.regionId] === undefined) continue;
+      const dF = regions[e.regionId]!.favorability - state.regions[e.regionId]!.favorability;
+      approval[e.regionId] = nudgeApproval(approval[e.regionId]!, dF * GOVERNING.eventApprovalShare);
+    }
+    career = { ...career, office: { ...office, approval } };
+  }
+
   const hand = typeof ref === 'number' ? state.hand.filter((c) => c.uid !== ref) : state.hand;
   const where = getRegion(regionId).seatCity;
   const text = preview.card.fundraising
@@ -165,6 +187,7 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
       ...state,
       rng: rng.state,
       regions,
+      career,
       hand,
       // Cards are paid for in the Market; playing one costs only energy.
       funds: state.funds + preview.fundsGain,

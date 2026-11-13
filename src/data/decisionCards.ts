@@ -1,7 +1,8 @@
 import type { DecisionCard } from '../engine/types';
+import { MAYOR_OFFICE_CARDS } from './officeCards';
 
 /** Campaign moments: questionnaires, endorsements, controversies (DESIGN §6.3). */
-export const DECISION_CARDS: DecisionCard[] = [
+export const CAMPAIGN_CARDS: DecisionCard[] = [
   {
     id: 'cm_stadium_tax_break', title: 'Stadium tax break', context: 'campaign', levels: ['mayor'],
     text: 'The local team wants a tax break to renovate its stadium. Do you back it?',
@@ -103,6 +104,8 @@ export const DECISION_CARDS: DecisionCard[] = [
     tags: [{ issue: 'cannabis', stance: -1 }, { issue: 'small_biz', stance: 1 }],
   },
 ];
+
+export const DECISION_CARDS: DecisionCard[] = [...CAMPAIGN_CARDS, ...MAYOR_OFFICE_CARDS];
 
 export const DECISION_CARDS_BY_ID: Record<string, DecisionCard> = Object.fromEntries(DECISION_CARDS.map((c) => [c.id, c]));
 

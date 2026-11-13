@@ -31,7 +31,7 @@ function resolved(): GameState {
 describe('income', () => {
   it('donors give most while running, less in office, least when idle', () => {
     const running = readyRun();
-    const office: GameState = { ...running, career: { affiliation: 'IND', lossStreak: 0, office: { officeId: 'mayor-watertown', termEndsYear: 2031 } } };
+    const office: GameState = { ...running, career: { affiliation: 'IND', lossStreak: 0, office: { officeId: 'mayor-watertown', termEndsYear: 2031, approval: { 'ny-north': 0.6 }, platform: [], startedYear: 2028 } } };
     const idle: GameState = { ...running, career: { affiliation: 'IND', lossStreak: 0 } };
     expect(projectedIncome(running).donors).toBeGreaterThan(projectedIncome(office).donors);
     expect(projectedIncome(office).donors).toBeGreaterThan(projectedIncome(idle).donors);

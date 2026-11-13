@@ -1,6 +1,7 @@
 // A simple "sensible player" bot used to measure balance (DESIGN §12).
 import { BASIC_CARD_IDS, getDecisionCard, getOffice, getRegion, ISSUE_IDS } from '../data';
 import {
+  activePlatform,
   applyAction,
   buyError,
   offerPrice,
@@ -15,7 +16,8 @@ import {
 } from '../engine';
 import type { CreationInput, GameState, IssueId, Pledge } from '../engine';
 
-export type BotStyle = 'sensible' | 'idle' | 'contrarian' | 'investor';
+/** 'flipflop' campaigns sensibly but, in office, signs bills that break its promises. */
+export type BotStyle = 'sensible' | 'idle' | 'contrarian' | 'investor' | 'flipflop';
 
 /** Platform fitted to the race's voters (or deliberately against them). */
 export function botPlatform(state: GameState, style: BotStyle): Pledge[] {
@@ -33,10 +35,14 @@ export function botPlatform(state: GameState, style: BotStyle): Pledge[] {
     });
 }
 
+function jurisdictionId(state: GameState): string | undefined {
+  return state.career.race?.officeId ?? state.career.office?.officeId;
+}
+
 function score(state: GameState, effects: { regionId: string; dRecognition: number; dFavorability: number }[]): number {
-  const race = state.career.race;
-  if (!race) return 0;
-  const weights = regionWeights(race.officeId);
+  const id = jurisdictionId(state);
+  if (!id) return 0;
+  const weights = regionWeights(id);
   return effects.reduce((sum, e) => sum + (weights[e.regionId] ?? 0) * (e.dFavorability * 2 + e.dRecognition), 0);
 }
 
@@ -47,13 +53,19 @@ function moneyWeight(style: BotStyle): number {
 
 function decide(state: GameState, style: BotStyle): string[] {
   const ids = state.decisions!.cardIds;
-  if (style !== 'sensible' && style !== 'investor') return [ids[0]!];
-  const weights = state.career.race ? regionWeights(state.career.race.officeId) : {};
+  if (style === 'idle' || style === 'contrarian') return [ids[0]!];
+  const jid = jurisdictionId(state);
+  const weights = jid ? regionWeights(jid) : {};
+  if (style === 'flipflop' && state.career.office) {
+    const breakers = ids.filter((id) => decisionImpact(state, getDecisionCard(id)).promisesBroken.length > 0);
+    if (breakers.length) return breakers;
+  }
   const ranked = ids
     .map((id) => {
       const impact = decisionImpact(state, getDecisionCard(id));
       const fav = Object.entries(impact.favorability).reduce((s, [r, v]) => s + (weights[r] ?? 0) * v, 0);
-      return { id, value: fav + impact.integrity * 0.002 + impact.funds * moneyWeight(style) };
+      const appr = Object.entries(impact.approval).reduce((s, [r, v]) => s + (weights[r] ?? 0) * v, 0);
+      return { id, value: fav + appr + impact.integrity * 0.002 + impact.funds * moneyWeight(style) };
     })
     .sort((a, b) => b.value - a.value);
   const good = ranked.filter((r) => r.value > 0).map((r) => r.id);
@@ -62,12 +74,13 @@ function decide(state: GameState, style: BotStyle): string[] {
 
 /** Best expected value of holding this card somewhere in the race, on some platform topic. */
 function cardValue(state: GameState, cardId: string, style: BotStyle): number {
-  const race = state.career.race;
-  if (!race) return 0;
+  const jid = jurisdictionId(state);
+  const platform = activePlatform(state);
+  if (!jid || !platform.length) return 0;
   const probe: GameState = { ...state, energy: 99, hand: [...state.hand, { uid: -1, cardId }] };
   let best = 0;
-  for (const regionId of getOffice(race.officeId).regionIds) {
-    for (const p of race.platform) {
+  for (const regionId of getOffice(jid).regionIds) {
+    for (const p of platform) {
       const pv = previewEvent(probe, -1, regionId, p.issue);
       if (!pv.error) best = Math.max(best, score(probe, pv.effects) + pv.fundsGain * moneyWeight(style));
     }
@@ -100,15 +113,16 @@ function shop(state: GameState, style: BotStyle): GameState {
 
 function playEvents(state: GameState, style: BotStyle): GameState {
   let s = state;
-  const race = s.career.race;
-  if (!race) return s;
-  const office = getOffice(race.officeId);
+  const jid = jurisdictionId(s);
+  const platform = activePlatform(s);
+  if (!jid || !platform.length) return s;
+  const office = getOffice(jid);
   for (let guard = 0; guard < 20; guard++) {
     let best: { ref: number | string; regionId: string; issue: IssueId; value: number } | undefined;
     const refs: (number | string)[] = [...s.hand.map((c) => c.uid), ...BASIC_CARD_IDS];
     for (const ref of refs) {
       for (const regionId of office.regionIds) {
-        for (const p of race.platform) {
+        for (const p of platform) {
           const pv = previewEvent(s, ref, regionId, p.issue);
           if (pv.error) continue;
           // Value per energy, with money only worth spending if it buys a real effect.
@@ -184,6 +198,30 @@ export function hometownWinRate(input: CreationInput, style: BotStyle, runs: num
     share += result.share;
   }
   return { winRate: wins / runs, avgShare: share / runs };
+}
+
+/** First-term mayors who campaign sensibly, then govern in `style`: how often are they re-elected? */
+export function reelectionRate(input: CreationInput, style: BotStyle, runs: number): { reelected: number; terms: number; avgApproval: number; integrity: number } {
+  let reelected = 0;
+  let terms = 0;
+  let approval = 0;
+  let integrity = 0;
+  for (let i = 0; i < runs; i++) {
+    let s = createRun(buildRunConfig(input, `reelect-${input.birthRegionId}-${i}`));
+    s = playCampaign(s, 'sensible').state;
+    if (!s.elections.at(-1)!.playerWon) continue;
+    terms++;
+    for (let guard = 0; guard < 30 && s.elections.length < 2 && !s.ended; guard++) {
+      const before = s;
+      s = playTurn(s, style);
+      if (before.career.race === undefined && s.career.race) {
+        approval += Object.values(s.career.office!.approval).reduce((a, b) => a + b, 0) / Object.keys(s.career.office!.approval).length;
+        integrity += s.integrity;
+      }
+    }
+    if (s.elections[1]?.playerWon) reelected++;
+  }
+  return { reelected: reelected / Math.max(1, terms), terms, avgApproval: approval / Math.max(1, terms), integrity: integrity / Math.max(1, terms) };
 }
 
 export { poll };

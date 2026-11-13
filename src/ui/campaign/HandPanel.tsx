@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BASIC_CARD_IDS, getEventCard, getRegion, ISSUES_BY_ID, STATES } from '../../data';
-import { previewEvent } from '../../engine';
+import { activePlatform, previewEvent } from '../../engine';
 import type { Action, EventCard, GameState, IssueId, RegionId } from '../../engine';
 import { money } from '../format';
 import { effectLabel, PRECISE_PREVIEW_POLICY, stanceLabel } from './labels';
@@ -28,9 +28,9 @@ interface HandEntry {
 }
 
 export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) {
-  const race = state.career.race!;
+  const platform = activePlatform(state);
   const [selected, setSelected] = useState<string>('door_knocking');
-  const [issue, setIssue] = useState<IssueId>(race.platform[0]!.issue);
+  const [issue, setIssue] = useState<IssueId>(platform[0]!.issue);
 
   const entries: HandEntry[] = BASIC_CARD_IDS.map((id) => ({ key: id, ref: id, card: getEventCard(id) }));
   const counts = new Map<string, number[]>();
@@ -47,7 +47,7 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
   return (
     <section className="panel">
       <div className="panel-head">
-        <h2>Campaign events</h2>
+        <h2>{state.career.race ? 'Campaign events' : 'Events in office'}</h2>
         <span className="muted small">
           Energy {state.energy} · {state.hand.length} card{state.hand.length === 1 ? '' : 's'} in hand — buy more in the Market below
         </span>
@@ -89,7 +89,7 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
             <label className="field inline">
               <span>Topic</span>
               <select value={issue} onChange={(e) => setIssue(e.target.value as IssueId)}>
-                {race.platform.map((p) => (
+                {platform.map((p) => (
                   <option key={p.issue} value={p.issue}>
                     {ISSUES_BY_ID[p.issue].name} — {stanceLabel(p.issue, p.stance)}
                   </option>
