@@ -15,7 +15,7 @@ async function drag(page: Page, from: Locator, to: { x: number; y: number }) {
   await page.mouse.up();
 }
 
-test('on a phone, decisions are swiped and cards are dragged onto a region', async ({ page }) => {
+test('on a phone, decisions are swiped and a card is played through the Play a card window', async ({ page }) => {
   const s = launchedState();
   await seed(page, { state: s });
   await page.goto('/');
@@ -29,16 +29,18 @@ test('on a phone, decisions are swiped and cards are dragged onto a region', asy
   await expect(page.locator('.dot.yes')).toHaveCount(1);
   await page.getByRole('button', { name: /^Confirm 1 stance/ }).click();
 
-  // Drag Door-knocking onto the Mill Street chip.
+  // Play a card: pick the neighborhood, pick the card from the album, see the range, play it.
   await page.getByRole('button', { name: /^Campaign/ }).click();
   const energy = Number((await page.locator('.stat', { hasText: 'Energy' }).locator('.count').innerText()).trim());
-  const chip = page.locator('.region-chip', { hasText: 'Mill Street' });
-  await chip.scrollIntoViewIfNeeded();
-  const target = (await chip.boundingBox())!;
-  await drag(page, page.locator('.hand-fan .gcard', { hasText: 'Door-knocking' }), {
-    x: target.x + target.width / 2,
-    y: target.y + target.height / 2,
-  });
+  await page.getByRole('button', { name: /Play a card/ }).click();
+  const win = page.getByRole('dialog', { name: 'Play a card' });
+  await win.getByRole('button', { name: /^Where|^Pick a neighborhood/ }).click();
+  await win.getByRole('button', { name: /^Mill Street/ }).click();
+  await win.getByRole('button', { name: 'Pick a card' }).click();
+  await win.locator('.album-grid .gcard', { hasText: 'Door-knocking' }).click();
+  await expect(win.locator('.effect-ranges')).toContainText('Your vote here');
+  await win.getByRole('button', { name: /^Play it!/ }).click();
+  await expect(win.locator('.play-result')).toContainText('Door-knocking in Mill Street');
+  await win.getByRole('button', { name: 'Done' }).click();
   await expect(page.locator('.stat', { hasText: 'Energy' }).locator('.count')).toHaveText(String(energy - 2));
-  await expect(page.locator('.region-chip.active')).toContainText('Mill Street');
 });

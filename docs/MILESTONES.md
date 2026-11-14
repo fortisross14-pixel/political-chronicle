@@ -402,6 +402,19 @@ seat: win Syracuse), Big city 80 / 100.
 
 ---
 
+## M21 — Play a card ✅ done
+
+- The Campaign tab's deck is one **Play a card** button. It opens a window with two slots: **Where**
+  (a neighborhood picker with demographics and your share) and **Card** (your album: basic actions,
+  cards from packs and campaign items; election-night cards stay in their own pile). Then the topic
+  (pre-picked to the one that lands best), the effects as ranges, and **Play it!**
+- **Luck:** every play rolls ×0.75–×1.25 on its effects; the window shows the range for recognition,
+  favorability and your vote here and overall, and after playing it shows what actually happened
+  (“Better than hoped”, “Fell a little flat”, “Gaffe!”).
+- Drag-to-region is gone.
+
+---
+
 ## After v2 (expansion)
 
 1. **More states:** California, Texas and smaller states (4–6 districts for Iowa-sized states),

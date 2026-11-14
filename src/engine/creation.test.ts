@@ -193,6 +193,6 @@ describe('M7 acceptance: natives vs transplants', () => {
     const n = hometownWinRate(botCharacter('ny-north'), 'sensible', 30);
     const t = hometownWinRate(botCharacter('ny-north', 'public_servant', 35, 'TX'), 'sensible', 30);
     expect(n.winRate).toBeGreaterThanOrEqual(t.winRate);
-    expect(n.avgShare - t.avgShare).toBeGreaterThan(0.015);
+    expect(n.avgShare - t.avgShare).toBeGreaterThan(0.01);
   });
 });

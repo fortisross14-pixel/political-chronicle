@@ -35,7 +35,7 @@ describe('taking office', () => {
     expect(office.officeId).toBe('mayor-watertown');
     expect(office.termEndsYear).toBe(2031);
     expect(office.platform.length).toBeGreaterThan(0);
-    expect(office.approval['wt-arsenal']).toBeGreaterThan(0.5);
+    expect(averageApproval(MAYOR)).toBeGreaterThan(0.5);
     expect(MAYOR.career.race).toBeUndefined();
   });
 

@@ -30,6 +30,9 @@ export const EVENT_POWER = 1.5;
 /** Basic cards (always in hand) vs cards from packs. */
 export const BASIC_POWER = 0.6;
 export const PACK_POWER = 2.2;
+/** Each play rolls a multiplier in this range on its effects (the preview shows the range). */
+export const LUCK = { min: 0.75, max: 1.25 };
+
 /** Extra weight on persuasion that goes against an area's views. */
 export const BACKLASH = 1.6;
 
@@ -207,6 +210,8 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
   if (preview.error) throw new GameError(preview.error);
   const rng = new Rng(state.rng);
   const rolled = rng.chance(preview.gaffeChance);
+  // A bit of luck: the same event lands a little better or worse each time.
+  const luck = LUCK.min + rng.float() * (LUCK.max - LUCK.min);
   const used = state.career.race?.used ?? [];
   // Debate notes (artifact) make the first debate safe; Rapid response (ability) cancels one gaffe.
   const safeDebate = preview.card.id === 'debate' && state.modifiers.safeFirstDebate && !used.includes('debate_notes');
@@ -217,13 +222,13 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
 
   for (const e of preview.effects) {
     const you = regions[e.regionId]!;
-    let favorability = you.favorability + e.dFavorability;
+    let favorability = clamp(you.favorability + e.dFavorability * luck, -1, 1);
     if (gaffe) {
       const r = getRegion(e.regionId);
       const penalty = preview.card.persuasion * r.media[preview.card.medium] * e.share * 0.6 * (hasPerk(state, 'spinDoctor') ? 0.5 : 1);
       favorability = nudgeFavorability(you.favorability, -penalty);
     }
-    regions[e.regionId] = { recognition: you.recognition + e.dRecognition, favorability };
+    regions[e.regionId] = { recognition: clamp(you.recognition + e.dRecognition * luck, 0, 1), favorability };
   }
 
   // In office, showing up for your constituents also moves job approval.
@@ -240,10 +245,10 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
   }
 
   const hand = typeof ref === 'number' ? state.hand.filter((c) => c.uid !== ref) : state.hand;
-  const where = getRegion(regionId).seatCity;
+  const where = getRegion(regionId).parent ? getRegion(regionId).name : getRegion(regionId).seatCity;
   const text = preview.card.fundraising
     ? `${preview.card.name} in ${where}: raised $${preview.fundsGain.toLocaleString('en-US')}.`
-    : `${preview.card.name} in ${where} on ${ISSUES_BY_ID[issue].name}${gaffe ? ' — a gaffe went viral!' : rapid ? ' — a gaffe, but your rapid response shut it down.' : '.'}`;
+    : `${preview.card.name} in ${where} on ${ISSUES_BY_ID[issue].name}${gaffe ? ' — a gaffe went viral!' : rapid ? ' — a gaffe, but your rapid response shut it down.' : luck >= 1.15 ? ' — it landed even better than hoped.' : luck <= 0.85 ? ' — it fell a little flat.' : '.'}`;
 
   const standingGain = preview.card.partyStanding ?? 0;
   // Loot bookkeeping on the race: door-knocks build the ground game; fundraisers count toward a haul.
