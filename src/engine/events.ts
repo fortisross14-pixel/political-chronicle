@@ -1,4 +1,5 @@
 // Event cards: pick a region and one of your platform topics (DESIGN §6.1).
+import { GameError } from './errors';
 import { getBackground, getEventCard, getOffice, getRegion, ISSUES_BY_ID, STATES } from '../data';
 import { alignment, clamp, nudgeFavorability, nudgeRecognition, regionAlignment, relevance, skillMult } from './opinion';
 import { GOVERNING, nudgeApproval } from './governing';
@@ -93,7 +94,7 @@ export function resolveCardRef(state: GameState, ref: number | string): EventCar
 /** Expected effect, without the gaffe roll. */
 export function previewEvent(state: GameState, ref: number | string, regionId: RegionId, issue: IssueId): EventPreview {
   const card = resolveCardRef(state, ref);
-  if (!card) throw new Error(`Card not available: ${ref}`);
+  if (!card) throw new GameError(`Card not available: ${ref}`);
   const stance = stanceFor(state, issue);
   const level = activeLevel(state);
   const region = getRegion(regionId);
@@ -161,7 +162,7 @@ export interface EventOutcome {
 
 export function playEvent(state: GameState, ref: number | string, regionId: RegionId, issue: IssueId): EventOutcome {
   const preview = previewEvent(state, ref, regionId, issue);
-  if (preview.error) throw new Error(preview.error);
+  if (preview.error) throw new GameError(preview.error);
   const rng = new Rng(state.rng);
   const rolled = rng.chance(preview.gaffeChance);
   const used = state.career.race?.used ?? [];

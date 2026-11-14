@@ -1,7 +1,9 @@
 // Election night: results stream in region by region; spend ground game on what's still being
 // counted (DESIGN_V2 §5.2). The true result is drawn when polls close; the night reveals it.
+import { GameError, reject } from './errors';
 import { getBackground, getEventCard, getItem, getOffice, getRegion } from '../data';
 import { eventPrice } from './economy';
+import { GROUND_GAME } from './loot';
 import { clamp } from './opinion';
 import { effectiveSkills } from './people';
 import type { Rng } from './rng';
@@ -198,7 +200,7 @@ export function nightFinished(night: ElectionNight): boolean {
 
 export function advanceNight(state: GameState): GameState {
   const night = state.night;
-  if (!night) throw new Error('No election night.');
+  if (!night) throw new GameError('No election night.');
   if (nightFinished(night)) return state;
   return updateCalls({ ...state, night: { ...night, step: night.step + 1 } });
 }
@@ -238,7 +240,7 @@ export function mobilize(
   opts: { free?: boolean; multiplier?: number; label?: string } = {},
 ): GameState {
   const error = mobilizeError(state, regionId, opts.free);
-  if (error) throw new Error(error);
+  reject(error);
   const night = state.night!;
   const effect = mobilizeEffect(state, regionId, opts.multiplier);
   const r = night.regions[regionId]!;
@@ -269,7 +271,7 @@ export function lawyersError(state: GameState, regionId: RegionId, free = false)
 
 export function sendLawyers(state: GameState, regionId: RegionId, free = false): GameState {
   const error = lawyersError(state, regionId, free);
-  if (error) throw new Error(error);
+  reject(error);
   const night = state.night!;
   return {
     ...state,
@@ -297,7 +299,7 @@ export function adBlitzError(state: GameState, free = false): string | undefined
 
 export function adBlitz(state: GameState, free = false): GameState {
   const error = adBlitzError(state, free);
-  if (error) throw new Error(error);
+  reject(error);
   const night = state.night!;
   const effect = Math.min(NIGHT.adBlitz * (1 - nightView(night).countedTotal), Math.max(0, NIGHT.maxSwing - totalSwing(night)));
   return {
@@ -315,7 +317,7 @@ export function adBlitz(state: GameState, free = false): GameState {
 /** Night-window items. */
 export function applyNightItem(state: GameState, uid: number, regionId?: RegionId): GameState {
   const card = state.items.find((i) => i.uid === uid);
-  if (!card || !state.night) throw new Error('You can’t use that now.');
+  if (!card || !state.night) throw new GameError('You can’t use that now.');
   const items = state.items.filter((i) => i.uid !== uid);
   const base = { ...state, items };
   switch (card.itemId) {
@@ -335,7 +337,7 @@ export function applyNightItem(state: GameState, uid: number, regionId?: RegionI
     case 'ad_reservation':
       return adBlitz(base, true);
   }
-  throw new Error('That item does nothing tonight.');
+  throw new GameError('That item does nothing tonight.');
 }
 
 /** Ends the night (skipping ahead if needed) and returns the final region shares. */
@@ -345,5 +347,5 @@ export function finalNightShares(night: ElectionNight): Record<RegionId, number[
 
 /** Organizers bring volunteers: extra starting tokens. */
 export function startingTokens(state: GameState): number {
-  return 2 + (getBackground(state.politician.backgroundId).id === 'organizer' ? 2 : 0);
+  return GROUND_GAME.base + (getBackground(state.politician.backgroundId).id === 'organizer' ? GROUND_GAME.organizerBonus : 0);
 }

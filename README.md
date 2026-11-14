@@ -9,27 +9,19 @@ compared.
 - [Design v1 — simulation engine](docs/DESIGN.md)
 - [POC milestones](docs/MILESTONES.md)
 
-Status: **M10 (scenarios, meta-progression & run results) done** — a menu with Scenarios
-(4 beginner missions with objectives, deadlines and stars), Sandbox (unlocked by the beginner
-track; choose artifacts, abilities and career length), run results with a legacy score and
-charts, and the Hall of Runs to compare careers. Next: M11 (development best practices), then
-M12 visual revamp and M13 balancing.
+Status: **M11 (development best practices) done** — ESLint + Prettier, a single action
+validator with typed errors, save migrations (old saves upgrade instead of disappearing),
+coverage floors, a performance budget, Playwright UI smoke tests, a fixed-seed balance
+baseline and a bundle budget, all in CI on every push. Next: M12 (total visual revamp), then
+M13 balancing.
 
 ## Development
 
-Requires Node 20+.
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ```bash
 npm install
 npm run dev        # local dev server
-npm run check      # typecheck + tests + production build (what CI runs)
-npm run sim        # balance harness: bot win rates (optional arg: runs, default 200)
+npm run check      # format, lint, types, tests + coverage, build, bundle budget, balance baseline
+npm run e2e        # Playwright UI smoke tests (desktop + phone)
 ```
-
-Layout:
-
-- `src/engine/` — pure TypeScript game rules (no React): types, seeded RNG, turn clock, reducer
-- `src/data/` — world data: issues, parties, backgrounds, New York regions and offices
-- `src/sim/` — balance bot used by tests and `npm run sim`
-- `src/storage/` — localStorage: the current run (`save.ts`) and the meta-progression profile (`profile.ts`)
-- `src/ui/` — React app (start screen, character creator, header, map, Government / My profile / My party tabs)

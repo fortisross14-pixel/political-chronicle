@@ -176,7 +176,7 @@ blowouts.
 **Done when:** a new player can clear the beginner track, earn artifacts, unlock Sandbox and
 compare runs.
 
-## M11 — Development best practices
+## M11 — Development best practices ✅ done
 
 - Code health pass: module boundaries (engine / data / ui), naming, dead code, comments where
   the "why" isn't obvious.

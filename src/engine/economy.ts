@@ -1,4 +1,5 @@
 // Money: income, upkeep, the Market and skill growth (DESIGN §6.2, §9).
+import { reject } from './errors';
 import {
   EVENT_CARDS,
   getEventCard,
@@ -171,7 +172,7 @@ export function buyError(state: GameState, offerIndex: number): string | undefin
 
 export function buyOffer(state: GameState, offerIndex: number): GameState {
   const error = buyError(state, offerIndex);
-  if (error) throw new Error(error);
+  reject(error);
   const offer = state.market!.offers[offerIndex]!;
   const price = offerPrice(offer, state);
   const offers = state.market!.offers.filter((_, i) => i !== offerIndex);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BASIC_CARD_IDS, getDecisionCard } from '../data';
+import { BASIC_CARD_IDS, getDecisionCard, getEventCard } from '../data';
 import { botCharacter, hometownWinRate, playCampaign } from '../sim/bot';
 import {
   alignment,
@@ -9,7 +9,6 @@ import {
   endTurnBlocker,
   eventPrice,
   fileRaceError,
-  getEventCardSafe,
   platformError,
   playEvent,
   poll,
@@ -17,7 +16,7 @@ import {
   nominationStatus,
   raceOptions,
   regionIntention,
-} from './testExports';
+} from './index';
 import { newRun, passTurn, passTurns, readyRun, WATERTOWN_PLATFORM } from './testUtils';
 import type { GameState } from './types';
 
@@ -153,7 +152,7 @@ describe('event cards', () => {
   });
 
   it('NYC media costs more than Watertown media', () => {
-    const tv = getEventCardSafe('local_tv_ad');
+    const tv = getEventCard('local_tv_ad');
     const nyc = newRun({ politician: { ...newRun().politician, residentRegionId: 'ny-nyc' } });
     expect(eventPrice(tv, nyc)).toBeGreaterThan(eventPrice(tv, newRun()));
   });

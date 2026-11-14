@@ -1,3 +1,4 @@
+import { GameError, reject } from './errors';
 import { getItem } from '../data';
 import { drawElection, fileRace, finalizeElection, isPrimaryTurn, opponentsAct, resolvePrimary, setPlatform } from './campaign';
 import { checkTurnMilestones, applyCampaignItem } from './loot';
@@ -5,6 +6,7 @@ import { adBlitz, advanceNight, finalNightShares, mobilize, sendLawyers, startNi
 import { joinParty } from './parties';
 import { poll } from './opinion';
 import { evaluateScenario } from './scenarios';
+import { endTurnBlocker, validateAction } from './validate';
 import { hasAbility } from './traits';
 import { rollChambers } from './legislature';
 import { assignPerson, discardPerson, hasPerk, unassignRole } from './people';
@@ -18,21 +20,12 @@ import { ageOf, energyForAge, MAX_AGE_ENDS_RUN, takeSnapshot } from './run';
 import { isElectionTurn, monthsPerTurn, turnsInYear } from './time';
 import type { Action, GameState } from './types';
 
-/** Why the player can't end the turn right now, or undefined if they can. */
-export function endTurnBlocker(state: GameState): string | undefined {
-  if (state.ended) return 'Your career is over.';
-  if (state.night) return 'Election night is under way.';
-  if (state.pendingResult !== undefined) return 'Review the election result first.';
-  if (state.career.race && !state.career.race.platform.length) return 'Choose your platform first.';
-  if (state.decisions && !state.decisions.resolved) return 'Resolve this turn’s decisions first (apply 1–3).';
-  return undefined;
-}
-
 /**
  * Applies a player action. Invalid actions throw; the UI checks the matching
  * `*Error` / `*Blocker` helpers first so it never sends one.
  */
 export function applyAction(state: GameState, action: Action): GameState {
+  reject(validateAction(state, action));
   return evaluateScenario(reduce(state, action));
 }
 
@@ -84,7 +77,7 @@ function reduce(state: GameState, action: Action): GameState {
 
 function endTurn(state: GameState): GameState {
   const blocker = endTurnBlocker(state);
-  if (blocker) throw new Error(blocker);
+  reject(blocker);
   const rng = new Rng(state.rng);
   let s: GameState = state;
 
@@ -104,11 +97,11 @@ function endTurn(state: GameState): GameState {
 /** Ends election night: applies the final count, then moves the calendar on. */
 function finishNight(state: GameState): GameState {
   const night = state.night;
-  if (!night) throw new Error('No election night.');
+  if (!night) throw new GameError('No election night.');
   const rng = new Rng(state.rng);
   const nightItems = state.items.filter((i) => getItem(i.itemId).window !== 'campaign');
   let s: GameState = { ...state, night: undefined, items: state.items.filter((i) => !nightItems.includes(i)) };
-  s = finalizeElection(s, rng, finalNightShares(night), night.finalPoll);
+  s = finalizeElection(s, finalNightShares(night), night.finalPoll);
   return advanceCalendar(s, rng);
 }
 

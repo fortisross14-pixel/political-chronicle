@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { applyAction, buildRunConfig, createRun, createScenarioRun, recordRun } from '../engine';
+import { applyAction, buildRunConfig, createRun, createScenarioRun, GameError, recordRun } from '../engine';
 import type { Action, GameState, Profile, RecordOutcome } from '../engine';
 import { loadProfile, saveProfile } from '../storage/profile';
-import { clearSave, loadGame, saveGame } from '../storage/save';
+import { clearSave, loadGameResult, saveGame } from '../storage/save';
 import { Header } from './Header';
 import { ScenarioSelect } from './menu/ScenarioSelect';
 import { SandboxSetup } from './menu/SandboxSetup';
@@ -28,7 +28,16 @@ function randomSeed(): string {
 
 export function App() {
   const [state, setState] = useState<GameState | null>(null);
-  const [saved, setSaved] = useState<GameState | null>(() => loadGame());
+  // Load once: the saved run (upgraded from older formats if needed) and a note for the menu.
+  const [initial] = useState(() => loadGameResult());
+  const [saved, setSaved] = useState<GameState | null>(initial.state);
+  const saveNotice = initial.state
+    ? 'migratedFrom' in initial && initial.migratedFrom
+      ? 'Your saved game was upgraded to this version.'
+      : undefined
+    : 'reason' in initial
+      ? initial.reason
+      : undefined;
   const [profile, setProfile] = useState<Profile>(() => loadProfile());
   const [outcome, setOutcome] = useState<RecordOutcome | null>(null);
   const [screen, setScreen] = useState<Screen>('menu');
@@ -74,7 +83,12 @@ export function App() {
       setState(applyAction(state, action));
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      // Rule violations are shown to the player; anything else is a bug.
+      if (e instanceof GameError) setError(e.message);
+      else {
+        console.error(e);
+        setError('Something went wrong. Your game is saved; try again or reload.');
+      }
     }
   };
 
@@ -104,6 +118,7 @@ export function App() {
     return (
       <StartScreen
         saved={saved}
+        notice={saveNotice}
         profile={profile}
         onContinue={() => saved && begin(saved)}
         onScenarios={() => setScreen('scenarios')}

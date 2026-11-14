@@ -4,6 +4,8 @@ import type { GameState, Profile } from '../engine';
 
 interface Props {
   saved: GameState | null;
+  /** About the saved game: upgraded, or why it couldn't be loaded. */
+  notice?: string;
   profile: Profile;
   onContinue: () => void;
   onScenarios: () => void;
@@ -11,13 +13,18 @@ interface Props {
   onHall: () => void;
 }
 
-export function StartScreen({ saved, profile, onContinue, onScenarios, onSandbox, onHall }: Props) {
+export function StartScreen({ saved, notice, profile, onContinue, onScenarios, onSandbox, onHall }: Props) {
   const sandbox = sandboxUnlocked(profile);
   const live = saved && !saved.ended ? saved : null;
   return (
     <div className="start">
       <h1>Political Chronicle</h1>
       <p className="tagline">Start as an independent. Win your town. Then win the state.</p>
+      {notice && (
+        <p className="save-notice small" role="status">
+          {notice}
+        </p>
+      )}
       <div className="start-actions">
         {live && (
           <button className="primary" onClick={onContinue}>

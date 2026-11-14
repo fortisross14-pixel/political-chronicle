@@ -1,4 +1,5 @@
 import { SCHEMA_VERSION } from '../engine/run';
+import { migrate } from './migrations';
 import type { GameState } from '../engine/types';
 
 export const SAVE_KEY = 'political-chronicle.currentRun';
@@ -29,19 +30,43 @@ export function saveGame(state: GameState): boolean {
   }
 }
 
-/** Returns the saved run, or null if there is none or it is from an incompatible version. */
-export function loadGame(): GameState | null {
+export type LoadResult = { state: GameState; migratedFrom?: number } | { state: null; reason?: string };
+
+/** Keys every playable save must have after migration; a save missing any is treated as corrupt. */
+const REQUIRED_KEYS: (keyof GameState)[] = [
+  'clock',
+  'politician',
+  'career',
+  'regions',
+  'team',
+  'chambers',
+  'items',
+  'modifiers',
+  'snapshots',
+];
+
+/** Loads the saved run, upgrading older save formats. `reason` explains a save that can't be loaded. */
+export function loadGameResult(): LoadResult {
   const store = storage();
-  if (!store) return null;
+  if (!store) return { state: null };
   try {
     const raw = store.getItem(SAVE_KEY);
-    if (!raw) return null;
+    if (!raw) return { state: null };
     const file = JSON.parse(raw) as Partial<SaveFile>;
-    if (file.schemaVersion !== SCHEMA_VERSION || !file.state) return null;
-    return file.state;
+    if (!file.state || typeof file.schemaVersion !== 'number') return { state: null, reason: 'The saved game is unreadable.' };
+    const result = migrate(file.state as unknown as Record<string, unknown>, file.schemaVersion);
+    if (!result.ok) return { state: null, reason: result.reason };
+    const state = result.state as unknown as GameState;
+    if (REQUIRED_KEYS.some((k) => state[k] === undefined)) return { state: null, reason: 'The saved game is incomplete.' };
+    return result.from === SCHEMA_VERSION ? { state } : { state, migratedFrom: result.from };
   } catch {
-    return null;
+    return { state: null, reason: 'The saved game is unreadable.' };
   }
+}
+
+/** Returns the saved run (upgraded if needed), or null. */
+export function loadGame(): GameState | null {
+  return loadGameResult().state;
 }
 
 export function clearSave(): void {

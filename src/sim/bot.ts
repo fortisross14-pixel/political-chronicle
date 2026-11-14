@@ -21,7 +21,6 @@ import {
   createRun,
   decisionImpact,
   DECISIONS_PER_TURN,
-  poll,
   previewEvent,
   regionWeights,
   relevance,
@@ -438,5 +437,3 @@ export function scenarioRate(scenarioId: string, runs: number, artifacts: string
   }
   return { winRate: wins / runs, avgStars: stars / runs };
 }
-
-export { poll };

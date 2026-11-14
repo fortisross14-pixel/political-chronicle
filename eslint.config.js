@@ -28,6 +28,11 @@ export default tseslint.config(
     },
   },
   {
+    // Plain Node scripts and config files.
+    files: ['**/*.{js,mjs}'],
+    languageOptions: { globals: { ...globals.node } },
+  },
+  {
     // The UI may import anything; only engine/data/sim/storage are restricted above.
     files: ['src/ui/**', 'src/main.tsx'],
     rules: { 'no-restricted-imports': 'off' },

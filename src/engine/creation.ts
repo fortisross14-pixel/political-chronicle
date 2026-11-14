@@ -1,3 +1,4 @@
+import { GameError } from './errors';
 import { getBackground, getRegion, REGIONS_BY_ID, US_STATE_NAMES } from '../data';
 import type { NewRunConfig } from './run';
 import type { Gender, Politician, RegionId, SkillId, Skills } from './types';
@@ -142,7 +143,7 @@ export function buildPolitician(input: CreationInput): Politician {
 
 export function buildRunConfig(input: CreationInput, seed: string): NewRunConfig {
   const errors = creationErrors(input);
-  if (errors.length) throw new Error(`Invalid character: ${errors.join(' ')}`);
+  if (errors.length) throw new GameError(`Invalid character: ${errors.join(' ')}`, 'invalid_character');
   return { seed, politician: buildPolitician(input), startingFunds: startingFundsFor(input.backgroundId, input.age) };
 }
 

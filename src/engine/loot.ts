@@ -1,4 +1,5 @@
 // Campaign loot: milestones pay out money, cards and one-shot items (DESIGN_V2 §5.1).
+import { GameError, reject } from './errors';
 import { getEventCard, getItem, getOffice, MILESTONES_BY_ID } from '../data';
 import { nudgeFavorability, nudgeRecognition, poll } from './opinion';
 import type { GameState, RegionId } from './types';
@@ -80,7 +81,7 @@ export function itemError(state: GameState, uid: number, regionId?: RegionId): s
 /** Uses a campaign-window item. Night use goes through the election-night actions. */
 export function applyCampaignItem(state: GameState, uid: number, regionId?: RegionId): GameState {
   const error = itemError(state, uid, regionId);
-  if (error) throw new Error(error);
+  reject(error);
   const card = state.items.find((i) => i.uid === uid)!;
   const race = state.career.race!;
   const items = state.items.filter((i) => i.uid !== uid);
@@ -121,5 +122,5 @@ export function applyCampaignItem(state: GameState, uid: number, regionId?: Regi
       log: [...state.log, { ...at, text: 'You rolled out a local endorsement.' }],
     };
   }
-  throw new Error('That item does nothing during the campaign.');
+  throw new GameError('That item does nothing during the campaign.');
 }

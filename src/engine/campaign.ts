@@ -1,4 +1,5 @@
 // Races: filing, platform, AI opponents and Election Day (DESIGN §5.3, §7).
+import { reject } from './errors';
 import { FIRST_NAMES, getOffice, getRegion, LAST_NAMES, OFFICES, PARTIES, REGIONS, STARTER_HAND } from '../data';
 import { dealDecisions } from './decisions';
 import { effectiveSkills } from './people';
@@ -333,7 +334,7 @@ export function opponentsAct(rng: Rng, race: Race): Race {
 
 export function fileRace(state: GameState, officeId: OfficeId): GameState {
   const error = fileRaceError(state, officeId);
-  if (error) throw new Error(error);
+  reject(error);
   const rng = new Rng(state.rng);
   const status = nominationStatus(state, officeId);
   const party = member(state);
@@ -405,7 +406,7 @@ export function platformError(state: GameState, platform: Pledge[]): string | un
 
 export function setPlatform(state: GameState, platform: Pledge[]): GameState {
   const error = platformError(state, platform);
-  if (error) throw new Error(error);
+  reject(error);
   const record = { ...state.record };
   for (const p of platform) {
     const old = record[p.issue];
@@ -446,17 +447,16 @@ export function drawElection(state: GameState, rng: Rng): ElectionDraw {
 /** Instant resolution (no election night), for bots and tests. */
 export function resolveElection(state: GameState, rng: Rng): GameState {
   const draw = drawElection(state, rng);
-  return finalizeElection(state, rng, draw.regionShares, draw.finalPoll);
+  return finalizeElection(state, draw.regionShares, draw.finalPoll);
 }
 
 /** Applies a final result: records it, moves you into (or out of) office. */
-export function finalizeElection(state: GameState, rng: Rng, regionShares: Record<RegionId, number[]>, finalPoll: number): GameState {
+export function finalizeElection(state: GameState, regionShares: Record<RegionId, number[]>, finalPoll: number): GameState {
   const race = state.career.race!;
   const office = getOffice(race.officeId);
   const weights = regionWeights(race.officeId);
   const totalShares = new Array<number>(race.opponents.length + 1).fill(0);
   for (const [id, final] of Object.entries(regionShares)) final.forEach((s, i) => (totalShares[i]! += s * weights[id]!));
-  void rng;
 
   const winner = totalShares.indexOf(Math.max(...totalShares));
   const playerWon = winner === 0;

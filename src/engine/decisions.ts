@@ -1,6 +1,7 @@
 // Decision cards: 3 per turn, apply 1–3, never 0 (DESIGN §6.3).
 // Campaigning they are campaign moments (move favorability); in office they are bills and
 // executive actions (move job approval, which favorability then follows).
+import { reject } from './errors';
 import { DECISION_CARDS, getBackground, getDecisionCard, getOffice, getRegion, STATES } from '../data';
 import { activeLevel, turnNo } from './events';
 import { executionMultiplier, nudgeApproval } from './governing';
@@ -182,7 +183,7 @@ export function decisionError(state: GameState, apply: string[]): string | undef
 
 export function resolveDecisions(state: GameState, apply: string[]): GameState {
   const error = decisionError(state, apply);
-  if (error) throw new Error(error);
+  reject(error);
   const hand = state.decisions!;
   const regions = { ...state.regions };
   const office = state.career.office;

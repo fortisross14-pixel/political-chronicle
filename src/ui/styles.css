@@ -1589,3 +1589,11 @@ details summary {
     overflow-x: auto;
   }
 }
+
+.save-notice {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}

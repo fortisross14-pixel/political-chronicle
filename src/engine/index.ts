@@ -17,4 +17,6 @@ export * from './loot';
 export * from './night';
 export * from './scenarios';
 export * from './meta';
-export { applyAction, endTurnBlocker } from './reducer';
+export { applyAction } from './reducer';
+export { endTurnBlocker, validateAction } from './validate';
+export { GameError } from './errors';

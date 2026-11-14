@@ -1,4 +1,5 @@
 // Parties: platform fit, standing, funds, nominations and primaries (DESIGN §7, §8).
+import { reject } from './errors';
 import { getBackground, getOffice, getRegion, ISSUE_IDS, PARTIES, STATES } from '../data';
 import { clamp } from './opinion';
 import { effectiveSkills, hasPerk } from './people';
@@ -126,7 +127,7 @@ export function joinError(state: GameState, party: PartyId): string | undefined 
 
 export function joinParty(state: GameState, party: PartyId): GameState {
   const error = joinError(state, party);
-  if (error) throw new Error(error);
+  reject(error);
   const inv = invitations(state).find((i) => i.party === party)!;
   const text = inv.switching
     ? `Switched to the ${PARTIES[party].name}. Old allies call it betrayal.`

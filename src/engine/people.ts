@@ -1,4 +1,5 @@
 // People cards: bought once in the Market, then assigned to a role, kept in reserve, or discarded (DESIGN_V2 §3).
+import { GameError } from './errors';
 import { getOffice, getPerson, PEOPLE, RARITY_WEIGHT } from '../data';
 import type { PersonPerk } from '../data';
 import type { Rng } from './rng';
@@ -73,7 +74,7 @@ export function acquirePerson(state: GameState, personId: string): GameState {
 
 export function assignPerson(state: GameState, uid: number): GameState {
   const card = state.team.cards.find((c) => c.uid === uid);
-  if (!card) throw new Error('Not on your team.');
+  if (!card) throw new GameError('Not on your team.');
   const role = getPerson(card.personId).role;
   return { ...state, team: { ...state.team, assigned: { ...state.team.assigned, [role]: uid } } };
 }
@@ -87,7 +88,7 @@ export function unassignRole(state: GameState, role: RoleId): GameState {
 /** Gone for good. */
 export function discardPerson(state: GameState, uid: number): GameState {
   const card = state.team.cards.find((c) => c.uid === uid);
-  if (!card) throw new Error('Not on your team.');
+  if (!card) throw new GameError('Not on your team.');
   const assigned = Object.fromEntries(Object.entries(state.team.assigned).filter(([, v]) => v !== uid));
   return {
     ...state,
