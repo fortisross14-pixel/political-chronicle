@@ -36,6 +36,15 @@ export interface NewRunConfig {
 
 export const DEFAULT_MODIFIERS: RunModifiers = { opponentRecognition: 1, extraTokens: 0, safeFirstDebate: false };
 
+export type Difficulty = 'easy' | 'normal' | 'hard';
+
+/** Sandbox difficulty: how known and how busy your opponents are. */
+export const DIFFICULTY: Record<Difficulty, Partial<RunModifiers>> = {
+  easy: { opponentRecognition: 0.85, opponentActivity: -0.5 },
+  normal: {},
+  hard: { opponentRecognition: 1.1, opponentActivity: 0.5 },
+};
+
 /** Artifacts change the opening state; some set run-wide modifiers. */
 export function applyArtifacts(state: GameState, artifacts: string[]): GameState {
   let s = state;

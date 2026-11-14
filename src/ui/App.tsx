@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
-import { applyAction, buildRunConfig, createRun, createScenarioRun, endTurnBlocker, GameError, recordRun, turnLabel } from '../engine';
+import {
+  applyAction,
+  buildRunConfig,
+  createRun,
+  createScenarioRun,
+  DIFFICULTY,
+  endTurnBlocker,
+  GameError,
+  recordRun,
+  turnLabel,
+} from '../engine';
 import type { Action, GameState, Profile, RecordOutcome } from '../engine';
 import { loadProfile, saveProfile } from '../storage/profile';
 import { clearSave, loadGameResult, saveGame } from '../storage/save';
@@ -154,10 +164,18 @@ export function App() {
       <SandboxSetup
         profile={profile}
         onBack={() => setScreen('menu')}
-        onStart={(input, artifacts, abilities, careerYears) => {
+        onStart={(input, artifacts, abilities, careerYears, difficulty) => {
           if (!confirmReplace()) return;
           const config = buildRunConfig(input, randomSeed());
-          begin(createRun({ ...config, politician: { ...config.politician, abilities }, artifacts, careerYears }));
+          begin(
+            createRun({
+              ...config,
+              politician: { ...config.politician, abilities },
+              artifacts,
+              careerYears,
+              modifiers: DIFFICULTY[difficulty],
+            }),
+          );
         }}
       />
     );

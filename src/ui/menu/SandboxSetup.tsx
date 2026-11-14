@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import type { CreationInput, Profile } from '../../engine';
+import type { CreationInput, Difficulty, Profile } from '../../engine';
 import { Creator } from '../Creator';
 import { Loadout } from './Loadout';
 
 interface Props {
   profile: Profile;
-  onStart: (input: CreationInput, artifacts: string[], abilities: string[], careerYears?: number) => void;
+  onStart: (
+    input: CreationInput,
+    artifacts: string[],
+    abilities: string[],
+    careerYears: number | undefined,
+    difficulty: Difficulty,
+  ) => void;
   onBack: () => void;
 }
 
@@ -16,12 +22,19 @@ const LENGTHS: { years?: number; label: string }[] = [
   { label: 'Until it ends' },
 ];
 
+const DIFFICULTIES: { id: Difficulty; label: string; text: string }[] = [
+  { id: 'easy', label: 'Easy', text: 'Opponents are less known and campaign less.' },
+  { id: 'normal', label: 'Normal', text: 'The game as tuned.' },
+  { id: 'hard', label: 'Hard', text: 'Better-known opponents who campaign harder.' },
+];
+
 /** Sandbox: build any politician, then pick a loadout and a career length. */
 export function SandboxSetup({ profile, onStart, onBack }: Props) {
   const [input, setInput] = useState<CreationInput | null>(null);
   const [artifacts, setArtifacts] = useState<string[]>([]);
   const [abilities, setAbilities] = useState<string[]>([]);
   const [years, setYears] = useState<number | undefined>(30);
+  const [difficulty, setDifficulty] = useState<Difficulty>('normal');
 
   if (!input) return <Creator onCreate={setInput} onCancel={onBack} />;
 
@@ -53,8 +66,25 @@ export function SandboxSetup({ profile, onStart, onBack }: Props) {
               Your legacy score is tallied when the career ends: by length, three losses in a row, retirement, or age 85.
             </span>
           </fieldset>
+          <fieldset className="field">
+            <legend>Difficulty</legend>
+            <div className="segmented">
+              {DIFFICULTIES.map((d) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  className={difficulty === d.id ? 'active' : undefined}
+                  aria-pressed={difficulty === d.id}
+                  onClick={() => setDifficulty(d.id)}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+            <span className="muted small">{DIFFICULTIES.find((d) => d.id === difficulty)!.text}</span>
+          </fieldset>
           <div className="row">
-            <button className="primary" onClick={() => onStart(input, artifacts, abilities, years)}>
+            <button className="primary" onClick={() => onStart(input, artifacts, abilities, years, difficulty)}>
               Start career
             </button>
           </div>

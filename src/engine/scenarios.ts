@@ -31,7 +31,7 @@ export function createScenarioRun(scenarioId: string, start: ScenarioStart): Gam
     exactYear: !!setup.office,
     raceOfficeId: scenario.objective.officeId,
     artifacts: setup.pure ? [] : start.artifacts,
-    modifiers: { opponentRecognition: setup.opponentRecognition ?? 1 },
+    modifiers: { opponentRecognition: setup.opponentRecognition ?? 1, opponentActivity: setup.opponentActivity ?? 0 },
   });
 
   if (setup.office) {

@@ -7,6 +7,7 @@ import {
   decided,
   decisionError,
   campaignWindow,
+  DIFFICULTY,
   endTurnBlocker,
   eventPrice,
   grantPerson,
@@ -291,5 +292,21 @@ describe('M3 acceptance: campaigning matters (bot)', () => {
     expect(idle.winRate).toBeLessThan(0.1);
     expect(contrarian.winRate).toBeLessThan(0.15);
     expect(sensible.avgShare).toBeGreaterThan(idle.avgShare + 0.2);
+  });
+});
+
+describe('difficulty', () => {
+  it('Sandbox difficulty changes how known and how busy opponents are', () => {
+    const opp = (difficulty: 'easy' | 'normal' | 'hard') =>
+      launch(newRun({ modifiers: DIFFICULTY[difficulty] })).career.race!.opponents[0]!;
+    expect(opp('hard').activity).toBeGreaterThan(opp('normal').activity);
+    expect(opp('easy').activity).toBeLessThan(opp('normal').activity);
+    expect(opp('hard').regions['ny-north']!.recognition).toBeGreaterThan(opp('easy').regions['ny-north']!.recognition);
+  });
+
+  it('scenarios can field a harder-working challenger', () => {
+    const plain = launch(newRun()).career.race!.opponents[0]!.activity;
+    const tough = launch(newRun({ modifiers: { opponentActivity: 3 } })).career.race!.opponents[0]!.activity;
+    expect(tough).toBe(plain + 3);
   });
 });

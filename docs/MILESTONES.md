@@ -249,12 +249,14 @@ race) plays through these systems, with saves migrated (v9 → v10).
 
 ## M14 — Balancing
 
+**Status: done.** See DESIGN_V2 §12 for the measured results.
+
 - A balance pass on everything with the bot harness: every scenario inside its difficulty
   band (Hometown favorite is too easy and Big city, small town too hard after M13);
   backgrounds within ±8 points of each other per state; native vs transplant gap 10–12;
   people, packs and night actions inside their targets; self-funding without runaways.
 - Tune pack prices and odds, role-star effects and the campaign window edge.
-- Difficulty settings for Sandbox.
+- Difficulty settings for Sandbox (Easy / Normal / Hard).
 
 **Done when:** every target in DESIGN_V2 is met by the sim in CI.
 

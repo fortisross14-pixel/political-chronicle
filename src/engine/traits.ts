@@ -9,16 +9,16 @@ export const TRAITS = {
   baseRecognition: 0.05,
   /** Native: your home region knows you and likes you a little. */
   nativeRecognition: 0.3,
-  nativeFavorability: 0.1,
+  nativeFavorability: 0.05,
   /** Transplant: people in your city have seen you around, but don't know you yet. */
-  transplantRecognition: 0.25,
+  transplantRecognition: 0.28,
   /** Newcomer trust penalty statewide, fading to 0 over this many years of residency. */
-  newcomerPenalty: 0.1,
+  newcomerPenalty: 0.03,
   newcomerYears: 8,
   /** Big cities are full of newcomers; small towns notice them. Multiplier on the newcomer penalty by region type. */
-  newcomerByType: { urban: 0.4, suburban: 0.7, midsize: 1, rural: 1.2 } as Record<string, number>,
+  newcomerByType: { urban: 0.4, suburban: 0.7, midsize: 0.8, rural: 0.9 } as Record<string, number>,
   /** Transplants raise extra money from home-state contacts: a flat network, per 3 months, × ECO/3. */
-  outsideDonorBase: 1000,
+  outsideDonorBase: 8000,
   /** Natives start a little ahead with their state party. */
   nativeStanding: 5,
   favoredState: 0.08,

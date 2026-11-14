@@ -74,6 +74,8 @@ export interface ScenarioSetup {
   funds?: number;
   /** <1 makes opponents less known (an easier race). */
   opponentRecognition?: number;
+  /** Extra events per turn for every opponent (a harder race). */
+  opponentActivity?: number;
   /** Run without artifacts. */
   pure?: boolean;
 }
@@ -101,6 +103,14 @@ const WATERTOWN_PLATFORM: Pledge[] = [
   { issue: 'industry', stance: stanceAt(-2) },
 ];
 
+/** A Red who won the North Country by staying close to the middle on what New York cares about. */
+const MODERATE_RED_PLATFORM: Pledge[] = [
+  { issue: 'taxes', stance: stanceAt(1) },
+  { issue: 'policing', stance: stanceAt(1) },
+  { issue: 'small_biz', stance: stanceAt(2) },
+  { issue: 'guns', stance: stanceAt(1) },
+];
+
 export const SCENARIOS: Scenario[] = [
   {
     id: 'hometown_favorite',
@@ -114,7 +124,7 @@ export const SCENARIOS: Scenario[] = [
     setup: {
       character: { gender: 'female', age: 34, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'public_servant' },
       startYear: 2027,
-      opponentRecognition: 0.8,
+      opponentRecognition: 0.55,
     },
     objective: { officeId: 'mayor-watertown', by: 2027, text: 'Win the 2027 race for Mayor of Watertown' },
     stars: [
@@ -131,12 +141,14 @@ export const SCENARIOS: Scenario[] = [
     title: 'Keep your word',
     tagline: 'You won on promises. Now keep them — and keep your job.',
     description:
-      'You’re the newly elected Mayor of Watertown. Bills land on your desk every turn; sign the ones your voters want and that keep your campaign promises, then win re-election in 2031.',
+      'You’re the newly elected Mayor of Watertown, and a well-funded challenger is already campaigning. Sign the bills your voters want, keep your promises, and win re-election in 2031.',
     teaches: 'Bills, approval, promises, re-election',
     setup: {
       character: { gender: 'male', age: 41, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'veteran' },
       startYear: 2028,
       office: { officeId: 'mayor-watertown', approval: 0.45, platform: WATERTOWN_PLATFORM, wonYear: 2027, share: 0.52 },
+      // A well-funded challenger campaigns hard for the whole window.
+      opponentActivity: 3,
     },
     objective: { officeId: 'mayor-watertown', by: 2031, minYear: 2031, text: 'Win re-election as Mayor of Watertown in 2031' },
     stars: [
@@ -153,7 +165,7 @@ export const SCENARIOS: Scenario[] = [
     title: 'Pick a side',
     tagline: 'Independents can only go so far. Time to choose a team.',
     description:
-      'As the independent Mayor of Watertown, join a party, earn its trust, and win the North Country & Southern Tier House seat by 2030.',
+      'As the independent Mayor of Watertown, the 2028 House race opens on your first turn. Ask a party to take you, launch, and win the North Country & Southern Tier seat.',
     teaches: 'Parties, standing, nominations, partisan races',
     setup: {
       character: { gender: 'nonbinary', age: 38, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'lawyer' },
@@ -161,7 +173,7 @@ export const SCENARIOS: Scenario[] = [
       office: { officeId: 'mayor-watertown', approval: 0.55, platform: WATERTOWN_PLATFORM, wonYear: 2027, share: 0.54 },
       opponentRecognition: 1.2,
     },
-    objective: { officeId: 'house-ny-north', by: 2030, text: 'Win the North Country House seat by 2030' },
+    objective: { officeId: 'house-ny-north', by: 2028, text: 'Win the North Country House seat in 2028' },
     stars: [
       { id: 'win', text: 'Win the House seat', rule: { kind: 'win' } },
       { id: 'noPrimary', text: 'Get the nomination without a primary', rule: { kind: 'noPrimary' } },
@@ -176,15 +188,15 @@ export const SCENARIOS: Scenario[] = [
     title: 'Big city, small town',
     tagline: 'Upstate loves you. Now win over New York City.',
     description:
-      'A Republic Party congresswoman from the North Country, you set your sights on the Governor’s mansion. Win statewide by 2034 — and that means competing in NYC.',
+      'A moderate Republic Party congresswoman from the North Country, you set your sights on the Governor’s mansion. Win statewide by 2034 — and that means competing in NYC.',
     teaches: 'Statewide campaigns, NYC, election night',
     setup: {
       character: { gender: 'female', age: 44, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'business' },
       startYear: 2029,
-      office: { officeId: 'house-ny-north', approval: 0.6, platform: WATERTOWN_PLATFORM, wonYear: 2028, share: 0.68 },
+      office: { officeId: 'house-ny-north', approval: 0.6, platform: MODERATE_RED_PLATFORM, wonYear: 2028, share: 0.68 },
       party: { id: 'RP', standing: 62 },
       funds: 40000,
-      opponentRecognition: 0.8,
+      opponentRecognition: 0.4,
     },
     objective: { officeId: 'governor-ny', by: 2034, text: 'Become Governor of New York by 2034' },
     stars: [

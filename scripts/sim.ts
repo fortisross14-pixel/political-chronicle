@@ -1,8 +1,17 @@
 // Balance harness: npm run sim [runs]
-import { BACKGROUNDS } from '../src/data';
-import { getEventCard } from '../src/data';
-import { buildRunConfig, createRun, eventPrice, projectedIncome } from '../src/engine';
-import { botCharacter, careerFunds, climbCareer, hometownWinRate, playCampaign, reelectionRate, setNightActions } from '../src/sim/bot';
+import { BACKGROUNDS, SCENARIOS } from '../src/data';
+import { buildRunConfig, createRun, DIFFICULTY, projectedIncome } from '../src/engine';
+import type { Difficulty } from '../src/engine';
+import {
+  botCharacter,
+  climbCareer,
+  hometownWinRate,
+  playCampaign,
+  reelectionRate,
+  scenarioRate,
+  setDonationShare,
+  setNightActions,
+} from '../src/sim/bot';
 import type { BotStyle } from '../src/sim/bot';
 
 const runs = Number(process.argv[2] ?? 200);
@@ -74,22 +83,33 @@ for (const home of ['ny-north', 'ny-nyc']) {
   );
 }
 
-console.log('\nEconomics investment: Watertown public servant, 20 turns (~6 years)');
-const rallyPrice = eventPrice(getEventCard('arena_rally'), createRun(buildRunConfig(botCharacter('ny-north'), 'price')));
-for (const style of ['sensible', 'investor'] as BotStyle[]) {
-  const n = Math.max(40, runs / 4);
-  let funds = 0;
-  let fr = 0;
-  let rally = 0;
-  for (let i = 0; i < n; i++) {
-    const r = careerFunds(botCharacter('ny-north'), style, 20, `fund-${style}-${i}`);
-    funds += r.funds;
-    fr += r.fundraising;
-    if (r.peak >= rallyPrice) rally++;
+console.log('\nSelf-funding: a $1B executive, the usual donation vs. everything in');
+for (const home of ['ny-north', 'ny-nyc']) {
+  for (const share of [undefined, 1]) {
+    setDonationShare(share);
+    const n = Math.max(40, runs / 4);
+    let wins = 0;
+    for (let i = 0; i < n; i++) {
+      const cfg = buildRunConfig(botCharacter(home, 'business'), `self-${home}-${i}`);
+      if (playCampaign(createRun({ ...cfg, wealth: 1e9 }), 'sensible').result.won) wins++;
+    }
+    console.log(`${home.padEnd(9)} ${share === undefined ? 'normal donation' : 'all in        '} win ${pct(wins / n)}`);
   }
-  console.log(
-    `${style.padEnd(10)} Economics ${(fr / n).toFixed(1)}  avg funds $${Math.round(funds / n / 1000)}k  could afford a $${rallyPrice / 1000}k rally: ${pct(rally / n)}`,
-  );
+}
+setDonationShare(undefined);
+
+console.log('\nSandbox difficulty: first hometown race (public servant)');
+for (const d of ['easy', 'normal', 'hard'] as Difficulty[]) {
+  const n = Math.max(40, runs / 4);
+  const row = ['ny-north', 'ny-nyc'].map((home) => {
+    let wins = 0;
+    for (let i = 0; i < n; i++) {
+      const cfg = buildRunConfig(botCharacter(home), `diff-${home}-${i}`);
+      if (playCampaign(createRun({ ...cfg, modifiers: DIFFICULTY[d] }), 'sensible').result.won) wins++;
+    }
+    return `${home} ${pct(wins / n)}`;
+  });
+  console.log(`${d.padEnd(7)} ${row.join('   ')}`);
 }
 
 console.log('\nRe-election after a first term (sensible campaigns, governing style varies)');
@@ -140,8 +160,6 @@ for (const [background, party] of [
 }
 
 console.log('\nBeginner scenarios (target: 80–90% wins for sensible play)');
-import { SCENARIOS } from '../src/data';
-import { scenarioRate } from '../src/sim/bot';
 for (const scn of SCENARIOS.filter((x) => x.track === 'beginner')) {
   const n = Math.max(40, runs / 3);
   const plain = scenarioRate(scn.id, n);

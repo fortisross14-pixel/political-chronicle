@@ -137,17 +137,17 @@ describe('native vs transplant', () => {
     expect(isNative(transplantRun.politician)).toBe(false);
     expect(nativeRun.regions['ny-north']!.recognition).toBeGreaterThan(transplantRun.regions['ny-north']!.recognition);
     expect(newcomerPenalty(nativeRun)).toBe(0);
-    expect(newcomerPenalty(transplantRun)).toBeCloseTo(0.1);
-    expect(newcomerPenalty(transplantRun, 'ny-north')).toBeCloseTo(0.12);
-    expect(newcomerPenalty(transplantRun, 'ny-nyc')).toBeCloseTo(0.04);
+    expect(newcomerPenalty(transplantRun)).toBeCloseTo(0.03);
+    expect(newcomerPenalty(transplantRun, 'ny-north')).toBeCloseTo(0.027); // rural ×0.9
+    expect(newcomerPenalty(transplantRun, 'ny-nyc')).toBeCloseTo(0.012); // urban ×0.4
     const later: GameState = { ...transplantRun, clock: { ...transplantRun.clock, monthsElapsed: 48 } };
-    expect(newcomerPenalty(later)).toBeCloseTo(0.05);
+    expect(newcomerPenalty(later)).toBeCloseTo(0.015);
     const running = launch(transplantRun, [{ issue: 'guns', stance: 2 }], undefined, 0);
     const you = raceViews(running, running.career.race!, 'ny-north')[0]!;
-    expect(you.standing.favorability).toBeCloseTo(running.regions['ny-north']!.favorability - 0.12);
+    expect(you.standing.favorability).toBeCloseTo(running.regions['ny-north']!.favorability - 0.027);
   });
 
-  it('transplants raise more from outside donors; only natives get the hometown event bonus', () => {
+  it('transplants raise more from outside donors; their city is home turf for events too', () => {
     expect(projectedIncome(transplantRun).donors).toBeGreaterThan(projectedIncome({ ...nativeRun, regions: transplantRun.regions }).donors);
     const ready = (s: GameState) => {
       const p = launch(s, [{ issue: 'guns', stance: 2 }]);
@@ -156,14 +156,14 @@ describe('native vs transplant', () => {
     const a = previewEvent(ready(nativeRun), 'door_knocking', 'ny-north', 'guns').effects[0]!.dRecognition;
     const b = previewEvent({ ...ready(transplantRun), regions: ready(nativeRun).regions }, 'door_knocking', 'ny-north', 'guns').effects[0]!
       .dRecognition;
-    expect(a).toBeGreaterThan(b);
+    expect(a).toBeCloseTo(b, 6);
   });
 });
 
 describe('background perks', () => {
   it('celebrities start known statewide; doctors with high integrity and less energy', () => {
     const celeb = run({ backgroundId: 'celebrity' });
-    expect(celeb.regions['ny-nyc']!.recognition).toBeGreaterThanOrEqual(0.25);
+    expect(celeb.regions['ny-nyc']!.recognition).toBeGreaterThanOrEqual(0.2);
     const doc = run({ backgroundId: 'doctor' });
     expect(doc.integrity).toBe(75);
     expect(doc.energy).toBe(run().energy - 1);

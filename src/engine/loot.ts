@@ -10,7 +10,7 @@ export const GROUND_GAME = {
   perDoorKnock: 1,
   maxFromDoorKnocks: 4,
   /** Organizers bring their own volunteers. */
-  organizerBonus: 2,
+  organizerBonus: 0,
   /** Each 2 energy left unspent on the final turn becomes a token. */
   energyPerToken: 2,
   doorKnocksForMilestone: 3,

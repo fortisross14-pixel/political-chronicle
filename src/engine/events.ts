@@ -11,8 +11,8 @@ import { Rng } from './rng';
 import type { EventCard, GameState, IssueId, OfficeLevel, Pledge, RegionId, Stance } from './types';
 
 export const HOMETOWN_EVENT_BONUS = 1.25;
-/** A transplant's own city is still home turf, just less so. */
-export const TRANSPLANT_EVENT_BONUS = 1.15;
+/** A transplant's own city is home turf too: they chose to live there. */
+export const TRANSPLANT_EVENT_BONUS = 1.25;
 export const CREDIBLE_ISSUE_BONUS = 1.15;
 export const DOUBTED_ISSUE_FACTOR = 0.85;
 export const FATIGUE = 0.7;

@@ -190,8 +190,7 @@ describe('M6 acceptance: Watertown → House → Governor', () => {
     const results = Array.from({ length: 8 }, (_, i) => climbCareer(botCharacter('ny-north'), 60, `accept-${i}`));
     expect(results.every((r) => r.party === 'RP')).toBe(true);
     expect(results.filter((r) => r.reachedHouse).length).toBeGreaterThanOrEqual(6);
-    // Statewide is hard for a Red in New York; tuned again in the balance milestone.
-    expect(results.filter((r) => r.reachedGovernor).length).toBeGreaterThanOrEqual(2);
+    expect(results.filter((r) => r.reachedGovernor).length).toBeGreaterThanOrEqual(3);
     // The first try for Governor is genuinely uncertain (NYC is hard for a Red).
     const firstTries = results.map((r) => r.firstGovernorTry).filter((v) => v !== undefined);
     expect(firstTries.length).toBeGreaterThan(0);

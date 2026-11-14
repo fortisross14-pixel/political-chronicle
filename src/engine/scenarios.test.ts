@@ -142,13 +142,13 @@ describe('artifacts & abilities', () => {
 });
 
 describe('M10 acceptance: beginner scenarios sit in their difficulty bands', () => {
-  // Target 80–90% for sensible play. These are wide while the gameplay rework settles; the
-  // balance milestone narrows them (hometown is too easy, Big city too hard right now).
+  // Target 80–90% for sensible play (DESIGN_V2 §8.1). 20 bot runs are noisy (±9 points), so CI
+  // allows a few points either side; the full report (npm run sim) measures them precisely.
   const bands: Record<string, [number, number]> = {
-    hometown_favorite: [0.7, 1],
-    keep_your_word: [0.7, 1],
-    pick_a_side: [0.6, 1],
-    big_city_small_town: [0.1, 0.95],
+    hometown_favorite: [0.7, 0.97],
+    keep_your_word: [0.7, 0.97],
+    pick_a_side: [0.7, 0.97],
+    big_city_small_town: [0.7, 0.97],
   };
   for (const scn of SCENARIOS.filter((x) => x.track === 'beginner')) {
     it(`${scn.title}`, () => {

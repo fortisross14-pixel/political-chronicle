@@ -69,8 +69,8 @@ ones), a **perk** and a **weakness**.
 | **Celebrity**                          | CHA +4, STR +1         | CA, NY, FL; urban regions         | Starts with 40% recognition statewide                                        | ADM, ECO and LAW start at 1; higher scandal risk; −10% credibility on policy topics       |
 | **Lawyer**                             | LAW +3, DIP +1         | MA, IL, NY                        | Legal-challenge cards favor you; +credibility in debates                     | CHA starts at 1                                                                           |
 | **Business executive**                 | ECO +3, ADM +1         | NY, TX, FL                        | Can self-fund: starts with $150k                                             | −credibility on labor and min-wage topics                                                 |
-| **Community organizer**                | LEA +1, CHA +1, DIP +1 | IL, MI, PA, OH                    | +2 ground-game tokens per campaign; door-knocking ×1.5                       | ECO starts at 1                                                                           |
-| **Doctor / scientist**                 | LAW +1, ADM +1, ECO +1 | MA, CO, WA                        | High trust: integrity starts at 75; credible on healthcare and climate       | Lower energy: −1 for the first cycle (still at the clinic)                                |
+| **Community organizer**                | LEA +2, DIP +1         | IL, MI, PA, OH                    | Credible on labor, housing and the minimum wage (M14; see §12)               | ECO starts at 1                                                                           |
+| **Doctor / scientist**                 | LAW +1, ADM +1, ECO +1 | MA, CO, WA                        | High trust: integrity 75; ×1.12 credibility on policy (M14)                  | Lower energy: −1 for the first two turns (still at the clinic)                            |
 
 **As built (M7):** weaknesses are creation caps (a skill can't go above 2 at creation); points
 that can't be placed because of caps are lost. Perk values were trimmed after the sim:
@@ -323,15 +323,14 @@ star goals. A run ends when the objective is met (stars scored at that moment) o
 passes. Each scenario unlocks after a star on the previous one, and Sandbox after a star on all
 four. Rewards pay out the first time you reach 1, 2 and 3 stars.
 
-| Scenario             | Starts                                           | Objective                        | Stars                                    | Rewards (1★ / 2★ / 3★)                             | Bot win rate |
-| -------------------- | ------------------------------------------------ | -------------------------------- | ---------------------------------------- | -------------------------------------------------- | ------------ |
-| Hometown favorite    | 2027, Watertown public servant, weaker opponents | Win Watertown mayor 2027         | win · 55%+ · 60%+                        | Campaign button / War chest / _Rapid response_     | ~83%         |
-| Keep your word       | 2028, veteran mayor, 45% approval                | Re-elected in 2031               | win · no broken promises · approval 60%+ | Lucky tie / Rolodex / _Iron discipline_            | ~100%¹       |
-| Pick a side          | 2028, independent lawyer mayor                   | North Country House seat by 2030 | win · no primary · standing 70+          | Union hall key / _Crossover appeal_ / Debate notes | ~78%         |
-| Big city, small town | 2029, Red House member (standing 55)             | Governor by 2034                 | win · first try · carry NYC              | _Comeback kid_ / — / —                             | ~80%         |
+| Scenario             | Starts                                                                           | Objective                        | Stars                                    | Rewards (1★ / 2★ / 3★)                             | Bot win rate |
+| -------------------- | -------------------------------------------------------------------------------- | -------------------------------- | ---------------------------------------- | -------------------------------------------------- | ------------ |
+| Hometown favorite    | Jan 2026 (blank), Watertown public servant, weak opponents (×0.55)               | Win Watertown mayor 2027         | win · 55%+ · 60%+                        | Campaign button / War chest / _Rapid response_     | ~85%         |
+| Keep your word       | 2028, veteran mayor, 45% approval; the challenger campaigns 3 extra times a turn | Re-elected in 2031               | win · no broken promises · approval 60%+ | Lucky tie / Rolodex / _Iron discipline_            | ~85%         |
+| Pick a side          | 2028, independent lawyer mayor; the House race opens on turn one                 | North Country House seat in 2028 | win · no primary · standing 70+          | Union hall key / _Crossover appeal_ / Debate notes | ~85–95%      |
+| Big city, small town | 2029, moderate Red House member (standing 62), weak opponents (×0.4)             | Governor by 2034                 | win · first try · carry NYC              | _Comeback kid_ / — / —                             | ~85%         |
 
-¹ Above the 80–90% band: a sensible bot governs its way from 45% to 60%+ approval within a
-year. Governing is too easy in general; that's an M13 balancing item, not a scenario tweak.
+Measured in M14 with 80–150 bot runs each (`npm run sim`).
 
 ### 8.2 Sandbox
 
@@ -456,3 +455,33 @@ legislature's vote, shown as a signing ceremony.
 **Terms and the world.** Re-election is launched like any race. A term you don't defend ends
 at New Year. Every office has a holder; each New Year the races you sat out are simulated
 (partisan lean, incumbency) and recorded. The sitting holder runs against you 60% of the time.
+
+## 12. Balance (M14, as measured)
+
+All numbers are sensible-bot win rates from `npm run sim` (80–150 runs).
+
+| Target (DESIGN_V2)                                   | Measured                                                                                |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Beginner scenarios 80–90%                            | Hometown 83–86%, Keep your word 85%, Pick a side 84–95%, Big city 85%                   |
+| Keeper re-elected ~100%, flip-flopper 2–30%, idle 0% | 100%, 0–5%, 0%                                                                          |
+| Native vs transplant gap 10–12 points                | Watertown 15, Buffalo 12, NYC 5 (average 11)                                            |
+| Backgrounds within ±8 points per area                | Watertown 65–75% (mean 71), NYC 45–56% (mean 52)                                        |
+| A full loadout ≤ +10–15 points                       | +0–8                                                                                    |
+| Self-funding without runaways                        | A $1B executive going all in does no better (Watertown 57% vs 80%, NYC 40% vs 43%)      |
+| Election night decides close races                   | 9–15% of races are within 3 points; night actions flip 14–25% of those, never a blowout |
+
+**Tuning that got there:** small-city mayoral opponents campaign 3 times a turn (NYC's
+front-runner 2); House opponents 3.5 and statewide 2.5 (fractional activity is a chance of one
+more event); natives start with +0.05 favorability (was +0.10) and transplants with 28%
+recognition, a newcomer doubt of −0.03 and a home-state donor network worth $8k × ECO/3 a
+turn; a transplant's city counts as home turf for events. Backgrounds: Celebrity 20% statewide
+recognition and ×0.75 policy credibility; Lawyer debates ×1.4 and ×1.08 policy credibility;
+Organizer LEA +2, DIP +1 (no extra Charisma, no token bonus); Doctor ×1.12 policy credibility
+and −1 energy only for the first two turns.
+
+**Sandbox difficulty:** Easy (opponents ×0.85 known, −0.5 events a turn), Normal, Hard
+(×1.1, +0.5). First hometown race: Watertown 98 / 65 / 40%, NYC 88 / 50 / 40%.
+
+**Still open:** the climber's first Governor try is rarely won (0–13%), and a Blue from the
+North Country reaches the House only ~30% of the time. Both reflect the red-region, blue-state
+tension by design, but expansion scenarios may want them less extreme.

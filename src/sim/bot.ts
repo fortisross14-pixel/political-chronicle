@@ -155,10 +155,14 @@ function staff(state: GameState): GameState {
 function shop(state: GameState, style: BotStyle): GameState {
   let s = state;
   if (style === 'idle') return s;
-  const wants: ['people' | 'policy' | 'campaign', 'regular' | 'golden'][] = [];
+  const wants: ['people' | 'policy' | 'campaign', 'regular' | 'golden' | 'elite'][] = [];
   if (s.team.cards.length < 3) wants.push(['people', 'regular']);
   if (s.career.race)
-    for (let k = 0; k < 3; k++) wants.push(['campaign', s.funds > packPrice('campaign', 'golden') * 6 ? 'golden' : 'regular']);
+    for (let k = 0; k < 3; k++) {
+      const tier =
+        s.funds > packPrice('campaign', 'elite') * 8 ? 'elite' : s.funds > packPrice('campaign', 'golden') * 6 ? 'golden' : 'regular';
+      wants.push(['campaign', tier]);
+    }
   if (s.career.office) wants.push(['policy', 'regular']);
   for (const [kind, tier] of wants) {
     // Keep a reserve: never spend more than a third of the war chest on one pack.
@@ -226,6 +230,12 @@ function nextRace(s: GameState, style: BotStyle): OfficeId | undefined {
     if (up && campaignWindow(s, up.id).electionYear <= office.termEndsYear) return up.id;
   }
   if (office) return open.some((r) => r.officeId === office.officeId) ? office.officeId : undefined;
+  // A party climber out of office goes back to its home House seat, not down to City Hall.
+  if (style === 'climber' && s.career.affiliation !== 'IND') {
+    const home = s.politician.residentRegionId;
+    const house = open.map((r) => getOffice(r.officeId)).find((o) => o.level === 'house' && o.regionIds.includes(home));
+    if (house) return house.id;
+  }
   const last = [...s.elections].reverse().find((e) => e.kind === 'general');
   const target = last && !getOffice(last.officeId).partisan ? last.officeId : hometownMayoralty(s.politician.residentRegionId);
   return target && open.some((r) => r.officeId === target) ? target : undefined;
@@ -242,6 +252,12 @@ function climb(state: GameState): GameState {
   return s;
 }
 
+/** Measurement hook: put this share of personal wealth into every campaign instead of the usual amount. */
+let donationShare: number | undefined;
+export function setDonationShare(share: number | undefined): void {
+  donationShare = share;
+}
+
 function launchIfReady(state: GameState, style: BotStyle): GameState {
   const s = state;
   if (s.career.race || s.packs.length) return s;
@@ -251,7 +267,12 @@ function launchIfReady(state: GameState, style: BotStyle): GameState {
   const manager = [...s.team.cards].sort(
     (a, b) => getPerson(b.personId).stars.campaignManager - getPerson(a.personId).stars.campaignManager,
   )[0];
-  const donation = style === 'idle' ? 0 : Math.round(Math.min(s.wealth * 0.6, donationNorm(officeId) * 0.5));
+  const donation =
+    style === 'idle'
+      ? 0
+      : donationShare !== undefined
+        ? Math.round(s.wealth * donationShare)
+        : Math.round(Math.min(s.wealth * 0.6, donationNorm(officeId) * 0.5));
   const action = { type: 'LAUNCH_CAMPAIGN' as const, officeId, platform, donation, managerUid: manager?.uid };
   return launchError(s, action) ? s : applyAction(s, action);
 }

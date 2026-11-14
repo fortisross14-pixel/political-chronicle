@@ -52,6 +52,11 @@ export const OPPONENT = {
   incumbentFavorability: 0.05,
   reachPerEvent: 0.06,
   persuasionPerEvent: 0.055,
+  /** Events per turn for a mayoral front-runner: small-city races are tighter, one-on-one fights. */
+  mayorActivity: 3,
+  /** In a big city the field splits: the front-runner and a second candidate do less each. */
+  bigCityActivity: 2,
+  mayorSecondActivity: 1,
 };
 
 /** Partisan races: tougher, better-funded opponents as the office grows (DESIGN §5.3). */
@@ -59,9 +64,9 @@ export const PARTISAN_OPPONENT: Record<
   Exclude<OfficeLevel, 'mayor'>,
   { recognition: number; incumbentChance: number; activity: number }
 > = {
-  house: { recognition: 0.42, incumbentChance: 0.6, activity: 4 },
-  senate: { recognition: 0.2, incumbentChance: 0.35, activity: 4 },
-  governor: { recognition: 0.2, incumbentChance: 0.35, activity: 4 },
+  house: { recognition: 0.42, incumbentChance: 0.6, activity: 3.5 },
+  senate: { recognition: 0.2, incumbentChance: 0.35, activity: 2.5 },
+  governor: { recognition: 0.2, incumbentChance: 0.35, activity: 2.5 },
 };
 
 // ---------- Opponents ----------
@@ -201,7 +206,9 @@ export function generateOpponents(rng: Rng, officeId: OfficeId, playerIsIncumben
       lean: Math.round(lean * 10) / 10,
       platform: opponentPlatform(rng, seat.id, lean, office.level),
       incumbent,
-      activity: (seat.type === 'urban' && i > 0 ? 1 : 2) + (playerIsIncumbent && i === 0 ? 1 : 0),
+      activity:
+        (seat.type === 'urban' ? (i > 0 ? OPPONENT.mayorSecondActivity : OPPONENT.bigCityActivity) : OPPONENT.mayorActivity) +
+        (playerIsIncumbent && i === 0 ? 1 : 0),
       regions,
     });
   }
@@ -245,7 +252,9 @@ export function opponentsAct(rng: Rng, race: Race): Race {
   const weights = regionWeights(race.officeId);
   const opponents = race.opponents.map((c) => {
     const regions = { ...c.regions };
-    for (let k = 0; k < c.activity; k++) {
+    // Fractional activity: the remainder is a chance of one more event this turn.
+    const events = Math.floor(c.activity) + (rng.chance(c.activity % 1) ? 1 : 0);
+    for (let k = 0; k < events; k++) {
       // Weighted pick of a region by population × turnout.
       let roll = rng.float();
       let regionId = office.regionIds[0]!;
@@ -298,6 +307,8 @@ export function fileRace(state: GameState, officeId: OfficeId, electionYear: num
     };
   });
   opponents = seatIncumbent(state, officeId, opponents, rng);
+  const extra = state.modifiers.opponentActivity ?? 0;
+  if (extra) opponents = opponents.map((c) => ({ ...c, activity: Math.max(0, c.activity + extra) }));
   let race: Race = {
     officeId,
     electionYear,

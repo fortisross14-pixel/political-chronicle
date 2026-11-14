@@ -15,7 +15,9 @@ coverage floors, a performance budget, Playwright UI smoke tests, a fixed-seed b
 baseline and a bundle budget, all in CI on every push. **M12 (visual revamp) done**: the
 Prime Time broadcast look, collectible 3D cards, drag-to-play and swipe decisions, sound and
 vibration, and an installable offline app. **M13 (gameplay rework) done**: a blank start, launching campaigns, card packs, people with
-role stars, political events, 7-step platforms and the World tab. Next: M14 balancing.
+role stars, political events, 7-step platforms and the World tab. **M14 (balancing) done**: every
+beginner scenario at 80–90% for sensible play, backgrounds within ±8 points, Sandbox difficulty.
+Next: expansion.
 
 ## Development
 

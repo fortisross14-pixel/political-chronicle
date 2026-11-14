@@ -68,9 +68,9 @@ describe('createRun', () => {
 
   it('gives the hometown a recognition and favorability boost', () => {
     const s = newRun();
-    // Native public servant: hometown 0.30 / +0.10, plus +0.08 statewide (NY favors public servants).
+    // Native public servant: hometown 0.30 / +0.05, plus +0.08 statewide (NY favors public servants).
     expect(s.regions['ny-north']!.recognition).toBe(0.3);
-    expect(s.regions['ny-north']!.favorability).toBeCloseTo(0.18);
+    expect(s.regions['ny-north']!.favorability).toBeCloseTo(0.13);
     expect(s.regions['ny-nyc']!.recognition).toBe(0.05);
     expect(s.regions['ny-nyc']!.favorability).toBeCloseTo(0.08);
   });

@@ -475,6 +475,8 @@ export interface RunModifiers {
   extraTokens: number;
   /** Your first debate of each campaign can't go wrong. */
   safeFirstDebate: boolean;
+  /** Extra campaign events per turn for every opponent (scenario difficulty, Sandbox difficulty). */
+  opponentActivity?: number;
 }
 
 export interface ScenarioRun {
