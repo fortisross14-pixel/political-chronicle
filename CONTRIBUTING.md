@@ -26,17 +26,18 @@ the UI smoke tests with:
 npm run check:all
 ```
 
-| Command                              | What it does                                                             |
-| ------------------------------------ | ------------------------------------------------------------------------ |
-| `npm run format`                     | Prettier, in place                                                       |
-| `npm run lint`                       | ESLint (TypeScript, React hooks, layer boundaries)                       |
-| `npm run typecheck`                  | `tsc` over the app, tests, scripts and configs                           |
-| `npm test` / `npm run test:coverage` | Vitest unit tests (coverage floors in `vite.config.ts`)                  |
-| `npm run e2e`                        | Playwright UI smoke tests against the production build (desktop + phone) |
-| `npm run sim -- 200`                 | The full balance report (slow, informational)                            |
-| `npm run balance`                    | The fixed-seed balance baseline check (fast; CI)                         |
-| `npm run balance:update`             | Re-record the baseline after an intended balance change                  |
-| `npm run bundle`                     | Gzip bundle budget (after `npm run build`)                               |
+| Command                              | What it does                                                                                              |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `npm run format`                     | Prettier, in place                                                                                        |
+| `npm run lint`                       | ESLint (TypeScript, React hooks, layer boundaries)                                                        |
+| `npm run typecheck`                  | `tsc` over the app, tests, scripts and configs                                                            |
+| `npm test` / `npm run test:coverage` | Vitest unit tests (coverage floors in `vite.config.ts`)                                                   |
+| `npm run e2e`                        | Playwright UI tests against the production build (desktop + phone), incl. WCAG AA checks and offline play |
+| `npm run icons`                      | Re-render the app icons from `public/icon.svg`                                                            |
+| `npm run sim -- 200`                 | The full balance report (slow, informational)                                                             |
+| `npm run balance`                    | The fixed-seed balance baseline check (fast; CI)                                                          |
+| `npm run balance:update`             | Re-record the baseline after an intended balance change                                                   |
+| `npm run bundle`                     | Gzip bundle budget (after `npm run build`)                                                                |
 
 ## Rules of the road
 

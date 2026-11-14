@@ -42,3 +42,13 @@ export function sideColor(affiliation: 'DU' | 'RP' | 'IND', lean: number, isPlay
 export function leadColor(base: string, margin: number): string {
   return mix('#3a4a6b', base, 0.4 + margin * 4);
 }
+
+/** Text colour that stays readable on `bg`: near-black on light fills, white on dark ones. */
+export function inkOn(bg: string): string {
+  const [r, g, b] = hex(bg).map((c) => {
+    const v = c / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  }) as Rgb;
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return lum > 0.22 ? '#1a1406' : '#ffffff';
+}

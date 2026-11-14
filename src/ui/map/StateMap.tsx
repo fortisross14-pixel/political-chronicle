@@ -19,9 +19,11 @@ interface Props {
   layer: MapLayer;
   selected: RegionId;
   onSelect: (id: RegionId) => void;
+  /** A region a card is being dragged over. */
+  hover?: RegionId;
 }
 
-export function StateMap({ state, layer, selected, onSelect }: Props) {
+export function StateMap({ state, layer, selected, onSelect, hover }: Props) {
   const race = state.career.race?.platform.length ? state.career.race : undefined;
   const intention = race ? poll(state, race).regions : {};
   const inRace = (id: RegionId) => !race || getOffice(race.officeId).regionIds.includes(id);
@@ -76,14 +78,30 @@ export function StateMap({ state, layer, selected, onSelect }: Props) {
         const region = getRegion(id);
         const isSelected = id === selected;
         const isHome = id === state.politician.residentRegionId;
+        const label = region.seatCity === 'New York City' ? 'NYC' : region.seatCity;
+        const nightRegion = layer === 'night' ? night?.regions[id] : undefined;
+        const approval = layer === 'approval' ? state.career.office?.approval[id] : undefined;
+        const sub =
+          approval !== undefined
+            ? `${Math.round(approval * 100)}% approve`
+            : nightRegion
+              ? nightRegion.calledFor !== undefined
+                ? nightRegion.calledFor === 0
+                  ? 'YOU WIN'
+                  : 'THEY WIN'
+                : `${Math.round(counted(nightRegion, night!.step) * 100)}% in`
+              : layer === 'vote' && intention[id]
+                ? `You ${Math.round(decided(intention[id]!)[0]! * 100)}%`
+                : undefined;
         return (
           <g
             key={id}
-            className={`map-region${isSelected ? ' selected' : ''}${(layer === 'vote' && !inRace(id)) || (layer === 'approval' && state.career.office?.approval[id] === undefined) || (layer === 'night' && !night?.regions[id]) ? ' dim' : ''}`}
+            className={`map-region${isSelected ? ' selected' : ''}${hover === id ? ' drop' : ''}${(layer === 'vote' && !inRace(id)) || (layer === 'approval' && state.career.office?.approval[id] === undefined) || (layer === 'night' && !night?.regions[id]) ? ' dim' : ''}`}
             role="button"
+            data-region={id}
             tabIndex={0}
             aria-pressed={isSelected}
-            aria-label={region.name}
+            aria-label={`${label}${sub ? ` ${sub}` : ''}, ${region.name}`}
             onClick={() => onSelect(id)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -102,25 +120,12 @@ export function StateMap({ state, layer, selected, onSelect }: Props) {
             ))}
             <circle cx={shape.city.x} cy={shape.city.y} r={isHome ? 4.5 : 3} className={isHome ? 'city home' : 'city'} />
             <text x={shape.label.x} y={shape.label.y} className="map-label" textAnchor="middle">
-              {region.seatCity === 'New York City' ? 'NYC' : region.seatCity}
+              {label}
             </text>
-            {layer === 'approval' && state.career.office?.approval[id] !== undefined && (
+            {sub && ' '}
+            {sub && (
               <text x={shape.label.x} y={shape.label.y + 14} className="map-label sub" textAnchor="middle">
-                {Math.round(state.career.office.approval[id]! * 100)}% approve
-              </text>
-            )}
-            {layer === 'night' && night?.regions[id] && (
-              <text x={shape.label.x} y={shape.label.y + 14} className="map-label sub" textAnchor="middle">
-                {night.regions[id]!.calledFor !== undefined
-                  ? night.regions[id]!.calledFor === 0
-                    ? 'YOU WIN'
-                    : 'THEY WIN'
-                  : `${Math.round(counted(night.regions[id]!, night.step) * 100)}% in`}
-              </text>
-            )}
-            {layer === 'vote' && intention[id] && (
-              <text x={shape.label.x} y={shape.label.y + 14} className="map-label sub" textAnchor="middle">
-                You {Math.round(decided(intention[id]!)[0]! * 100)}%
+                {sub}
               </text>
             )}
           </g>

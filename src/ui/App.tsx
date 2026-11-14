@@ -5,6 +5,8 @@ import { loadProfile, saveProfile } from '../storage/profile';
 import { clearSave, loadGameResult, saveGame } from '../storage/save';
 import { Header } from './Header';
 import { ICONS } from './icons';
+import { cue } from './fx/sound';
+import type { Cue } from './fx/sound';
 import { ScenarioSelect } from './menu/ScenarioSelect';
 import { SandboxSetup } from './menu/SandboxSetup';
 import { HallOfRuns } from './results/HallOfRuns';
@@ -34,6 +36,24 @@ function Breaking({ state }: { state: GameState }) {
     </div>
   );
 }
+
+/** The sound each action makes when it succeeds. */
+const ACTION_CUES: Partial<Record<Action['type'], Cue>> = {
+  PLAY_EVENT: 'play',
+  BUY_CARD: 'coin',
+  RESOLVE_DECISIONS: 'stamp',
+  END_TURN: 'turn',
+  ASSIGN_PERSON: 'deal',
+  UNASSIGN_ROLE: 'deal',
+  DISCARD_PERSON: 'deal',
+  USE_ITEM: 'play',
+  NIGHT_MOBILIZE: 'play',
+  NIGHT_LAWYERS: 'stamp',
+  NIGHT_AD_BLITZ: 'coin',
+  NIGHT_ADVANCE: 'tick',
+  SET_PLATFORM: 'stamp',
+  DISMISS_RESULT: 'tap',
+};
 
 function randomSeed(): string {
   return Math.random().toString(36).slice(2, 10);
@@ -93,9 +113,19 @@ export function App() {
   const dispatch = (action: Action) => {
     if (!state) return;
     try {
-      setState(applyAction(state, action));
+      const next = applyAction(state, action);
+      setState(next);
       setError(null);
+      const called = state.night && next.night && state.night.calledFor === undefined ? next.night.calledFor : undefined;
+      if (called !== undefined) cue(called === 0 ? 'call-win' : 'call-lose');
+      else if (state.pendingResult === undefined && next.pendingResult !== undefined)
+        cue(next.elections[next.pendingResult]!.playerWon ? 'call-win' : 'call-lose');
+      else {
+        const sound = ACTION_CUES[action.type];
+        if (sound) cue(sound);
+      }
     } catch (e) {
+      cue('error');
       // Rule violations are shown to the player; anything else is a bug.
       if (e instanceof GameError) setError(e.message);
       else {

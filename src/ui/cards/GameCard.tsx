@@ -29,6 +29,14 @@ interface Props {
   onClick?: () => void;
   style?: CSSProperties;
   children?: ReactNode;
+  /** Extra pointer handlers (dragging), merged with the tilt handlers. */
+  dragProps?: {
+    onPointerDown?: (e: PointerEvent<HTMLElement>) => void;
+    onPointerMove?: (e: PointerEvent<HTMLElement>) => void;
+    onPointerUp?: (e: PointerEvent<HTMLElement>) => void;
+    onPointerCancel?: () => void;
+    onClickCapture?: (e: { preventDefault: () => void; stopPropagation: () => void }) => void;
+  };
 }
 
 export function Bolt() {
@@ -55,11 +63,13 @@ export function GameCard({
   onClick,
   style,
   children,
+  dragProps,
 }: Props) {
   const ref = useRef<HTMLElement | null>(null);
 
   // Tilt toward the pointer. Written straight to CSS variables so moving the pointer never re-renders.
   const onMove = (e: PointerEvent<HTMLElement>) => {
+    dragProps?.onPointerMove?.(e);
     const el = ref.current;
     if (!el || e.pointerType === 'touch') return;
     const r = el.getBoundingClientRect();
@@ -113,6 +123,10 @@ export function GameCard({
         className={classes}
         aria-pressed={selected}
         onClick={onClick}
+        onPointerDown={dragProps?.onPointerDown}
+        onPointerUp={dragProps?.onPointerUp}
+        onPointerCancel={dragProps?.onPointerCancel}
+        onClickCapture={dragProps?.onClickCapture}
         onPointerMove={onMove}
         onPointerLeave={onLeave}
         style={style}

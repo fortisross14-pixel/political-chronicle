@@ -19,7 +19,8 @@
     "balance:update": "vite-node scripts/balance.ts --update",
     "bundle": "node scripts/check-bundle.mjs",
     "check": "npm run format:check && npm run lint && npm run typecheck && vitest run --coverage && npm run build && npm run bundle && npm run balance",
-    "check:all": "npm run check && npm run e2e"
+    "check:all": "npm run check && npm run e2e",
+    "icons": "node scripts/icons.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -32,6 +33,7 @@
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^9.39.5",
     "@playwright/test": "^1.63.0",
     "@testing-library/react": "^16.3.3",

@@ -1,6 +1,7 @@
 import { getScenario } from '../data';
 import { sandboxUnlocked, totalStars, turnLabel } from '../engine';
 import type { GameState, Profile } from '../engine';
+import { install, useCanInstall } from './fx/install';
 
 interface Props {
   saved: GameState | null;
@@ -15,6 +16,7 @@ interface Props {
 
 export function StartScreen({ saved, notice, profile, onContinue, onScenarios, onSandbox, onHall }: Props) {
   const sandbox = sandboxUnlocked(profile);
+  const canInstall = useCanInstall();
   const live = saved && !saved.ended ? saved : null;
   return (
     <div className="start">
@@ -47,6 +49,7 @@ export function StartScreen({ saved, notice, profile, onContinue, onScenarios, o
         >
           Sandbox{sandbox ? '' : ' (locked)'}
         </button>
+        {canInstall && <button onClick={() => void install()}>Install the app (plays offline)</button>}
         <button disabled={profile.runs.length === 0} onClick={onHall}>
           Hall of Runs {profile.runs.length ? `(${profile.runs.length})` : ''}
         </button>

@@ -2,6 +2,7 @@ import { getOffice, getRegion, ISSUES_BY_ID, PARTIES } from '../../data';
 import { averageApproval, yourChamber } from '../../engine';
 import type { Action, GameState } from '../../engine';
 import { pct } from '../format';
+import { CountUp } from '../fx/CountUp';
 import { stanceLabel } from './labels';
 
 export function OfficePanel({ state, dispatch }: { state: GameState; dispatch: (a: Action) => void }) {
@@ -30,7 +31,9 @@ export function OfficePanel({ state, dispatch }: { state: GameState; dispatch: (
       </div>
       <div className="approval-row">
         <div>
-          <span className="big-number">{pct(avg)}</span>
+          <span className="big-number">
+            <CountUp value={avg * 100} format={(n) => `${Math.round(n)}%`} />
+          </span>
           <span className="muted small"> job approval</span>
         </div>
         <div className="approval-regions">

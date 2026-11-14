@@ -204,14 +204,25 @@ baseline on every push, and old saves migrate instead of being dropped.
 **Done when:** a full scenario plays comfortably one-handed on a phone, looks like a premium
 game, and installs offline.
 
-**Status: first pass shipped.** The "Prime Time" direction (network-studio look) was chosen from
-three mock-ups. Built: the broadcast skin (`src/ui/primetime.css`, Barlow / Barlow Condensed /
-Alfa Slab One), collectible cards with 3D tilt, glare, foil and illustrated art drawn in code
-(`src/ui/cards`), a thumb-reach dock with tabs and End turn, Government split into Desk, Map,
-Play cards, Market and Team, a turn wipe and "latest" lower third, the TV map coloured by who
-leads, and a broadcast election night (scoreboard, projection banner, results crawl). Reduced
-motion is respected. Still open: drag-to-region, swipe decisions, count-ups, sound and haptics,
-the PWA, a tablet layout and a full accessibility audit.
+**Status: done.** The "Prime Time" direction (network-studio look) was chosen from three
+mock-ups. Built:
+
+- The broadcast skin (`src/ui/primetime.css`; Barlow, Barlow Condensed and Alfa Slab One,
+  self-hosted) and collectible cards with 3D tilt, glare, foil and art drawn in code
+  (`src/ui/cards`), including a card for your politician on the profile.
+- A thumb-reach dock (tabs and End turn), Government split into Desk, Map, Play cards, Market and
+  Team with badges, a turn wipe and a "latest" lower third, a compact phone header.
+- Drag a card onto a map region or region chip to play it; on phones, decisions are a swipe
+  stack (right to sign or back, left to pass) with buttons for the same.
+- Count-ups on funds, energy, integrity, approval and night results; synthesised sound effects
+  and vibration (both switchable in the game menu, `src/ui/fx`).
+- The TV map coloured by who leads; a broadcast election night (scoreboard, projection banner,
+  results crawl).
+- An installable offline web app: manifest, icons (`npm run icons` re-renders them from
+  `public/icon.svg`) and a service worker that precaches every build file.
+- Tablet and phone layouts; tables that stack on phones.
+- Accessibility: WCAG 2.1 AA checks (axe) on every main screen at desktop and phone size in CI,
+  reduced motion respected, every drag and swipe has a button alternative.
 
 ## M13 — Balancing
 

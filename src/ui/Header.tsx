@@ -3,6 +3,8 @@ import { ageOf, averageApproval, isElectionYear, turnLabel } from '../engine';
 import type { GameState } from '../engine';
 import { Bolt } from './cards/GameCard';
 import { money } from './format';
+import { CountUp } from './fx/CountUp';
+import { setFxSettings, useFxSettings } from './fx/settings';
 
 interface Props {
   state: GameState;
@@ -12,6 +14,7 @@ interface Props {
 
 export function Header({ state, onMainMenu, onAbandon }: Props) {
   const { clock, career, politician } = state;
+  const fx = useFxSettings();
   const electionYear = isElectionYear(career, clock.year);
   const approval = averageApproval(state);
   const status = career.office
@@ -35,7 +38,7 @@ export function Header({ state, onMainMenu, onAbandon }: Props) {
         </span>
         <div className="who">
           <strong>{politician.name}</strong>
-          <span className="muted">
+          <span className="muted who-line">
             {Math.floor(ageOf(state))} · {career.affiliation === 'IND' ? 'Independent' : PARTIES[career.affiliation].name} · {status}
           </span>
         </div>
@@ -58,7 +61,7 @@ export function Header({ state, onMainMenu, onAbandon }: Props) {
         >
           <dt>Funds</dt>
           <dd>
-            {money(state.funds)}
+            <CountUp value={state.funds} format={money} />
             {state.lastIncome && (
               <span className="income small"> +{money(state.lastIncome.donors + state.lastIncome.salary + state.lastIncome.party)}</span>
             )}
@@ -67,17 +70,27 @@ export function Header({ state, onMainMenu, onAbandon }: Props) {
         <div className="stat">
           <dt>Energy</dt>
           <dd>
-            <Bolt /> {state.energy}
+            <Bolt /> <CountUp value={state.energy} />
           </dd>
         </div>
         <div className="stat">
           <dt>Integrity</dt>
-          <dd>{state.integrity}</dd>
+          <dd>
+            <CountUp value={state.integrity} />
+          </dd>
         </div>
       </dl>
       <details className="header-menu">
         <summary aria-label="Game menu">Menu</summary>
         <div className="header-menu-items">
+          <label className="toggle">
+            <input type="checkbox" checked={fx.sound} onChange={(e) => setFxSettings({ sound: e.target.checked })} />
+            <span>Sound effects</span>
+          </label>
+          <label className="toggle">
+            <input type="checkbox" checked={fx.haptics} onChange={(e) => setFxSettings({ haptics: e.target.checked })} />
+            <span>Vibration</span>
+          </label>
           <button onClick={onMainMenu}>Save and go to the main menu</button>
           <button className="danger" onClick={onAbandon}>
             Abandon this run

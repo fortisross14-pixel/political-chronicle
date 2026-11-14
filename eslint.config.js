@@ -33,6 +33,11 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.node } },
   },
   {
+    // The service worker; the build fills in the precache list.
+    files: ['public/sw.js'],
+    languageOptions: { globals: { ...globals.serviceworker, __PRECACHE__: 'readonly' } },
+  },
+  {
     // The UI may import anything; only engine/data/sim/storage are restricted above.
     files: ['src/ui/**', 'src/main.tsx'],
     rules: { 'no-restricted-imports': 'off' },

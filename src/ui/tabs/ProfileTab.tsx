@@ -3,6 +3,8 @@ import { getBackground, getOffice, getRegion, ISSUES, ISSUES_BY_ID, STATES, US_S
 import { stanceLabel } from '../campaign/labels';
 import { CareerCharts } from '../charts/CareerCharts';
 import { pct } from '../format';
+import { PortraitArt } from '../cards/CardArt';
+import { GameCard } from '../cards/GameCard';
 import {
   ageOf,
   effectiveSkills,
@@ -44,46 +46,66 @@ export function ProfileTab({ state }: { state: GameState }) {
       </nav>
 
       {sub === 'overview' && (
-        <section className="panel">
-          <h2>{p.name}</h2>
-          <dl className="kv">
-            <dt>Age</dt>
-            <dd>{age.toFixed(1)}</dd>
-            <dt>Gender</dt>
-            <dd>{p.gender === 'nonbinary' ? 'Non-binary' : p.gender === 'female' ? 'Female' : 'Male'}</dd>
-            <dt>Born in</dt>
-            <dd>{US_STATE_NAMES[p.homeState]}</dd>
-            <dt>Lives in</dt>
-            <dd>
-              {getRegion(p.residentRegionId).seatCity}, {STATES[getRegion(p.residentRegionId).state]!.name} ·{' '}
-              {native(state) ? 'native' : `transplant (newcomer doubt −${Math.round(newcomerPenalty(state) * 100)})`}
-            </dd>
-            <dt>Background</dt>
-            <dd>{getBackground(p.backgroundId).name}</dd>
-            <dt>Perk</dt>
-            <dd>{getBackground(p.backgroundId).perkText}</dd>
-            <dt>Weakness</dt>
-            <dd>{getBackground(p.backgroundId).weaknessText}</dd>
-            <dt>Credible on</dt>
-            <dd>
-              {getBackground(p.backgroundId)
-                .credibleIssues.map((i) => ISSUES_BY_ID[i].name)
-                .join(', ')}
-            </dd>
-            <dt>Energy per turn</dt>
-            <dd>{energyForAge(age)}</dd>
-          </dl>
-          <h3>Activity</h3>
-          <ul className="log">
-            {[...state.log].reverse().map((entry, i) => (
-              <li key={i}>
-                <span className="muted">
-                  {entry.year} T{entry.turn + 1}
-                </span>{' '}
-                {entry.text}
-              </li>
-            ))}
-          </ul>
+        <section className="panel profile-hero">
+          <GameCard
+            className="politician-card"
+            tone={state.career.affiliation === 'DU' ? 'rare' : state.career.affiliation === 'RP' ? 'tv' : 'legendary'}
+            title={p.name}
+            typeLine={`${getBackground(p.backgroundId).name}, ${Math.floor(age)}`}
+            art={<PortraitArt name={p.name} role="chiefOfStaff" />}
+            rarity={state.career.office ? 'In office' : state.career.race ? 'Candidate' : 'Citizen'}
+            foil
+          >
+            <span className="chips">
+              {SKILL_IDS.map((id) => (
+                <span key={id} className="chip">
+                  {SKILL_CODES[id]} {effective[id]}
+                </span>
+              ))}
+            </span>
+            <span>{getBackground(p.backgroundId).perkText}</span>
+          </GameCard>
+          <div className="profile-facts">
+            <h2>{p.name}</h2>
+            <dl className="kv">
+              <dt>Age</dt>
+              <dd>{age.toFixed(1)}</dd>
+              <dt>Gender</dt>
+              <dd>{p.gender === 'nonbinary' ? 'Non-binary' : p.gender === 'female' ? 'Female' : 'Male'}</dd>
+              <dt>Born in</dt>
+              <dd>{US_STATE_NAMES[p.homeState]}</dd>
+              <dt>Lives in</dt>
+              <dd>
+                {getRegion(p.residentRegionId).seatCity}, {STATES[getRegion(p.residentRegionId).state]!.name} ·{' '}
+                {native(state) ? 'native' : `transplant (newcomer doubt −${Math.round(newcomerPenalty(state) * 100)})`}
+              </dd>
+              <dt>Background</dt>
+              <dd>{getBackground(p.backgroundId).name}</dd>
+              <dt>Perk</dt>
+              <dd>{getBackground(p.backgroundId).perkText}</dd>
+              <dt>Weakness</dt>
+              <dd>{getBackground(p.backgroundId).weaknessText}</dd>
+              <dt>Credible on</dt>
+              <dd>
+                {getBackground(p.backgroundId)
+                  .credibleIssues.map((i) => ISSUES_BY_ID[i].name)
+                  .join(', ')}
+              </dd>
+              <dt>Energy per turn</dt>
+              <dd>{energyForAge(age)}</dd>
+            </dl>
+            <h3>Activity</h3>
+            <ul className="log">
+              {[...state.log].reverse().map((entry, i) => (
+                <li key={i}>
+                  <span className="muted">
+                    {entry.year} T{entry.turn + 1}
+                  </span>{' '}
+                  {entry.text}
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
       )}
 
@@ -196,7 +218,7 @@ export function ProfileTab({ state }: { state: GameState }) {
           {state.elections.length === 0 ? (
             <p className="muted">No elections yet.</p>
           ) : (
-            <table className="table">
+            <table className="table stack-sm">
               <thead>
                 <tr>
                   <th>Year</th>

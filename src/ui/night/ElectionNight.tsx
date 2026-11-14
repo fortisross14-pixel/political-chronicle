@@ -14,7 +14,8 @@ import {
 } from '../../engine';
 import type { Action, GameState, RegionId } from '../../engine';
 import { money, pct } from '../format';
-import { sideColor } from '../map/colors';
+import { CountUp } from '../fx/CountUp';
+import { inkOn, sideColor } from '../map/colors';
 import { StateMap } from '../map/StateMap';
 
 /** Semicircle needle: 0 (left, you lose) → 1 (right, you win). */
@@ -94,7 +95,7 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
           </div>
           {names.map((name, i) => (
             <div key={name} className={i === leader ? 'score-row leading' : 'score-row'}>
-              <span className="score-chip" style={{ background: colors[i] }}>
+              <span className="score-chip" style={{ background: colors[i], color: inkOn(colors[i]!) }}>
                 {sides[i] === 'IND' ? 'IND' : sides[i]}
               </span>
               <span className="score-name">
@@ -105,7 +106,9 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
                   </svg>
                 )}
               </span>
-              <span className="score-pct">{view.countedTotal ? pct(view.reportedTotals[i] ?? 0) : '—'}</span>
+              <span className="score-pct">
+                {view.countedTotal ? <CountUp value={(view.reportedTotals[i] ?? 0) * 100} format={(n) => `${Math.round(n)}%`} /> : '—'}
+              </span>
               <span className="score-bar" aria-hidden>
                 <span style={{ width: `${(view.reportedTotals[i] ?? 0) * 100}%`, background: colors[i] }} />
               </span>
@@ -182,7 +185,7 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
                         <span className="muted small">Polls open</span>
                       )}
                     </div>
-                    <div className="count-bar" aria-label={`${pct(c)} counted`}>
+                    <div className="count-bar" role="img" aria-label={`${pct(c)} counted`}>
                       <span style={{ width: `${c * 100}%` }} />
                     </div>
                     <span className="small muted">

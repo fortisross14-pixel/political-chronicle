@@ -186,7 +186,7 @@ function Nominations({ state, dispatch }: { state: GameState; dispatch: (a: Acti
         Uncontested nomination: House needs standing 40, Senate and Governor 60. Up to 25 below, you can force a primary among party voters,
         decided at the end of the election year’s first turn. Running for a different office puts your current seat on the line.
       </p>
-      <table className="table">
+      <table className="table stack-sm nominations">
         <thead>
           <tr>
             <th>Office</th>

@@ -1,0 +1,18 @@
+{
+  "name": "Political Chronicle",
+  "short_name": "Chronicle",
+  "description": "A card-driven political career game. Start as an independent, win your town, then win the state.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050f2c",
+  "theme_color": "#071a45",
+  "categories": ["games", "strategy"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

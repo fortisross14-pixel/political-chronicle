@@ -1,11 +1,15 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { CSSProperties } from 'react';
 import { BASIC_CARD_IDS, getEventCard, getItem, getRegion, ISSUES_BY_ID, MILESTONES_BY_ID, STATES } from '../../data';
 import { activePlatform, itemError, previewEvent } from '../../engine';
 import type { Action, EventCard, GameState, IssueId, RegionId } from '../../engine';
 import { Bolt, GameCard } from '../cards/GameCard';
 import { EventArt } from '../cards/CardArt';
+import { useCardDrag } from '../cards/useCardDrag';
 import { money } from '../format';
+import { cue } from '../fx/sound';
+import { StateMap } from '../map/StateMap';
 import { effectLabel, PRECISE_PREVIEW_POLICY, stanceLabel } from './labels';
 
 const MEDIUM_LABEL: Record<EventCard['medium'], string> = {
@@ -48,6 +52,26 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
   const target = preview.effects.find((e) => e.regionId === regionId);
   const spill = preview.effects.filter((e) => e.regionId !== regionId);
   const stateRegions = STATES[getRegion(regionId).state]!.regionIds;
+  const [notice, setNotice] = useState<string | null>(null);
+  const play = (e: HandEntry, region: RegionId) => {
+    const err = previewEvent(state, e.ref, region, issue).error;
+    if (err) {
+      cue('error');
+      setNotice(err);
+      return;
+    }
+    setNotice(null);
+    dispatch({ type: 'PLAY_EVENT', cardUid: e.ref, regionId: region, issue });
+  };
+  const { drag, handlers } = useCardDrag((key, region) => {
+    const e = entries.find((x) => x.key === key);
+    if (!e) return;
+    setSelected(key);
+    onRegionChange(region);
+    play(e, region);
+  });
+  const dragged = drag ? entries.find((e) => e.key === drag.key) : undefined;
+  const layer = race?.platform.length ? 'vote' : state.career.office ? 'approval' : 'lean';
 
   return (
     <section className="panel hand-panel">
@@ -56,6 +80,26 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
         <span className="muted small">
           Energy {state.energy} · {state.hand.length} card{state.hand.length === 1 ? '' : 's'} bought, buy more in the Market
         </span>
+      </div>
+      <div className="hand-board">
+        <div className="map-stage mini">
+          <StateMap state={state} layer={layer} selected={regionId} onSelect={onRegionChange} hover={drag?.over} />
+        </div>
+        <div className="region-chips" role="group" aria-label="Where to hold the event">
+          {stateRegions.map((id) => (
+            <button
+              key={id}
+              data-region={id}
+              className={`region-chip${id === regionId ? ' active' : ''}${drag?.over === id ? ' drop' : ''}`}
+              aria-pressed={id === regionId}
+              onClick={() => onRegionChange(id)}
+            >
+              <strong>{getRegion(id).seatCity}</strong>
+              <span>{getRegion(id).name}</span>
+            </button>
+          ))}
+          <p className="muted small drag-hint">Drag a card onto a region to play it there, or pick one and press Play.</p>
+        </div>
       </div>
       <div className="hand-fan" style={{ '--n': entries.length } as CSSProperties}>
         {entries.map((e, i) => (
@@ -70,25 +114,40 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
             rarity={e.card.basic ? 'Basic' : 'Event'}
             foil={!e.card.basic && e.card.energy >= 3}
             selected={e.key === entry.key}
-            onClick={() => setSelected(e.key)}
+            onClick={() => {
+              cue('tap');
+              setSelected(e.key);
+            }}
+            dragProps={handlers(e.key)}
+            className={drag?.key === e.key ? 'lifted' : undefined}
             style={{ '--i': i } as CSSProperties}
           />
         ))}
       </div>
+      {drag &&
+        dragged &&
+        createPortal(
+          <div className="drag-ghost" style={{ left: drag.x, top: drag.y }} aria-hidden="true">
+            <GameCard
+              small
+              tone={dragged.card.medium}
+              title={dragged.card.name}
+              typeLine={drag.over ? `Play in ${getRegion(drag.over).seatCity}` : 'Drop on a region'}
+              art={<EventArt id={dragged.card.id} medium={dragged.card.medium} />}
+              energy={dragged.card.energy}
+            />
+          </div>,
+          document.body,
+        )}
+      {notice && (
+        <p className="toast small" role="alert">
+          {notice} <button onClick={() => setNotice(null)}>OK</button>
+        </p>
+      )}
 
       <div className="play-controls">
         <p className="small">{entry.card.description}</p>
         <div className="row">
-          <label className="field inline">
-            <span>Where</span>
-            <select value={regionId} onChange={(e) => onRegionChange(e.target.value)}>
-              {stateRegions.map((id) => (
-                <option key={id} value={id}>
-                  {getRegion(id).seatCity} — {getRegion(id).name}
-                </option>
-              ))}
-            </select>
-          </label>
           {!entry.card.fundraising && (
             <label className="field inline">
               <span>Topic</span>
@@ -165,12 +224,8 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
           </div>
         )}
         <div className="row">
-          <button
-            className="primary"
-            disabled={!!preview.error}
-            onClick={() => dispatch({ type: 'PLAY_EVENT', cardUid: entry.ref, regionId, issue })}
-          >
-            Play {entry.card.name} <Bolt />
+          <button className="primary" disabled={!!preview.error} onClick={() => play(entry, regionId)}>
+            Play {entry.card.name} in {getRegion(regionId).seatCity} <Bolt />
             {preview.energy}
           </button>
           {preview.error && <span className="muted small">{preview.error}</span>}
