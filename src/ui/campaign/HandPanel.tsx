@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import { BASIC_CARD_IDS, getEventCard, getItem, getRegion, ISSUES_BY_ID, MILESTONES_BY_ID, STATES } from '../../data';
 import { activePlatform, itemError, previewEvent } from '../../engine';
 import type { Action, EventCard, GameState, IssueId, RegionId } from '../../engine';
+import { Bolt, GameCard } from '../cards/GameCard';
+import { EventArt } from '../cards/CardArt';
 import { money } from '../format';
 import { effectLabel, PRECISE_PREVIEW_POLICY, stanceLabel } from './labels';
 
@@ -47,30 +50,29 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
   const stateRegions = STATES[getRegion(regionId).state]!.regionIds;
 
   return (
-    <section className="panel">
+    <section className="panel hand-panel">
       <div className="panel-head">
         <h2>{state.career.race ? 'Campaign events' : 'Events in office'}</h2>
         <span className="muted small">
-          Energy {state.energy} · {state.hand.length} card{state.hand.length === 1 ? '' : 's'} in hand — buy more in the Market below
+          Energy {state.energy} · {state.hand.length} card{state.hand.length === 1 ? '' : 's'} bought, buy more in the Market
         </span>
       </div>
-      <div className="hand">
-        {entries.map((e) => (
-          <button
+      <div className="hand-fan" style={{ '--n': entries.length } as CSSProperties}>
+        {entries.map((e, i) => (
+          <GameCard
             key={e.key}
-            className={e.key === entry.key ? 'event-card active' : 'event-card'}
-            aria-pressed={e.key === entry.key}
+            small
+            tone={e.card.medium}
+            title={`${e.card.name}${e.count && e.count > 1 ? ` ×${e.count}` : ''}`}
+            typeLine={`${MEDIUM_LABEL[e.card.medium]}${e.card.basic ? ', always available' : ', one use'}`}
+            art={<EventArt id={e.card.id} medium={e.card.medium} />}
+            energy={e.card.energy}
+            rarity={e.card.basic ? 'Basic' : 'Event'}
+            foil={!e.card.basic && e.card.energy >= 3}
+            selected={e.key === entry.key}
             onClick={() => setSelected(e.key)}
-          >
-            <span className="event-name">
-              {e.card.name}
-              {e.count && e.count > 1 ? ` ×${e.count}` : ''}
-            </span>
-            <span className="muted small">
-              {MEDIUM_LABEL[e.card.medium]} · ⚡{e.card.energy}
-              {e.card.basic ? ' · always available' : ' · one use'}
-            </span>
-          </button>
+            style={{ '--i': i } as CSSProperties}
+          />
         ))}
       </div>
 
@@ -168,7 +170,8 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
             disabled={!!preview.error}
             onClick={() => dispatch({ type: 'PLAY_EVENT', cardUid: entry.ref, regionId, issue })}
           >
-            Hold event (⚡{preview.energy})
+            Play {entry.card.name} <Bolt />
+            {preview.energy}
           </button>
           {preview.error && <span className="muted small">{preview.error}</span>}
         </div>

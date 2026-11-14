@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { getDecisionCard, getRegion, ISSUES_BY_ID, PARTIES } from '../../data';
 import { decisionError, decisionImpact, DECISIONS_PER_TURN, yourChamber } from '../../engine';
 import type { Action, GameState } from '../../engine';
+import { IssueArt, ItemArt } from '../cards/CardArt';
+import { GameCard } from '../cards/GameCard';
 import { money } from '../format';
 import { effectLabel, PRECISE_PREVIEW_POLICY, stanceLabel } from './labels';
 
@@ -47,8 +49,17 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
               .map(([r, v]) => [r, v, ''] as [string, number, string]),
           ];
           return (
-            <article key={id} className={on ? 'decision-card on' : 'decision-card'}>
-              <h3>{card.title}</h3>
+            <GameCard
+              key={id}
+              className={on ? 'decision-card on' : 'decision-card'}
+              tone="bill"
+              title={card.title}
+              typeLine={[inOffice ? 'Bill' : 'Decision', ...card.tags.map((t) => ISSUES_BY_ID[t.issue].name)].join(', ')}
+              art={card.tags[0] ? <IssueArt issue={card.tags[0].issue} /> : <ItemArt id="endorsement" />}
+              rarity={card.partyPriority ? 'Whip vote' : inOffice ? 'Bill' : 'Decision'}
+              foil={!!card.partyPriority}
+              selected={on}
+            >
               {card.partyPriority && (
                 <span className={`whip ${card.partyPriority.toLowerCase()}`}>{PARTIES[card.partyPriority].nickname} whip vote</span>
               )}
@@ -107,13 +118,13 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
                 <p className="muted small">{inOffice ? 'Shelving this will cost approval.' : 'Declining costs you some goodwill.'}</p>
               )}
               <button
-                className={on ? 'primary' : undefined}
+                className={on ? 'primary stamp' : 'stamp'}
                 aria-pressed={on}
                 onClick={() => setChosen(on ? chosen.filter((c) => c !== id) : [...chosen, id])}
               >
                 {on ? (inOffice ? 'Signing ✓' : 'Backing ✓') : inOffice ? 'Sign this' : 'Back this'}
               </button>
-            </article>
+            </GameCard>
           );
         })}
       </div>

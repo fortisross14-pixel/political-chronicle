@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { applyAction, buildRunConfig, createRun, createScenarioRun, GameError, recordRun } from '../engine';
+import { applyAction, buildRunConfig, createRun, createScenarioRun, endTurnBlocker, GameError, recordRun, turnLabel } from '../engine';
 import type { Action, GameState, Profile, RecordOutcome } from '../engine';
 import { loadProfile, saveProfile } from '../storage/profile';
 import { clearSave, loadGameResult, saveGame } from '../storage/save';
 import { Header } from './Header';
+import { ICONS } from './icons';
 import { ScenarioSelect } from './menu/ScenarioSelect';
 import { SandboxSetup } from './menu/SandboxSetup';
 import { HallOfRuns } from './results/HallOfRuns';
@@ -21,6 +22,18 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'profile', label: 'My profile' },
   { id: 'party', label: 'My party' },
 ];
+
+/** A news-style lower third with the latest thing that happened. It fades on its own. */
+function Breaking({ state }: { state: GameState }) {
+  const latest = state.log.at(-1);
+  if (!latest || state.night) return null;
+  return (
+    <div key={state.log.length} className="breaking" role="status">
+      <span className="breaking-tag">Latest</span>
+      <span className="breaking-text">{latest.text}</span>
+    </div>
+  );
+}
 
 function randomSeed(): string {
   return Math.random().toString(36).slice(2, 10);
@@ -130,11 +143,13 @@ export function App() {
 
   if (finished) return <RunResults state={state} outcome={outcome} onMenu={toMenu} onHall={() => setScreen('hall')} />;
 
+  const blocker = endTurnBlocker(state);
+  const turnKey = `${state.clock.year}-${state.clock.turn}`;
+
   return (
     <div className="shell">
       <Header
         state={state}
-        onEndTurn={() => dispatch({ type: 'END_TURN' })}
         onMainMenu={toMenu}
         onAbandon={() => {
           if (!window.confirm('Abandon this run? It will be deleted.')) return;
@@ -144,20 +159,11 @@ export function App() {
           setScreen('menu');
         }}
       />
-      <nav className="tabs" role="tablist">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={tab === t.id}
-            className={tab === t.id ? 'tab active' : 'tab'}
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
-      <main className="content">
+      {/* A wipe with the new date each time the turn changes. */}
+      <div key={turnKey} className="turn-splash" aria-hidden="true">
+        <span>{turnLabel(state.clock)}</span>
+      </div>
+      <main className="content" key={tab}>
         {error && (
           <div className="toast" role="alert">
             {error} <button onClick={() => setError(null)}>OK</button>
@@ -167,6 +173,29 @@ export function App() {
         {tab === 'profile' && <ProfileTab state={state} />}
         {tab === 'party' && <PartyTab state={state} dispatch={dispatch} />}
       </main>
+      <footer className="dock">
+        <Breaking state={state} />
+        {blocker && !state.ended && !state.night && <p className="dock-hint small">{blocker}</p>}
+        <div className="dock-bar">
+          <nav className="tabs" role="tablist">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                role="tab"
+                aria-selected={tab === t.id}
+                className={tab === t.id ? 'tab active' : 'tab'}
+                onClick={() => setTab(t.id)}
+              >
+                {ICONS[t.id]}
+                <span>{t.label}</span>
+              </button>
+            ))}
+          </nav>
+          <button className="primary end-turn" onClick={() => dispatch({ type: 'END_TURN' })} disabled={!!blocker} title={blocker}>
+            End turn
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }

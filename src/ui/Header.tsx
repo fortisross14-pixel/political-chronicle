@@ -1,33 +1,44 @@
 import { getOffice, PARTIES } from '../data';
-import { ageOf, averageApproval, endTurnBlocker, isElectionYear, turnLabel } from '../engine';
+import { ageOf, averageApproval, isElectionYear, turnLabel } from '../engine';
 import type { GameState } from '../engine';
+import { Bolt } from './cards/GameCard';
 import { money } from './format';
 
 interface Props {
   state: GameState;
-  onEndTurn: () => void;
   onMainMenu: () => void;
   onAbandon: () => void;
 }
 
-export function Header({ state, onEndTurn, onMainMenu, onAbandon }: Props) {
+export function Header({ state, onMainMenu, onAbandon }: Props) {
   const { clock, career, politician } = state;
   const electionYear = isElectionYear(career, clock.year);
-  const blocker = endTurnBlocker(state);
   const approval = averageApproval(state);
   const status = career.office
     ? `${getOffice(career.office.officeId).name} · ${Math.round(approval! * 100)}% approval${career.race ? (career.race.officeId === career.office.officeId ? ' · running again' : ` · running for ${getOffice(career.race.officeId).name}`) : ''}`
     : career.race
       ? `Candidate · ${getOffice(career.race.officeId).name}`
       : 'Private citizen';
+  const side = career.affiliation === 'IND' ? 'ind' : career.affiliation.toLowerCase();
+  const initials = politician.name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
     <header className="header">
-      <div className="who">
-        <strong>{politician.name}</strong>
-        <span className="muted">
-          {Math.floor(ageOf(state))} · {career.affiliation === 'IND' ? 'Independent' : PARTIES[career.affiliation].name} · {status}
+      <div className="header-id">
+        <span className={`avatar ${side}`} aria-hidden="true">
+          {initials}
         </span>
+        <div className="who">
+          <strong>{politician.name}</strong>
+          <span className="muted">
+            {Math.floor(ageOf(state))} · {career.affiliation === 'IND' ? 'Independent' : PARTIES[career.affiliation].name} · {status}
+          </span>
+        </div>
       </div>
       <div className="clock">
         <span className="date">{turnLabel(clock)}</span>
@@ -36,9 +47,9 @@ export function Header({ state, onEndTurn, onMainMenu, onAbandon }: Props) {
           {electionYear && <span className="badge">Election year</span>}
         </span>
       </div>
-      {blocker && !state.ended && <span className="blocker small">{blocker}</span>}
       <dl className="stats">
         <div
+          className="stat gold"
           title={
             state.lastIncome
               ? `This turn: donors +${money(state.lastIncome.donors)}, salary +${money(state.lastIncome.salary)}, party +${money(state.lastIncome.party)}`
@@ -53,24 +64,26 @@ export function Header({ state, onEndTurn, onMainMenu, onAbandon }: Props) {
             )}
           </dd>
         </div>
-        <div>
+        <div className="stat">
           <dt>Energy</dt>
-          <dd>{state.energy}</dd>
+          <dd>
+            <Bolt /> {state.energy}
+          </dd>
         </div>
-        <div>
+        <div className="stat">
           <dt>Integrity</dt>
           <dd>{state.integrity}</dd>
         </div>
       </dl>
-      <div className="header-actions">
-        <button className="primary" onClick={onEndTurn} disabled={!!blocker} title={blocker}>
-          End turn
-        </button>
-        <button onClick={onMainMenu}>Menu</button>
-        <button className="danger" onClick={onAbandon}>
-          Abandon
-        </button>
-      </div>
+      <details className="header-menu">
+        <summary aria-label="Game menu">Menu</summary>
+        <div className="header-menu-items">
+          <button onClick={onMainMenu}>Save and go to the main menu</button>
+          <button className="danger" onClick={onAbandon}>
+            Abandon this run
+          </button>
+        </div>
+      </details>
     </header>
   );
 }

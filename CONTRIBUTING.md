@@ -60,8 +60,8 @@ npm run check:all
 | -------------------------------- | ----------------------------------------------------- | -------------------------- |
 | Engine cost per turn             | < 5 ms on a dev machine (~50 ms on a mid-range phone) | `src/engine/perf.test.ts`  |
 | Save size after 60 turns         | < 300 KB                                              | `src/engine/perf.test.ts`  |
-| JS bundle                        | ≤ 160 KB gzip                                         | `scripts/check-bundle.mjs` |
-| CSS                              | ≤ 12 KB gzip                                          | `scripts/check-bundle.mjs` |
+| JS bundle                        | ≤ 170 KB gzip                                         | `scripts/check-bundle.mjs` |
+| CSS                              | ≤ 16 KB gzip                                          | `scripts/check-bundle.mjs` |
 | Coverage (engine, data, storage) | statements 90 · branches 84 · functions 90 · lines 93 | `vite.config.ts`           |
 
 ## Known issues

@@ -12,8 +12,9 @@ compared.
 Status: **M11 (development best practices) done** — ESLint + Prettier, a single action
 validator with typed errors, save migrations (old saves upgrade instead of disappearing),
 coverage floors, a performance budget, Playwright UI smoke tests, a fixed-seed balance
-baseline and a bundle budget, all in CI on every push. Next: M12 (total visual revamp), then
-M13 balancing.
+baseline and a bundle budget, all in CI on every push. **M12 (visual revamp) first pass
+shipped**: the Prime Time broadcast look and collectible 3D cards. Next: the rest of M12 (PWA,
+drag and swipe, sound), then M13 balancing.
 
 ## Development
 

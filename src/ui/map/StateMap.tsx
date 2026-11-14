@@ -1,7 +1,7 @@
 import { getOffice, getRegion } from '../../data';
 import { counted, decided, poll, reportedShares } from '../../engine';
 import type { GameState, RegionId } from '../../engine';
-import { favorabilityColor, leanColor, recognitionColor } from './colors';
+import { favorabilityColor, leadColor, leanColor, recognitionColor, sideColor } from './colors';
 import { NY_SHAPES, NY_VIEWBOX } from './nyShapes';
 
 export type MapLayer = 'vote' | 'approval' | 'lean' | 'recognition' | 'favorability' | 'night';
@@ -26,19 +26,27 @@ export function StateMap({ state, layer, selected, onSelect }: Props) {
   const intention = race ? poll(state, race).regions : {};
   const inRace = (id: RegionId) => !race || getOffice(race.officeId).regionIds.includes(id);
   const night = state.night;
+  const field = state.career.race?.opponents ?? [];
+  /** Colour by who leads: index 0 is the player. */
+  const leaderFill = (shares: number[]) => {
+    const top = shares.indexOf(Math.max(...shares));
+    const margin = shares[top]! - Math.max(...shares.filter((_, i) => i !== top), 0);
+    const rival = field[top - 1];
+    const base = top === 0 || !rival ? sideColor(state.career.affiliation, 0, true) : sideColor(rival.affiliation, rival.lean, false);
+    return leadColor(base, margin);
+  };
   const fill = (id: RegionId) => {
     if (layer === 'night') {
       const r = night?.regions[id];
       if (!r) return '#1f2a3d';
       const rep = reportedShares(night!, id);
       if (!rep) return '#2a3650';
-      return favorabilityColor((rep[0]! - Math.max(...rep.slice(1))) * 3);
+      return leaderFill(rep);
     }
     if (layer === 'vote') {
       const shares = intention[id];
       if (!shares) return '#253247';
-      const d = decided(shares);
-      return favorabilityColor((d[0]! - Math.max(...d.slice(1))) * 2);
+      return leaderFill(decided(shares));
     }
     if (layer === 'approval') {
       const a = state.career.office?.approval[id];
@@ -53,6 +61,16 @@ export function StateMap({ state, layer, selected, onSelect }: Props) {
 
   return (
     <svg className="state-map" viewBox={NY_VIEWBOX} role="group" aria-label="Map of New York regions">
+      <defs>
+        <filter id="map-lift" x="-10%" y="-10%" width="120%" height="130%">
+          <feDropShadow dx="0" dy="6" stdDeviation="5" floodColor="#000" floodOpacity="0.55" />
+        </filter>
+        <linearGradient id="map-gloss" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.34" />
+          <stop offset="0.55" stopColor="#fff" stopOpacity="0.02" />
+          <stop offset="1" stopColor="#000" stopOpacity="0.22" />
+        </linearGradient>
+      </defs>
       {order.map((id) => {
         const shape = NY_SHAPES[id]!;
         const region = getRegion(id);
@@ -74,8 +92,13 @@ export function StateMap({ state, layer, selected, onSelect }: Props) {
               }
             }}
           >
+            <g filter="url(#map-lift)">
+              {shape.polygons.map((points, i) => (
+                <polygon key={i} points={points} fill={fill(id)} />
+              ))}
+            </g>
             {shape.polygons.map((points, i) => (
-              <polygon key={i} points={points} fill={fill(id)} />
+              <polygon key={`g${i}`} className="gloss" points={points} fill="url(#map-gloss)" />
             ))}
             <circle cx={shape.city.x} cy={shape.city.y} r={isHome ? 4.5 : 3} className={isHome ? 'city home' : 'city'} />
             <text x={shape.label.x} y={shape.label.y} className="map-label" textAnchor="middle">
@@ -90,8 +113,8 @@ export function StateMap({ state, layer, selected, onSelect }: Props) {
               <text x={shape.label.x} y={shape.label.y + 14} className="map-label sub" textAnchor="middle">
                 {night.regions[id]!.calledFor !== undefined
                   ? night.regions[id]!.calledFor === 0
-                    ? '✓ YOU'
-                    : '✗ THEM'
+                    ? 'YOU WIN'
+                    : 'THEY WIN'
                   : `${Math.round(counted(night.regions[id]!, night.step) * 100)}% in`}
               </text>
             )}

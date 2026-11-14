@@ -18,7 +18,12 @@ export function StartScreen({ saved, notice, profile, onContinue, onScenarios, o
   const live = saved && !saved.ended ? saved : null;
   return (
     <div className="start">
-      <h1>Political Chronicle</h1>
+      <div className="start-logo" aria-hidden="true">
+        <span className="live">LIVE</span>
+      </div>
+      <h1>
+        Political <span>Chronicle</span>
+      </h1>
       <p className="tagline">Start as an independent. Win your town. Then win the state.</p>
       {notice && (
         <p className="save-notice small" role="status">
@@ -40,7 +45,7 @@ export function StartScreen({ saved, notice, profile, onContinue, onScenarios, o
           title={sandbox ? undefined : 'Finish the four beginner scenarios to unlock Sandbox'}
           onClick={onSandbox}
         >
-          Sandbox {sandbox ? '' : '🔒'}
+          Sandbox{sandbox ? '' : ' (locked)'}
         </button>
         <button disabled={profile.runs.length === 0} onClick={onHall}>
           Hall of Runs {profile.runs.length ? `(${profile.runs.length})` : ''}

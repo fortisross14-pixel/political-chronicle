@@ -29,3 +29,16 @@ export function recognitionColor(value: number): string {
 export function favorabilityColor(value: number): string {
   return value < 0 ? mix(NEUTRAL, '#e07b39', -value / 0.6) : mix(NEUTRAL, '#2fb39a', value / 0.6);
 }
+
+/** Broadcast colour for a candidate: party colour, gold for you as an independent. */
+export function sideColor(affiliation: 'DU' | 'RP' | 'IND', lean: number, isPlayer: boolean): string {
+  if (affiliation === 'DU') return '#2f6fd6';
+  if (affiliation === 'RP') return '#d83a2e';
+  if (isPlayer) return '#e9b92f';
+  return lean < -0.2 ? '#5f93ea' : lean > 0.2 ? '#e8695c' : '#9b8cf0';
+}
+
+/** A region held by `base`, stronger the bigger the lead (0..~0.3). */
+export function leadColor(base: string, margin: number): string {
+  return mix('#3a4a6b', base, 0.4 + margin * 4);
+}

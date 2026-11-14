@@ -14,6 +14,7 @@ import {
 } from '../../engine';
 import type { Action, GameState, RegionId } from '../../engine';
 import { money, pct } from '../format';
+import { sideColor } from '../map/colors';
 import { StateMap } from '../map/StateMap';
 
 /** Semicircle needle: 0 (left, you lose) → 1 (right, you win). */
@@ -23,9 +24,9 @@ function Needle({ p }: { p: number }) {
     <svg className="needle" viewBox="0 0 200 116" role="img" aria-label={`Win probability ${Math.round(p * 100)}%`}>
       <defs>
         <linearGradient id="needle-arc" x1="0" x2="1">
-          <stop offset="0%" stopColor="#e07b39" />
-          <stop offset="50%" stopColor="#5a6680" />
-          <stop offset="100%" stopColor="#2fb39a" />
+          <stop offset="0%" stopColor="#c3271e" />
+          <stop offset="50%" stopColor="#8a95b8" />
+          <stop offset="100%" stopColor="#f5c842" />
         </linearGradient>
       </defs>
       <path d="M 15 100 A 85 85 0 0 1 185 100" fill="none" stroke="url(#needle-arc)" strokeWidth="16" strokeLinecap="round" />
@@ -61,62 +62,83 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
   // "Called!" banner the moment the race is called.
   useEffect(() => {
     if (night.calledFor !== undefined && callSeen.current === undefined) {
-      setBanner(night.calledFor === 0 ? 'Projected winner: YOU' : 'Race called for your opponent');
+      setBanner(night.calledFor === 0 ? `${state.politician.name} wins` : 'Race called for your opponent');
       setPlaying(false);
     }
     callSeen.current = night.calledFor;
-  }, [night.calledFor]);
+  }, [night.calledFor, state.politician.name]);
 
   const nightItems = state.items.filter((i) => getItem(i.itemId).window !== 'campaign');
   const hour = HOURS[Math.min(night.step, HOURS.length - 1)]!;
 
+  const field = state.career.race?.opponents ?? [];
+  const sides = [state.career.affiliation, ...field.map((c) => c.affiliation)];
+  const colors = [sideColor(state.career.affiliation, 0, true), ...field.map((c) => sideColor(c.affiliation, c.lean, false))];
+  const leader = view.countedTotal ? view.reportedTotals.indexOf(Math.max(...view.reportedTotals)) : -1;
+  const crawl = night.ticker.slice(-6);
+
   return (
     <div className="stack night-screen">
       <section className="panel night-head">
-        <div className="panel-head">
-          <div>
-            <span className="live">● LIVE</span>
-            <h2>Election night — {office.name}</h2>
-            <span className="muted small">
-              {hour} {night.step <= 7 ? 'pm' : 'am'} · {pct(view.countedTotal)} of the expected vote counted
-            </span>
+        <div className="bc-bar">
+          <span className="live">LIVE</span>
+          <h2>Election night: {office.name}</h2>
+          <span className="bc-clock">
+            {hour} {night.step <= 7 ? 'PM' : 'AM'}
+          </span>
+        </div>
+        <div className="scoreboard">
+          <div className="scoreboard-head">
+            <span>{office.name}</span>
+            <span>{pct(view.countedTotal)} of the expected vote in</span>
           </div>
-          <div className="row">
-            {!done && (
-              <>
-                <button onClick={() => setPlaying(!playing)}>{playing ? '❚❚ Pause' : '▶ Play'}</button>
-                <button onClick={() => dispatch({ type: 'NIGHT_ADVANCE' })}>Next ›</button>
-              </>
-            )}
-            <button className={done ? 'primary' : undefined} onClick={() => dispatch({ type: 'NIGHT_FINISH' })}>
-              {done ? 'See the results' : 'Skip to the end'}
-            </button>
-          </div>
+          {names.map((name, i) => (
+            <div key={name} className={i === leader ? 'score-row leading' : 'score-row'}>
+              <span className="score-chip" style={{ background: colors[i] }}>
+                {sides[i] === 'IND' ? 'IND' : sides[i]}
+              </span>
+              <span className="score-name">
+                {i === 0 ? state.politician.name : name}
+                {i === leader && (
+                  <svg className="score-check" viewBox="0 0 24 22" width="20" height="18" role="img" aria-label="Leading">
+                    <path d="M3 12 L9 18 L21 3" />
+                  </svg>
+                )}
+              </span>
+              <span className="score-pct">{view.countedTotal ? pct(view.reportedTotals[i] ?? 0) : '—'}</span>
+              <span className="score-bar" aria-hidden>
+                <span style={{ width: `${(view.reportedTotals[i] ?? 0) * 100}%`, background: colors[i] }} />
+              </span>
+            </div>
+          ))}
         </div>
         {banner && (
           <div className={night.calledFor === 0 ? 'called-banner win' : 'called-banner lose'} role="status">
-            {banner}
+            <span className="called-tag">Projection</span>
+            <span className="called-text">{banner}</span>
             <button onClick={() => setBanner(null)}>OK</button>
           </div>
         )}
         <div className="night-grid">
           <div className="needle-box">
+            <span className="muted small">Decision desk: chance you win</span>
             <Needle p={view.winProbability} />
-            <span className="muted small">Chance you win</span>
           </div>
-          <div className="poll">
-            {names.map((name, i) => (
-              <div key={name} className={i === 0 ? 'poll-row you' : 'poll-row'}>
-                <span className="poll-name">{name}</span>
-                <span className="poll-bar" aria-hidden>
-                  <span style={{ width: `${(view.reportedTotals[i] ?? 0) * 100}%` }} />
-                </span>
-                <span className="num">{view.countedTotal ? pct(view.reportedTotals[i] ?? 0) : '—'}</span>
-              </div>
-            ))}
+          <div className="stack">
+            <div className="row night-controls">
+              {!done && (
+                <>
+                  <button onClick={() => setPlaying(!playing)}>{playing ? '❚❚ Pause' : '▶ Play'}</button>
+                  <button onClick={() => dispatch({ type: 'NIGHT_ADVANCE' })}>Next ›</button>
+                </>
+              )}
+              <button className={done ? 'primary' : undefined} onClick={() => dispatch({ type: 'NIGHT_FINISH' })}>
+                {done ? 'See the results' : 'Skip to the end'}
+              </button>
+            </div>
             <ul className="ticker small">
               {[...night.ticker]
-                .slice(-5)
+                .slice(-4)
                 .reverse()
                 .map((t, i) => (
                   <li key={`${night.ticker.length - i}`} className={i === 0 ? 'fresh' : undefined}>
@@ -130,7 +152,9 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
 
       <section className="panel">
         <div className="map-layout">
-          <StateMap state={state} layer="night" selected={selected} onSelect={setSelected} />
+          <div className="map-stage">
+            <StateMap state={state} layer="night" selected={selected} onSelect={setSelected} />
+          </div>
           <div className="stack">
             <div className="tokens">
               <span className="big-number">{night.tokens}</span> <span className="muted small">ground-game tokens</span>
@@ -205,6 +229,16 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
           </div>
         </div>
       </section>
+      {crawl.length > 0 && (
+        <div className="crawl" aria-hidden="true">
+          <span className="crawl-tag">Results</span>
+          <div className="crawl-track">
+            {[...crawl, ...crawl].map((t, i) => (
+              <span key={i}>{t}</span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

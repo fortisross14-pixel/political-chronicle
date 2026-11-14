@@ -15,6 +15,9 @@ import { RacePicker } from '../campaign/RacePicker';
 import { RegionPanel } from '../map/RegionPanel';
 import { MAP_LAYERS, StateMap } from '../map/StateMap';
 import type { MapLayer } from '../map/StateMap';
+import { ICONS } from '../icons';
+
+type Section = 'desk' | 'map' | 'cards' | 'market' | 'team';
 
 interface Props {
   state: GameState;
@@ -28,6 +31,7 @@ export function GovernmentTab({ state, dispatch }: Props) {
   const inOffice = !!state.career.office;
   const canHoldEvents = campaigning || (inOffice && !race);
   const [layer, setLayer] = useState<MapLayer>(campaigning ? 'vote' : inOffice ? 'approval' : 'lean');
+  const [section, setSection] = useState<Section>('desk');
   const [selected, setSelected] = useState<RegionId>(race ? getOffice(race.officeId).regionIds[0]! : state.politician.residentRegionId);
   useEffect(() => {
     if (campaigning) setLayer('vote');
@@ -57,10 +61,12 @@ export function GovernmentTab({ state, dispatch }: Props) {
       </div>
       <div className="map-layout">
         <div>
-          <StateMap state={state} layer={shownLayer} selected={selected} onSelect={setSelected} />
+          <div className="map-stage">
+            <StateMap state={state} layer={shownLayer} selected={selected} onSelect={setSelected} />
+          </div>
           <p className="muted small">
-            Schematic map, not to scale. Click a region for details.
-            {shownLayer === 'vote' && ' Teal: you lead the field there; orange: you trail.'}
+            Schematic map, not to scale. Tap a region for details.
+            {shownLayer === 'vote' && ' Each region takes the colour of whoever leads there; gold is you as an independent.'}
             {shownLayer === 'approval' && ' Teal: voters approve of your job; orange: they don’t.'}
           </p>
         </div>
@@ -92,33 +98,71 @@ export function GovernmentTab({ state, dispatch }: Props) {
             {state.ended.reason === 'age' && `You stepped away from public life in ${state.ended.year}.`} Elections: {wins} won,{' '}
             {state.elections.length - wins} lost.
           </p>
-          <p className="muted small">Career summaries and the Hall of Runs arrive in M7. Start a new run from the menu.</p>
+          <p className="muted small">Your career summary is next.</p>
         </section>
         {map}
       </div>
     );
   }
 
+  const todo = !!state.decisions && !state.decisions.resolved;
+  const needsSetup = (!!race && !race.platform.length) || (!race && !inOffice);
+  const sections: { id: Section; label: string; badge?: string; alert?: boolean }[] = [
+    { id: 'desk', label: 'Desk', badge: todo || needsSetup ? '!' : undefined, alert: true },
+    { id: 'map', label: 'Map' },
+    ...(canHoldEvents ? [{ id: 'cards' as const, label: 'Play cards', badge: state.energy > 0 ? String(state.energy) : undefined }] : []),
+    { id: 'market', label: 'Market', badge: state.market?.offers.length ? String(state.market.offers.length) : undefined },
+    { id: 'team', label: 'Team', badge: state.team.cards.length ? String(state.team.cards.length) : undefined },
+  ];
+  const shown = sections.some((x) => x.id === section) ? section : 'desk';
+
   return (
     <div className="stack">
-      {state.scenario && <ScenarioHud state={state} />}
-      {race && !race.platform.length && <PlatformBuilder key={`${race.officeId}-${race.electionYear}`} state={state} dispatch={dispatch} />}
-      {campaigning && <CampaignPanel state={state} />}
-      {inOffice && <OfficePanel state={state} dispatch={dispatch} />}
-      {!race && !state.career.office && <RacePicker state={state} dispatch={dispatch} />}
-      {state.decisions && <DecisionTray key={state.decisions.turnNo} state={state} dispatch={dispatch} />}
-      {map}
-      {canHoldEvents && (
-        <HandPanel
-          key={race ? `${race.officeId}-${race.electionYear}` : `office-${state.career.office!.termEndsYear}`}
-          state={state}
-          dispatch={dispatch}
-          regionId={selected}
-          onRegionChange={setSelected}
-        />
-      )}
-      <MarketPanel state={state} dispatch={dispatch} />
-      <TeamPanel state={state} dispatch={dispatch} />
+      <nav className="section-nav" aria-label="Government sections">
+        {sections.map((x) => (
+          <button
+            key={x.id}
+            className={shown === x.id ? 'section active' : 'section'}
+            aria-pressed={shown === x.id}
+            onClick={() => setSection(x.id)}
+          >
+            {ICONS[x.id]}
+            <span>{x.label}</span>
+            {x.badge && <span className={x.alert ? 'pip alert' : 'pip'}>{x.badge}</span>}
+          </button>
+        ))}
+      </nav>
+      <div className="stack section-body" key={shown}>
+        {shown === 'desk' && (
+          <>
+            {state.scenario && <ScenarioHud state={state} />}
+            {race && !race.platform.length && (
+              <PlatformBuilder key={`${race.officeId}-${race.electionYear}`} state={state} dispatch={dispatch} />
+            )}
+            {!race && !state.career.office && <RacePicker state={state} dispatch={dispatch} />}
+            {state.decisions && <DecisionTray key={state.decisions.turnNo} state={state} dispatch={dispatch} />}
+            {campaigning && <CampaignPanel state={state} />}
+            {inOffice && <OfficePanel state={state} dispatch={dispatch} />}
+            {canHoldEvents && state.energy > 0 && (!state.decisions || state.decisions.resolved) && (
+              <button className="next-step" onClick={() => setSection('cards')}>
+                You have {state.energy} energy left. Play your cards
+              </button>
+            )}
+          </>
+        )}
+        {shown === 'map' && map}
+        {shown === 'cards' && canHoldEvents && (
+          <HandPanel
+            key={race ? `${race.officeId}-${race.electionYear}` : `office-${state.career.office!.termEndsYear}`}
+            state={state}
+            dispatch={dispatch}
+            regionId={selected}
+            onRegionChange={setSelected}
+          />
+        )}
+        {shown === 'market' && <MarketPanel state={state} dispatch={dispatch} />}
+        {shown === 'team' && <TeamPanel state={state} dispatch={dispatch} />}
+      </div>
     </div>
   );
 }
