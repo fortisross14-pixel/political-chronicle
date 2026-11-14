@@ -3068,3 +3068,16 @@ button.link {
 .dossier dd .neg {
   color: var(--bad, #c3271e);
 }
+
+/* Painted art from public/art (art/PROMPTS.md). */
+img.card-art.painted {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+img.card-art.painted.portrait {
+  object-position: center 22%;
+}

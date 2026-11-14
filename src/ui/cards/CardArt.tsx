@@ -1,6 +1,7 @@
 // Card illustrations: small layered SVG scenes drawn in code, so every card has its own picture
 // without shipping image files. All art is decorative; the card's text carries the meaning.
 import type { ReactNode } from 'react';
+import { ART_IDS } from '../../data/artManifest';
 import type { IssueId, SkillId } from '../../engine';
 
 const W = 120;
@@ -318,7 +319,23 @@ const MEDIUM_FALLBACK: Record<string, string> = {
 
 export function EventArt({ id, medium }: { id: string; medium: string }) {
   const draw = EVENT_ART[id] ?? EVENT_ART[MEDIUM_FALLBACK[medium] ?? 'town_hall']!;
-  return <>{draw()}</>;
+  return <Painted id={id}>{draw()}</Painted>;
+}
+
+/** A painted image from public/art when one exists (see art/PROMPTS.md), else the drawn fallback. */
+export function Painted({ id, portrait, children }: { id: string; portrait?: boolean; children?: ReactNode }) {
+  if (!ART_IDS.has(id)) return <>{children}</>;
+  return (
+    <img
+      className={`card-art painted${portrait ? ' portrait' : ''}`}
+      src={`${import.meta.env.BASE_URL}art/${id}.webp`}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      draggable={false}
+    />
+  );
 }
 
 const SKILL_GLYPH: Record<SkillId, { palette: keyof typeof PALETTES; glyph: ReactNode }> = {
@@ -409,9 +426,11 @@ function Emblem({ id, palette, children }: { id: string; palette: keyof typeof P
 export function SkillArt({ skill }: { skill: SkillId }) {
   const s = SKILL_GLYPH[skill];
   return (
-    <Emblem id={`skill-${skill}`} palette={s.palette}>
-      {s.glyph}
-    </Emblem>
+    <Painted id={`skill_${skill}`}>
+      <Emblem id={`skill-${skill}`} palette={s.palette}>
+        {s.glyph}
+      </Emblem>
+    </Painted>
   );
 }
 
@@ -580,7 +599,8 @@ const ROLE_PALETTE: Record<string, keyof typeof PALETTES> = {
 };
 
 /** A portrait generated from the person's name: the same name always gets the same face. */
-export function PortraitArt({ name, role }: { name: string; role: string }) {
+export function PortraitArt({ name, role, id }: { name: string; role: string; id?: string }) {
+  if (id && ART_IDS.has(id)) return <Painted id={id} portrait />;
   const h = hash(name);
   const skin = SKIN[h % SKIN.length]!;
   const hair = HAIR[(h >> 4) % HAIR.length]!;
@@ -654,8 +674,10 @@ const ITEM_GLYPH: Record<string, ReactNode> = {
 
 export function ItemArt({ id }: { id: string }) {
   return (
-    <Emblem id={`item-${id}`} palette="violet">
-      {ITEM_GLYPH[id] ?? ITEM_GLYPH.endorsement}
-    </Emblem>
+    <Painted id={id}>
+      <Emblem id={`item-${id}`} palette="violet">
+        {ITEM_GLYPH[id] ?? ITEM_GLYPH.endorsement}
+      </Emblem>
+    </Painted>
   );
 }

@@ -4,7 +4,7 @@ import { getEventCard, getItem, getPerson, getPolicyCard, PERK_TEXT, ROLE_SHORT 
 import type { Person } from '../../data';
 import { isItemCard, isSkillCard, ROLES, SKILL_LABELS, skillOfCard } from '../../engine';
 import type { PackKind, Rarity } from '../../engine';
-import { EventArt, IssueArt, ItemArt, PortraitArt, SkillArt } from './CardArt';
+import { EventArt, IssueArt, ItemArt, Painted, PortraitArt, SkillArt } from './CardArt';
 import { GameCard } from './GameCard';
 import { actionChips, itemChips, policyChips } from './effects';
 import type { Chip } from './effects';
@@ -79,7 +79,7 @@ export function PersonCard({ person, ...v }: { person: Person } & ViewProps) {
       tone={person.rarity}
       title={person.name}
       typeLine={RARITY_LABEL[person.rarity]}
-      art={<PortraitArt name={person.name} role={bestOf(person)} />}
+      art={<PortraitArt name={person.name} role={bestOf(person)} id={person.id} />}
       rarity={RARITY_LABEL[person.rarity]}
       foil={foiled(person.rarity)}
       selected={v.selected}
@@ -115,7 +115,7 @@ export function PolicyCardView({ id, ...v }: { id: string } & ViewProps) {
       tone={c.rarity}
       title={c.name}
       typeLine={`Political event${c.needsOffice ? ', in office' : ''}`}
-      art={'issue' in c.art ? <IssueArt issue={c.art.issue} /> : <SkillArt skill={c.art.skill} />}
+      art={<Painted id={c.id}>{'issue' in c.art ? <IssueArt issue={c.art.issue} /> : <SkillArt skill={c.art.skill} />}</Painted>}
       energy={c.energy}
       rarity={RARITY_LABEL[c.rarity]}
       foil={foiled(c.rarity)}

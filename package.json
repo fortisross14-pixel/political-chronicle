@@ -19,6 +19,8 @@
     "balance:update": "vite-node scripts/balance.ts --update",
     "bundle": "node scripts/check-bundle.mjs",
     "check": "npm run format:check && npm run lint && npm run typecheck && vitest run --coverage && npm run build && npm run bundle && npm run balance",
+    "art": "python3 -I scripts/art/slice.py",
+    "art:prompts": "node scripts/art/prompts.mjs",
     "check:all": "npm run check && npm run e2e",
     "icons": "node scripts/icons.mjs"
   },
