@@ -77,3 +77,7 @@ export function backgroundEnergyPenalty(state: Pick<GameState, 'politician' | 'c
   const penalty = getBackground(state.politician.backgroundId).perks.energyPenalty;
   return penalty && state.clock.monthsElapsed < penalty.months ? penalty.amount : 0;
 }
+
+export function hasAbility(state: Pick<GameState, 'politician'>, ability: string): boolean {
+  return state.politician.abilities?.includes(ability) ?? false;
+}

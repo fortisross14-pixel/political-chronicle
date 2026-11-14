@@ -15,4 +15,6 @@ export * from './people';
 export * from './legislature';
 export * from './loot';
 export * from './night';
+export * from './scenarios';
+export * from './meta';
 export { applyAction, endTurnBlocker } from './reducer';

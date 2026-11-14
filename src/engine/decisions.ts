@@ -6,6 +6,7 @@ import { activeLevel, turnNo } from './events';
 import { executionMultiplier, nudgeApproval } from './governing';
 import { passageChance, rollPassage, yourChamber } from './legislature';
 import { effectiveSkills, hasPerk } from './people';
+import { hasAbility } from './traits';
 import { adjustStanding, effectivePlatform, member, PARTY, stanceAgreement } from './parties';
 import { clamp, nudgeFavorability, nudgeRecognition, regionAlignment, relevance } from './opinion';
 import { Rng } from './rng';
@@ -148,7 +149,9 @@ export function decisionImpact(state: GameState, card: DecisionCard): DecisionIm
     if (!pledge) continue;
     const kept = Math.sign(pledge.stance) === Math.sign(tag.stance);
     (kept ? impact.promisesKept : impact.promisesBroken).push(tag.issue);
-    impact.integrity += kept ? DECISION_EFFECT.promiseKeptIntegrity : DECISION_EFFECT.promiseBrokenIntegrity;
+    impact.integrity += kept
+      ? DECISION_EFFECT.promiseKeptIntegrity
+      : DECISION_EFFECT.promiseBrokenIntegrity * (hasAbility(state, 'iron_discipline') ? 0.5 : 1);
     const bump = kept ? DECISION_EFFECT.promiseKeptEffect : DECISION_EFFECT.promiseBrokenEffect;
     const target = inOffice ? impact.approval : impact.favorability;
     for (const id of home) target[id] = (target[id] ?? 0) + bump;

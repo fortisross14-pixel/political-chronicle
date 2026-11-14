@@ -7,6 +7,7 @@ import { ElectionResult } from '../campaign/ElectionResult';
 import { HandPanel } from '../campaign/HandPanel';
 import { MarketPanel } from '../campaign/MarketPanel';
 import { OfficePanel } from '../campaign/OfficePanel';
+import { ScenarioHud } from '../campaign/ScenarioHud';
 import { TeamPanel } from '../campaign/TeamPanel';
 import { ElectionNight } from '../night/ElectionNight';
 import { PlatformBuilder } from '../campaign/PlatformBuilder';
@@ -100,6 +101,7 @@ export function GovernmentTab({ state, dispatch }: Props) {
 
   return (
     <div className="stack">
+      {state.scenario && <ScenarioHud state={state} />}
       {race && !race.platform.length && <PlatformBuilder key={`${race.officeId}-${race.electionYear}`} state={state} dispatch={dispatch} />}
       {campaigning && <CampaignPanel state={state} />}
       {inOffice && <OfficePanel state={state} dispatch={dispatch} />}

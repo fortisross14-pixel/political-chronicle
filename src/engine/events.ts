@@ -5,7 +5,7 @@ import { GOVERNING, nudgeApproval } from './governing';
 import { adjustStanding } from './parties';
 import { award, GROUND_GAME } from './loot';
 import { effectiveSkills, hasPerk } from './people';
-import { native } from './traits';
+import { hasAbility, native } from './traits';
 import { Rng } from './rng';
 import type { EventCard, GameState, IssueId, OfficeLevel, Pledge, RegionId, Stance } from './types';
 
@@ -161,7 +161,13 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
   const preview = previewEvent(state, ref, regionId, issue);
   if (preview.error) throw new Error(preview.error);
   const rng = new Rng(state.rng);
-  const gaffe = rng.chance(preview.gaffeChance);
+  const rolled = rng.chance(preview.gaffeChance);
+  const used = state.career.race?.used ?? [];
+  // Debate notes (artifact) make the first debate safe; Rapid response (ability) cancels one gaffe.
+  const safeDebate = preview.card.id === 'debate' && state.modifiers.safeFirstDebate && !used.includes('debate_notes');
+  const rapid = rolled && !safeDebate && hasAbility(state, 'rapid_response') && !used.includes('rapid_response');
+  const gaffe = rolled && !safeDebate && !rapid;
+  const newlyUsed = [...(safeDebate ? ['debate_notes'] : []), ...(rapid ? ['rapid_response'] : [])];
   const regions = { ...state.regions };
 
   for (const e of preview.effects) {
@@ -192,12 +198,12 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
   const where = getRegion(regionId).seatCity;
   const text = preview.card.fundraising
     ? `${preview.card.name} in ${where}: raised $${preview.fundsGain.toLocaleString('en-US')}.`
-    : `${preview.card.name} in ${where} on ${ISSUES_BY_ID[issue].name}${gaffe ? ' — a gaffe went viral!' : '.'}`;
+    : `${preview.card.name} in ${where} on ${ISSUES_BY_ID[issue].name}${gaffe ? ' — a gaffe went viral!' : rapid ? ' — a gaffe, but your rapid response shut it down.' : '.'}`;
 
   const standingGain = preview.card.partyStanding ?? 0;
   // Loot bookkeeping on the race: door-knocks build the ground game; fundraisers count toward a haul.
   if (career.race) {
-    const r = career.race;
+    const r = { ...career.race, used: [...(career.race.used ?? []), ...newlyUsed] };
     const knock = preview.card.id === 'door_knocking';
     career = {
       ...career,

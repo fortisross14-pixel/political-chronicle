@@ -10,6 +10,8 @@ export { PEOPLE, PEOPLE_BY_ID, getPerson, ROLE_LABELS, ROLE_HINTS, PERK_TEXT, RA
 export type { Person, PersonPerk, Rarity, Role } from './people';
 export { ITEMS, ITEMS_BY_ID, getItem, MILESTONES, MILESTONES_BY_ID } from './items';
 export type { Item, Milestone } from './items';
+export { ABILITIES, ABILITIES_BY_ID, ARTIFACTS, ARTIFACTS_BY_ID, MAX_ABILITIES, SCENARIOS, SCENARIOS_BY_ID, getScenario } from './meta';
+export type { Ability, Artifact, Reward, Scenario, ScenarioSetup, StarGoal, StarRule } from './meta';
 export { EVENT_CARDS, EVENT_CARDS_BY_ID, BASIC_CARD_IDS, STARTER_HAND, MARKET_COST_FACTOR, MARKET_WEIGHTS, getEventCard } from './eventCards';
 export { SKILL_CARDS, SKILL_CARDS_BY_ID, getSkillCard } from './skillCards';
 export type { SkillCard } from './skillCards';

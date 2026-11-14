@@ -162,7 +162,7 @@ low LAW and no director sees noticeably more failed bills.
 1–2 min, and the bot shows the actions flip about 20–30% of close races and almost no
 blowouts.
 
-## M10 — Scenarios, meta-progression & run results
+## M10 — Scenarios, meta-progression & run results ✅ done
 
 - Scenario framework: data definitions, objectives, cycle limits, stars, rewards.
 - 4 beginner scenarios (Hometown favorite → Big city, small town); Sandbox unlocks on

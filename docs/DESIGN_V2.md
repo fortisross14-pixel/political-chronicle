@@ -316,6 +316,23 @@ funds), modifiers, **objectives with a cycle limit**, **star goals**, and reward
 for sensible play; intermediate 50–65%; hard 25–40% on the first attempt. A full artifact
 loadout adds at most 10–15 points.
 
+**As built (M10):** the 4 beginner scenarios are data (`src/data/meta.ts`): a preset character
+(you choose the name), a starting year, optionally an office already held, party membership,
+extra funds and an opponent-recognition modifier. Each has an objective with a deadline and 3
+star goals. A run ends when the objective is met (stars scored at that moment) or the deadline
+passes. Each scenario unlocks after a star on the previous one, and Sandbox after a star on all
+four. Rewards pay out the first time you reach 1, 2 and 3 stars.
+
+| Scenario | Starts | Objective | Stars | Rewards (1★ / 2★ / 3★) | Bot win rate |
+|---|---|---|---|---|---|
+| Hometown favorite | 2027, Watertown public servant, weaker opponents | Win Watertown mayor 2027 | win · 55%+ · 60%+ | Campaign button / War chest / *Rapid response* | ~83% |
+| Keep your word | 2028, veteran mayor, 45% approval | Re-elected in 2031 | win · no broken promises · approval 60%+ | Lucky tie / Rolodex / *Iron discipline* | ~100%¹ |
+| Pick a side | 2028, independent lawyer mayor | North Country House seat by 2030 | win · no primary · standing 70+ | Union hall key / *Crossover appeal* / Debate notes | ~78% |
+| Big city, small town | 2029, Red House member (standing 55) | Governor by 2034 | win · first try · carry NYC | *Comeback kid* / — / — | ~80% |
+
+¹ Above the 80–90% band: a sensible bot governs its way from 45% to 60%+ approval within a
+year. Governing is too easy in general; that's an M13 balancing item, not a scenario tweak.
+
 ### 8.2 Sandbox
 
 Unlocks after the beginner track. Pick home and resident state, background, age, points
@@ -333,6 +350,15 @@ until it ends. Score with the legacy score and compare in the Hall of Runs.
 - **Rewards** are tied to stars, and repeat clears pay less, so you're pushed toward new
   scenarios.
 - Some scenarios run in **"pure" mode** with no artifacts, for bragging rights.
+
+**As built (M10):** 6 artifacts (campaign button, Rolodex, union hall key, war chest, lucky tie,
+debate notes) and 4 abilities (rapid response, iron discipline, crossover appeal, comeback
+kid). Artifacts work in scenarios and Sandbox; abilities only in Sandbox, 2 slots. Artifact
+slots: 2, +1 at 6 stars, +1 at 10. Measured: two artifacts add ~0–5 points of win rate on the
+beginner scenarios. The profile (stars, unlocks, artifacts, abilities, the last 50 runs) is
+stored apart from the current run. The **legacy score** is office points × years served
+(mayor 10, House 20, Senate 35, Governor 40), + 20 × promises-kept share, + 20 × peak
+approval, + 5 per election won.
 
 ---
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getBackground, getOffice, getRegion, ISSUES, ISSUES_BY_ID, STATES, US_STATE_NAMES } from '../../data';
 import { stanceLabel } from '../campaign/labels';
+import { CareerCharts } from '../charts/CareerCharts';
 import { pct } from '../format';
 import { ageOf, effectiveSkills, energyForAge, native, newcomerPenalty, skillCap, SKILL_CODES, SKILL_HINTS, SKILL_IDS, SKILL_LABELS } from '../../engine';
 import type { GameState } from '../../engine';
@@ -205,9 +206,7 @@ export function ProfileTab({ state }: { state: GameState }) {
       {sub === 'stats' && (
         <section className="panel">
           <h2>Stats</h2>
-          <p className="muted">
-            {state.snapshots.length} turn snapshot{state.snapshots.length === 1 ? '' : 's'} recorded. Charts arrive in M7.
-          </p>
+          <CareerCharts snapshots={state.snapshots} />
         </section>
       )}
     </div>

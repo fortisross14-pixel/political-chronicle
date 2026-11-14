@@ -25,6 +25,7 @@ export function readyRun(overrides: Partial<NewRunConfig> = {}, platform: Pledge
 export function passTurn(state: GameState): GameState {
   let s = state;
   if (s.pendingResult !== undefined) s = applyAction(s, { type: 'DISMISS_RESULT' });
+  if (s.ended) return s;
   if (s.decisions && !s.decisions.resolved) s = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: [s.decisions.cardIds[0]!] });
   s = applyAction(s, { type: 'END_TURN' });
   if (s.night) s = applyAction(s, { type: 'NIGHT_FINISH' });

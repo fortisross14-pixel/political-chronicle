@@ -8,9 +8,9 @@ import { rollChambers } from './legislature';
 import { emptyTeam, grantPerson } from './people';
 import { initialRegions } from './traits';
 import { nextElectionYear, turnsInYear } from './time';
-import type { Career, GameState, Politician, RegionId, Skills, Snapshot } from './types';
+import type { Career, GameState, Politician, RegionId, RunModifiers, Skills, Snapshot } from './types';
 
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 export const MAX_AGE_ENDS_RUN = 85;
 export const DEFAULT_START_YEAR = 2027;
 
@@ -24,6 +24,45 @@ export interface NewRunConfig {
   earliestYear?: number;
   /** First race to file for. Defaults to the hometown's mayoralty, if there is one. */
   raceOfficeId?: string;
+  /** Start without filing for any race (scenario setups that begin in office). */
+  noRace?: boolean;
+  /** Artifacts equipped for the run (DESIGN_V2 §8.3). */
+  artifacts?: string[];
+  modifiers?: Partial<RunModifiers>;
+  /** Sandbox: end the career after this many years. */
+  careerYears?: number;
+}
+
+export const DEFAULT_MODIFIERS: RunModifiers = { opponentRecognition: 1, extraTokens: 0, safeFirstDebate: false };
+
+/** Artifacts change the opening state; some set run-wide modifiers. */
+export function applyArtifacts(state: GameState, artifacts: string[]): GameState {
+  let s = state;
+  for (const id of artifacts) {
+    switch (id) {
+      case 'campaign_button': {
+        const r = s.regions[s.politician.residentRegionId]!;
+        s = { ...s, regions: { ...s.regions, [s.politician.residentRegionId]: { ...r, recognition: Math.min(1, r.recognition + 0.05) } } };
+        break;
+      }
+      case 'rolodex':
+        if (!s.team.cards.some((c) => c.personId === 'cm_kowalczyk')) s = grantPerson(s, 'cm_kowalczyk');
+        break;
+      case 'union_hall_key':
+        s = { ...s, modifiers: { ...s.modifiers, extraTokens: s.modifiers.extraTokens + 1 } };
+        break;
+      case 'war_chest':
+        s = { ...s, funds: s.funds + 15000 };
+        break;
+      case 'lucky_tie':
+        s = { ...s, integrity: Math.min(100, s.integrity + 5) };
+        break;
+      case 'debate_notes':
+        s = { ...s, modifiers: { ...s.modifiers, safeFirstDebate: true } };
+        break;
+    }
+  }
+  return { ...s, artifacts: [...artifacts] };
 }
 
 export function defaultSkills(): Skills {
@@ -61,7 +100,7 @@ export function createRun(config: NewRunConfig): GameState {
   const { politician } = config;
   getRegion(politician.residentRegionId); // validates birthplace
   const earliest = config.earliestYear ?? DEFAULT_START_YEAR;
-  const raceOfficeId = config.raceOfficeId ?? hometownMayoralty(politician.residentRegionId);
+  const raceOfficeId = config.noRace ? undefined : (config.raceOfficeId ?? hometownMayoralty(politician.residentRegionId));
   // Start in the first race's election year, so the career opens with a campaign.
   const startYear = raceOfficeId ? nextElectionYear(getOffice(raceOfficeId), earliest) : earliest;
 
@@ -90,10 +129,15 @@ export function createRun(config: NewRunConfig): GameState {
     promises: [],
     snapshots: [],
     log: [{ year: startYear, turn: 0, text: `${politician.name} enters public life.` }],
+    modifiers: { ...DEFAULT_MODIFIERS, ...config.modifiers },
+    startYear,
+    artifacts: [],
+    ...(config.careerYears ? { careerYears: config.careerYears } : {}),
   };
   // Public servants bring someone from their old job.
   const staffed = politician.backgroundId === 'public_servant' ? grantPerson(base, 'cs_pham') : base;
-  return dealMarket(raceOfficeId ? fileRace(staffed, raceOfficeId) : staffed);
+  const equipped = applyArtifacts(staffed, config.artifacts ?? []);
+  return dealMarket(raceOfficeId ? fileRace(equipped, raceOfficeId) : equipped);
 }
 
 export function takeSnapshot(state: GameState): Snapshot {

@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react';
-import { applyAction, buildRunConfig, createRun } from '../engine';
-import type { Action, GameState } from '../engine';
+import { applyAction, buildRunConfig, createRun, createScenarioRun, recordRun } from '../engine';
+import type { Action, GameState, Profile, RecordOutcome } from '../engine';
+import { loadProfile, saveProfile } from '../storage/profile';
 import { clearSave, loadGame, saveGame } from '../storage/save';
-import { Creator } from './Creator';
 import { Header } from './Header';
+import { ScenarioSelect } from './menu/ScenarioSelect';
+import { SandboxSetup } from './menu/SandboxSetup';
+import { HallOfRuns } from './results/HallOfRuns';
+import { RunResults } from './results/RunResults';
 import { StartScreen } from './StartScreen';
 import { GovernmentTab } from './tabs/GovernmentTab';
 import { PartyTab } from './tabs/PartyTab';
 import { ProfileTab } from './tabs/ProfileTab';
 
 type TabId = 'government' | 'profile' | 'party';
+type Screen = 'menu' | 'scenarios' | 'sandbox' | 'hall' | 'game';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'government', label: 'Government' },
@@ -24,14 +29,45 @@ function randomSeed(): string {
 export function App() {
   const [state, setState] = useState<GameState | null>(null);
   const [saved, setSaved] = useState<GameState | null>(() => loadGame());
+  const [profile, setProfile] = useState<Profile>(() => loadProfile());
+  const [outcome, setOutcome] = useState<RecordOutcome | null>(null);
+  const [screen, setScreen] = useState<Screen>('menu');
   const [tab, setTab] = useState<TabId>('government');
-  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (state) saveGame(state);
   }, [state]);
+  useEffect(() => {
+    saveProfile(profile);
+  }, [profile]);
 
-  const [error, setError] = useState<string | null>(null);
+  // A run is over once its last result has been seen: file it in the profile (once).
+  const finished = !!state?.ended && state.pendingResult === undefined && !state.night;
+  useEffect(() => {
+    if (!state || !finished || outcome) return;
+    const recorded = recordRun(profile, state);
+    setOutcome(recorded);
+    setProfile(recorded.profile);
+  }, [finished, state, outcome, profile]);
+
+  const begin = (s: GameState) => {
+    setOutcome(null);
+    setTab('government');
+    setState(s);
+    setScreen('game');
+  };
+  const toMenu = () => {
+    if (state?.ended) {
+      clearSave();
+      setSaved(null);
+    } else if (state) setSaved(state);
+    setState(null);
+    setOutcome(null);
+    setScreen('menu');
+  };
+  const confirmReplace = () => !saved || saved.ended || window.confirm('Starting a new run replaces your saved run. Continue?');
+
   const dispatch = (action: Action) => {
     if (!state) return;
     try {
@@ -42,57 +78,60 @@ export function App() {
     }
   };
 
-  if (!state && creating) {
+  if (screen === 'scenarios')
     return (
-      <Creator
-        onCancel={() => setCreating(false)}
-        onCreate={(input) => {
-          setTab('government');
-          setCreating(false);
-          setState(createRun(buildRunConfig(input, randomSeed())));
+      <ScenarioSelect
+        profile={profile}
+        onBack={() => setScreen('menu')}
+        onStart={(id, name, artifacts) => confirmReplace() && begin(createScenarioRun(id, { name, artifacts, seed: randomSeed() }))}
+      />
+    );
+  if (screen === 'sandbox')
+    return (
+      <SandboxSetup
+        profile={profile}
+        onBack={() => setScreen('menu')}
+        onStart={(input, artifacts, abilities, careerYears) => {
+          if (!confirmReplace()) return;
+          const config = buildRunConfig(input, randomSeed());
+          begin(createRun({ ...config, politician: { ...config.politician, abilities }, artifacts, careerYears }));
         }}
+      />
+    );
+  if (screen === 'hall') return <HallOfRuns profile={profile} onBack={() => setScreen(state ? 'game' : 'menu')} />;
+
+  if (!state || screen === 'menu') {
+    return (
+      <StartScreen
+        saved={saved}
+        profile={profile}
+        onContinue={() => saved && begin(saved)}
+        onScenarios={() => setScreen('scenarios')}
+        onSandbox={() => setScreen('sandbox')}
+        onHall={() => setScreen('hall')}
       />
     );
   }
 
-  if (!state) {
-    return (
-      <StartScreen
-        saved={saved}
-        onContinue={() => saved && setState(saved)}
-        onNewRun={() => {
-          if (saved && !window.confirm('Starting a new run replaces your saved run. Continue?')) return;
-          setCreating(true);
-        }}
-      />
-    );
-  }
+  if (finished) return <RunResults state={state} outcome={outcome} onMenu={toMenu} onHall={() => setScreen('hall')} />;
 
   return (
     <div className="shell">
       <Header
         state={state}
         onEndTurn={() => dispatch({ type: 'END_TURN' })}
-        onMainMenu={() => {
-          setSaved(state);
-          setState(null);
-        }}
+        onMainMenu={toMenu}
         onAbandon={() => {
           if (!window.confirm('Abandon this run? It will be deleted.')) return;
           clearSave();
           setSaved(null);
           setState(null);
+          setScreen('menu');
         }}
       />
       <nav className="tabs" role="tablist">
         {TABS.map((t) => (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={tab === t.id}
-            className={tab === t.id ? 'tab active' : 'tab'}
-            onClick={() => setTab(t.id)}
-          >
+          <button key={t.id} role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'tab active' : 'tab'} onClick={() => setTab(t.id)}>
             {t.label}
           </button>
         ))}

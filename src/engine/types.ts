@@ -133,6 +133,8 @@ export interface Politician {
   residentRegionId: RegionId;
   backgroundId: string;
   skills: Skills;
+  /** Special abilities earned in missions (Sandbox loadout). */
+  abilities?: string[];
 }
 
 // ---------- Run state ----------
@@ -191,6 +193,8 @@ export interface Race {
   doorKnocks: number;
   /** Money raised by fundraising events this turn (for the "haul" milestone). */
   raisedThisTurn: number;
+  /** Once-per-campaign effects already used (abilities, artifacts). */
+  used?: string[];
 }
 
 export type ItemWindow = 'campaign' | 'night' | 'both';
@@ -426,6 +430,21 @@ export interface EventPlay {
   fundraiser?: boolean;
 }
 
+export interface RunModifiers {
+  /** Multiplier on every opponent's starting recognition. */
+  opponentRecognition: number;
+  /** Extra ground-game tokens at the start of each campaign. */
+  extraTokens: number;
+  /** Your first debate of each campaign can't go wrong. */
+  safeFirstDebate: boolean;
+}
+
+export interface ScenarioRun {
+  id: string;
+  startYear: number;
+  result?: { won: boolean; stars: string[]; year: number; reason: string };
+}
+
 export interface GameState {
   schemaVersion: number;
   runId: string;
@@ -463,7 +482,16 @@ export interface GameState {
   promises: PromiseEvent[];
   /** Index into `elections` of a result the player hasn't dismissed yet. */
   pendingResult?: number;
-  ended?: { reason: 'retired' | 'losses' | 'age'; year: number };
+  ended?: { reason: 'retired' | 'losses' | 'age' | 'length' | 'scenario'; year: number };
+  /** Run-wide modifiers from artifacts and scenario setups. */
+  modifiers: RunModifiers;
+  /** Present when this run is a scenario (mission). */
+  scenario?: ScenarioRun;
+  /** Sandbox: the career ends after this many years. */
+  careerYears?: number;
+  startYear: number;
+  /** Artifacts equipped for this run. */
+  artifacts: string[];
   snapshots: Snapshot[];
   log: LogEntry[];
 }

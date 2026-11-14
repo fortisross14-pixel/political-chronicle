@@ -64,6 +64,8 @@ export interface VoterView {
   lean: number;
   affiliation: Affiliation;
   incumbent: boolean;
+  /** Crossover appeal (ability): partisan lean counts 25% less against this candidate. */
+  crossover?: boolean;
   /** Job approval in this region, when the candidate is the sitting officeholder with a record. */
   approval?: number;
 }
@@ -71,7 +73,8 @@ export interface VoterView {
 export function utility(view: VoterView, regionId: RegionId, level: OfficeLevel, partisan: boolean): number {
   const { recognition: R, favorability: F } = view.standing;
   const w = VOTE_WEIGHTS;
-  const partyFit = view.lean * getRegion(regionId).partisanLean;
+  const fit = view.lean * getRegion(regionId).partisanLean;
+  const partyFit = view.crossover && fit < 0 ? fit * 0.75 : fit;
   const indep = view.affiliation === 'IND' ? INDEPENDENT_PENALTY[level] : 0;
   return (
     w.liked * F * R +
@@ -102,7 +105,10 @@ export function regionIntention(views: VoterView[], regionId: RegionId, level: O
 export function partisanBaseline(views: VoterView[], regionId: RegionId): number[] {
   const lean = getRegion(regionId).partisanLean;
   const blue = clamp(0.5 - VOTE_WEIGHTS.baselineSlope * lean, 0.15, 0.85);
-  const raw = views.map((v) => (v.affiliation === 'DU' ? blue : v.affiliation === 'RP' ? 1 - blue : 0.08));
+  const raw = views.map((v) => {
+    const base = v.affiliation === 'DU' ? blue : v.affiliation === 'RP' ? 1 - blue : 0.08;
+    return v.crossover && base < 0.5 && v.affiliation !== 'IND' ? base + (0.5 - base) * 0.25 : base;
+  });
   const total = raw.reduce((a, b) => a + b, 0);
   return raw.map((r) => r / total);
 }
@@ -120,6 +126,7 @@ export function raceViews(state: GameState, race: Race, regionId: RegionId): Vot
   const doubt = newcomerPenalty(state, regionId);
   const player: VoterView = {
     standing: doubt ? { ...raw, favorability: clamp(raw.favorability - doubt, -1, 1) } : raw,
+    crossover: state.politician.abilities?.includes('crossover_appeal'),
     lean: affiliationLean(state.career.affiliation),
     affiliation: state.career.affiliation,
     incumbent: state.career.office?.officeId === race.officeId,

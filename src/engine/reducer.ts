@@ -3,6 +3,9 @@ import { drawElection, fileRace, finalizeElection, isPrimaryTurn, opponentsAct, 
 import { checkTurnMilestones, useCampaignItem } from './loot';
 import { adBlitz, advanceNight, finalNightShares, mobilize, sendLawyers, startNight, useNightItem } from './night';
 import { joinParty } from './parties';
+import { poll } from './opinion';
+import { evaluateScenario } from './scenarios';
+import { hasAbility } from './traits';
 import { rollChambers } from './legislature';
 import { assignPerson, discardPerson, hasPerk, unassignRole } from './people';
 import { backgroundEnergyPenalty } from './traits';
@@ -30,6 +33,10 @@ export function endTurnBlocker(state: GameState): string | undefined {
  * `*Error` / `*Blocker` helpers first so it never sends one.
  */
 export function applyAction(state: GameState, action: Action): GameState {
+  return evaluateScenario(reduce(state, action));
+}
+
+function reduce(state: GameState, action: Action): GameState {
   switch (action.type) {
     case 'END_TURN':
       return endTurn(state);
@@ -121,6 +128,9 @@ function advanceCalendar(state: GameState, rng: Rng): GameState {
   s = { ...s, energy: Math.max(1, energyForAge(age) - backgroundEnergyPenalty(s)) };
   // A new two-year cycle: legislatures change hands.
   if (turn === 0 && year % 2 === 0 && s.chambers.rolledYear !== year) s = { ...s, chambers: rollChambers(rng, year) };
+  if (!s.ended && s.careerYears && turn === 0 && year >= s.startYear + s.careerYears) {
+    s = { ...s, ended: { reason: 'length', year }, log: [...s.log, { year, turn, text: `${s.careerYears} years in public life: your career is complete.` }] };
+  }
   if (!s.ended && age >= MAX_AGE_ENDS_RUN) {
     s = {
       ...s,
@@ -134,5 +144,13 @@ function advanceCalendar(state: GameState, rng: Rng): GameState {
   // The last year of a term opens the re-election campaign (or retire instead).
   if (s.career.office && !s.career.race && s.clock.turn === 0 && isReelectionYear(s)) s = fileRace(s, s.career.office.officeId);
   if (hasPerk(s, 'roadWarrior')) s = { ...s, energy: s.energy + 1 };
+  // Comeback kid (ability): trailing by 5+ going into the final turn.
+  const race = s.career.race;
+  if (race?.platform.length && hasAbility(s, 'comeback_kid') && isElectionTurn(s.clock, s.career)) {
+    const p = poll(s, race).decided;
+    if (Math.max(...p.slice(1)) - p[0]! >= 0.05) {
+      s = { ...s, energy: s.energy + 1, career: { ...s.career, race: { ...race, tokens: race.tokens + 1 } }, log: [...s.log, { year, turn, text: 'Comeback kid: you dig in for the final stretch (+1 energy, +1 token).' }] };
+    }
+  }
   return dealMarket(dealDecisions(s));
 }

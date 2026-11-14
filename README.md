@@ -9,11 +9,11 @@ compared.
 - [Design v1 — simulation engine](docs/DESIGN.md)
 - [POC milestones](docs/MILESTONES.md)
 
-Status: **M9 (campaign loot & election night) done** — campaign milestones pay out money,
-cards and one-shot items; a ground game builds tokens; and Election Day becomes a live,
-animated night (results streaming in, needle, calls) where you mobilize, send lawyers and
-run late ads on what's still uncounted. Next: M10 (scenarios, meta-progression & run results),
-then M11 best practices, M12 visual revamp, M13 balancing.
+Status: **M10 (scenarios, meta-progression & run results) done** — a menu with Scenarios
+(4 beginner missions with objectives, deadlines and stars), Sandbox (unlocked by the beginner
+track; choose artifacts, abilities and career length), run results with a legacy score and
+charts, and the Hall of Runs to compare careers. Next: M11 (development best practices), then
+M12 visual revamp and M13 balancing.
 
 ## Development
 
@@ -31,5 +31,5 @@ Layout:
 - `src/engine/` — pure TypeScript game rules (no React): types, seeded RNG, turn clock, reducer
 - `src/data/` — world data: issues, parties, backgrounds, New York regions and offices
 - `src/sim/` — balance bot used by tests and `npm run sim`
-- `src/storage/` — localStorage save/load
+- `src/storage/` — localStorage: the current run (`save.ts`) and the meta-progression profile (`profile.ts`)
 - `src/ui/` — React app (start screen, character creator, header, map, Government / My profile / My party tabs)

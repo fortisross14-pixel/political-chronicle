@@ -107,3 +107,13 @@ for (const [background, party] of [['public_servant', undefined], ['lawyer', und
   }
   console.log(`${(background + (party ? ' as Blue' : '')).padEnd(16)} reached House ${pct(house / n)} (first try ${pct(houseFirst / Math.max(1, houseTried))})  Governor ${pct(gov / n)}${gov ? ` (avg ${Math.round(years / gov)} yrs)` : ''}  first Governor try won ${pct(firstWins / Math.max(1, tries))}  parties ${JSON.stringify(tally)}`);
 }
+
+console.log('\nBeginner scenarios (target: 80–90% wins for sensible play)');
+import { SCENARIOS } from '../src/data';
+import { scenarioRate } from '../src/sim/bot';
+for (const scn of SCENARIOS.filter((x) => x.track === 'beginner')) {
+  const n = Math.max(40, runs / 3);
+  const plain = scenarioRate(scn.id, n);
+  const loaded = scenarioRate(scn.id, n, ['war_chest', 'union_hall_key']);
+  console.log(`${scn.title.padEnd(22)} win ${pct(plain.winRate)}  stars ${plain.avgStars.toFixed(2)}   with 2 artifacts: win ${pct(loaded.winRate)}  stars ${loaded.avgStars.toFixed(2)}`);
+}

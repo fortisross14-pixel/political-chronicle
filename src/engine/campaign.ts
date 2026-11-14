@@ -290,13 +290,17 @@ export function fileRace(state: GameState, officeId: OfficeId): GameState {
   const rng = new Rng(state.rng);
   const status = nominationStatus(state, officeId);
   const party = member(state);
-  const opponents = generateOpponents(rng, officeId, state.career.office?.officeId === officeId, state.career.affiliation);
+  const opponents = generateOpponents(rng, officeId, state.career.office?.officeId === officeId, state.career.affiliation).map((c) => {
+    const scale = state.modifiers.opponentRecognition;
+    if (scale === 1) return c;
+    return { ...c, regions: Object.fromEntries(Object.entries(c.regions).map(([id, r]) => [id, { ...r, recognition: r.recognition * scale }])) };
+  });
   const race: Race = {
     officeId,
     electionYear: electionYearIfFiled(state, officeId),
     platform: [],
     opponents,
-    tokens: startingTokens(state),
+    tokens: startingTokens(state) + state.modifiers.extraTokens,
     milestones: [],
     doorKnocks: 0,
     raisedThisTurn: 0,

@@ -4,6 +4,7 @@ import {
   activePlatform,
   applyAction,
   counted,
+  createScenarioRun,
   fileRaceError,
   lawyersError,
   mobilizeError,
@@ -371,6 +372,7 @@ export function climbCareer(input: CreationInput, turns: number, seed: string, p
     if (level && (highest === 'none' || LADDER[level]! > LADDER[highest]!)) highest = level;
     if (highest === 'governor') break;
   }
+  forcedParty = undefined;
   return {
     highest,
     party: s.career.affiliation,
@@ -381,6 +383,33 @@ export function climbCareer(input: CreationInput, turns: number, seed: string, p
     houseTries: s.elections.filter((e) => e.kind === 'general' && getOffice(e.officeId).level === 'house').length,
     years: s.clock.year - 2027,
   };
+}
+
+/** The style a sensible player would use for each beginner scenario. */
+export const SCENARIO_STYLE: Record<string, BotStyle> = {
+  hometown_favorite: 'sensible',
+  keep_your_word: 'sensible',
+  pick_a_side: 'climber',
+  big_city_small_town: 'climber',
+};
+
+/** Plays a scenario to its end. */
+export function playScenario(scenarioId: string, seed: string, artifacts: string[] = [], style: BotStyle = SCENARIO_STYLE[scenarioId] ?? 'sensible'): GameState {
+  forcedParty = undefined;
+  let s = createScenarioRun(scenarioId, { name: 'Bot', artifacts, seed });
+  for (let guard = 0; guard < 120 && !s.scenario?.result; guard++) s = playTurn(s, style);
+  return s;
+}
+
+export function scenarioRate(scenarioId: string, runs: number, artifacts: string[] = []): { winRate: number; avgStars: number } {
+  let wins = 0;
+  let stars = 0;
+  for (let i = 0; i < runs; i++) {
+    const r = playScenario(scenarioId, `scn-${scenarioId}-${i}`, artifacts).scenario!.result!;
+    if (r.won) wins++;
+    stars += r.stars.length;
+  }
+  return { winRate: wins / runs, avgStars: stars / runs };
 }
 
 export { poll };
