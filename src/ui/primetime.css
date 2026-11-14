@@ -4617,3 +4617,63 @@ img.card-art.painted.portrait {
     grid-column: 3;
   }
 }
+
+/* ---------- Save slots on the menu ---------- */
+.save-slots {
+  display: grid;
+  gap: 6px;
+}
+
+.save-slot {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+}
+
+.save-slot.empty {
+  display: block;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+.save-slot-main {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 10px;
+  align-items: center;
+  text-align: left;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, #ffe08a, #e2a82a);
+  color: #1a1406;
+}
+
+.save-slot-main .muted {
+  color: rgba(26, 20, 6, 0.7);
+}
+
+.save-face {
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 2px solid rgba(26, 20, 6, 0.4);
+}
+
+.save-face .card-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+}
+
+.save-text {
+  display: grid;
+  line-height: 1.2;
+}
+
+.save-del {
+  width: 44px;
+  padding: 0;
+  font-size: 1.4rem;
+}

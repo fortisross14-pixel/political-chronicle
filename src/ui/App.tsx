@@ -14,7 +14,7 @@ import {
 } from '../engine';
 import type { Action, GameState, Profile, RecordOutcome } from '../engine';
 import { loadProfile, saveProfile } from '../storage/profile';
-import { clearSave, loadGameResult, saveGame } from '../storage/save';
+import { clearSave, loadAllSlots, saveGame, SLOT_COUNT } from '../storage/save';
 import { Header } from './Header';
 import { ICONS } from './icons';
 import { cue } from './fx/sound';
@@ -79,16 +79,18 @@ function randomSeed(): string {
 
 export function App() {
   const [state, setState] = useState<GameState | null>(null);
-  // Load once: the saved run (upgraded from older formats if needed) and a note for the menu.
-  const [initial] = useState(() => loadGameResult());
-  const [saved, setSaved] = useState<GameState | null>(initial.state);
-  const saveNotice = initial.state
-    ? 'migratedFrom' in initial && initial.migratedFrom
-      ? 'Your saved game was upgraded to this version.'
-      : undefined
-    : 'reason' in initial
-      ? initial.reason
-      : undefined;
+  // Load once: every save slot (upgraded from older formats if needed) and a note for the menu.
+  const [initial] = useState(() => loadAllSlots());
+  const [slots, setSlots] = useState<(GameState | null)[]>(() => initial.map((r) => r.state));
+  /** When each slot was last played, to pick which one to replace when all are full. */
+  const [playedAt, setPlayedAt] = useState<number[]>(() =>
+    initial.map((r) => ('savedAt' in r && r.savedAt ? Date.parse(r.savedAt) || 0 : 0)),
+  );
+  const [active, setActive] = useState(0);
+  const saveNotice = initial.some((r) => 'migratedFrom' in r && r.migratedFrom)
+    ? 'Your saved games were upgraded to this version.'
+    : initial.map((r) => ('reason' in r ? r.reason : undefined)).find(Boolean);
+  const setSlot = (i: number, s: GameState | null) => setSlots((all) => all.map((x, k) => (k === i ? s : x)));
   const [profile, setProfile] = useState<Profile>(() => loadProfile());
   const [outcome, setOutcome] = useState<RecordOutcome | null>(null);
   const [screen, setScreen] = useState<Screen>('menu');
@@ -96,8 +98,8 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (state) saveGame(state);
-  }, [state]);
+    if (state) saveGame(state, active);
+  }, [state, active]);
   useEffect(() => {
     saveProfile(profile);
   }, [profile]);
@@ -111,7 +113,9 @@ export function App() {
     setProfile(recorded.profile);
   }, [finished, state, outcome, profile]);
 
-  const begin = (s: GameState) => {
+  const begin = (s: GameState, slot = active) => {
+    setActive(slot);
+    setPlayedAt((all) => all.map((x, k) => (k === slot ? Date.now() : x)));
     setOutcome(null);
     setTab('government');
     setState(s);
@@ -119,14 +123,26 @@ export function App() {
   };
   const toMenu = () => {
     if (state?.ended) {
-      clearSave();
-      setSaved(null);
-    } else if (state) setSaved(state);
+      clearSave(active);
+      setSlot(active, null);
+    } else if (state) setSlot(active, state);
     setState(null);
     setOutcome(null);
     setScreen('menu');
   };
-  const confirmReplace = () => !saved || saved.ended || window.confirm('Starting a new run replaces your saved run. Continue?');
+  /** The slot a new run goes into: the first free one, or (after asking) the one played longest ago. */
+  const freeSlot = (): number | undefined => {
+    const free = slots.findIndex((s) => !s || s.ended);
+    if (free >= 0) return free;
+    const oldest = playedAt.indexOf(Math.min(...playedAt));
+    const who = slots[oldest]!;
+    return window.confirm(`All ${SLOT_COUNT} slots are in use. Replace slot ${oldest + 1} (${who.politician.name})?`) ? oldest : undefined;
+  };
+  const startNew = (make: () => GameState) => {
+    const slot = freeSlot();
+    if (slot === undefined) return;
+    begin(make(), slot);
+  };
 
   const dispatch = (action: Action) => {
     if (!state) return;
@@ -159,7 +175,7 @@ export function App() {
         profile={profile}
         onBack={() => setScreen('menu')}
         onStart={(id, name, trinkets, extra) =>
-          confirmReplace() && begin(createScenarioRun(id, { name, artifacts: trinkets, extra, seed: randomSeed() }))
+          startNew(() => createScenarioRun(id, { name, artifacts: trinkets, extra, seed: randomSeed() }))
         }
       />
     );
@@ -169,9 +185,8 @@ export function App() {
         profile={profile}
         onBack={() => setScreen('menu')}
         onStart={(input, trinkets, careerYears, difficulty) => {
-          if (!confirmReplace()) return;
           const config = buildRunConfig(input, randomSeed());
-          begin(
+          startNew(() =>
             createRun({
               ...config,
               artifacts: trinkets,
@@ -187,10 +202,15 @@ export function App() {
   if (!state || screen === 'menu') {
     return (
       <StartScreen
-        saved={saved}
+        slots={slots}
         notice={saveNotice}
         profile={profile}
-        onContinue={() => saved && begin(saved)}
+        onContinue={(i) => slots[i] && begin(slots[i]!, i)}
+        onDelete={(i) => {
+          if (!window.confirm(`Delete the run in slot ${i + 1}?`)) return;
+          clearSave(i);
+          setSlot(i, null);
+        }}
         onScenarios={() => setScreen('scenarios')}
         onSandbox={() => setScreen('sandbox')}
         onHall={() => setScreen('hall')}
@@ -212,8 +232,8 @@ export function App() {
         onMainMenu={toMenu}
         onAbandon={() => {
           if (!window.confirm('Abandon this run? It will be deleted.')) return;
-          clearSave();
-          setSaved(null);
+          clearSave(active);
+          setSlot(active, null);
           setState(null);
           setScreen('menu');
         }}

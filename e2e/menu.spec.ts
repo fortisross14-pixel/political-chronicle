@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { seed, veteranProfile } from './helpers';
+import { launchedState, seed, veteranProfile } from './helpers';
 
 test('Sandbox is locked for new players and opens after the beginner track', async ({ page }) => {
   await seed(page, {});
@@ -18,5 +18,20 @@ test('a veteran builds a Sandbox politician with a loadout and the run saves acr
   await page.getByRole('button', { name: 'Start career' }).click();
   await expect(page.locator('.who strong')).toHaveText('Jo Park');
   await page.reload();
+  await expect(page.getByRole('button', { name: /Continue — Jo Park/ })).toBeVisible();
+});
+
+test('a second run goes in its own slot; both survive a reload', async ({ page }) => {
+  page.on('dialog', (d) => d.accept());
+  await seed(page, { state: launchedState('slot-1'), profile: veteranProfile() });
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: /Continue — Night Owl/ })).toBeVisible();
+  await page.getByRole('button', { name: /^Sandbox/ }).click();
+  await page.getByPlaceholder(/Sam Ortega/).fill('Jo Park');
+  await page.getByRole('button', { name: 'Start career' }).click();
+  await page.getByRole('button', { name: 'Start career' }).click();
+  await expect(page.locator('.who strong')).toHaveText('Jo Park');
+  await page.reload();
+  await expect(page.getByRole('button', { name: /Continue — Night Owl/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Continue — Jo Park/ })).toBeVisible();
 });
