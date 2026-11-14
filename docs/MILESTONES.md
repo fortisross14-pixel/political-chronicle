@@ -124,7 +124,7 @@ The direction changed after M6: a card roguelike for phones and tablets, with sc
 sandbox, people cards, a legislature and an animated election night. See
 [DESIGN_V2.md](./DESIGN_V2.md). The old M7 (stats and Hall of Runs) folds into M10.
 
-## M7 — Character v2: traits, skills, backgrounds
+## M7 — Character v2: traits, skills, backgrounds ✅ done
 
 - Home state (any of 50) and resident state/region (playable); native vs transplant rules
   (hometown bonus vs newcomer penalty plus outside donors).

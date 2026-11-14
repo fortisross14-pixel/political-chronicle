@@ -9,10 +9,10 @@ compared.
 - [Design v1 — simulation engine](docs/DESIGN.md)
 - [POC milestones](docs/MILESTONES.md)
 
-Status: **M6 (parties & the climb to Governor) done** — join the Democratic Union or the
-Republic Party, build standing, earn party money, request nominations or fight primaries, and
-run for the House, Senate or Governor across all of New York. Next: M7 (character v2:
-traits, skills, backgrounds) — see the v2 roadmap.
+Status: **M7 (character v2) done** — home state (any of 50) and resident state/city (native
+or transplant), 7 backgrounds with perks, weaknesses and state affinities, and the 7 skills
+(CHA, ECO, DIP, STR, ADM, LEA, LAW) wired into campaigning, money, parties and governing.
+Next: M8 (people cards & the legislature). See [the v2 roadmap](docs/MILESTONES.md).
 
 ## Development
 

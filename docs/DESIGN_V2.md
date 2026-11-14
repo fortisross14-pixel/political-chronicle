@@ -72,6 +72,14 @@ ones), a **perk** and a **weakness**.
 | **Community organizer** | LEA +1, CHA +1, DIP +1 | IL, MI, PA, OH | +2 ground-game tokens per campaign; door-knocking ×1.5 | ECO starts at 1 |
 | **Doctor / scientist** | LAW +1, ADM +1, ECO +1 | MA, CO, WA | High trust: integrity starts at 75; credible on healthcare and climate | Lower energy: −1 for the first cycle (still at the clinic) |
 
+**As built (M7):** weaknesses are creation caps (a skill can't go above 2 at creation); points
+that can't be placed because of caps are lost. Perk values were trimmed after the sim:
+Celebrity 25% statewide recognition and ×0.8 policy credibility, Business $70k, Organizer
+door-knocking ×1.2. First-mayoral-race win rates for a sensible bot (Watertown / NYC):
+Veteran 61 / 61, Public servant 60 / 57, Celebrity 79 / 59, Lawyer 67 / 64, Business 76 / 44,
+Organizer 73 / 51, Doctor 60 / 67. Celebrity is the strongest campaigner by design (CHA 5); its
+cost comes later, in governing.
+
 ### 2.4 Skills (7)
 
 These replace v1's Oratory, Charisma, Media Savvy, Digital, Policy, Negotiation and
@@ -98,6 +106,13 @@ How v1 mechanics map onto the new skills:
 | Effect preview precision | STR |
 | Party standing gains | LEA (own party) · DIP (deals across lines) |
 | Credibility | LAW on policy topics, plus background |
+
+**As built (M7):** CHA drives every event and the gaffe chance; ECO drives donors and
+fundraising events, plus ×(0.8 + 0.04·ECO) on tax bills in office; DIP cushions standing
+losses ×(1.2 − 0.05·DIP); STR gives exact previews at 5, opponent standings at 4, their likely
+next move at 6, and a 4th decision card at 7; ADM scales approval wear ×(1.25 − 0.05·ADM) and
+bill impact ×(0.8 + 0.04·ADM); LEA scales standing gains ×(0.8 + 0.05·LEA) and crisis costs
+×(1.25 − 0.05·LEA); LAW drives credibility (and, in M8, bill passage).
 
 Note on party relationships: **LEA** is about your own team and party, while **DIP** is about
 everyone else (the other party, other chambers, other politicians). That keeps the two from
