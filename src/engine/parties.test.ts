@@ -164,7 +164,7 @@ describe('partisan elections', () => {
       career: {
         ...s.career,
         office: { ...s.career.office!, officeId: 'house-ny-north', termEndsYear: 2030 },
-        race: { officeId: 'house-ny-north', electionYear: 2030, platform: [], opponents: [] },
+        race: { officeId: 'house-ny-north', electionYear: 2030, platform: [], opponents: [], tokens: 2, milestones: [], doorKnocks: 0, raisedThisTurn: 0 },
       },
     };
     expect(fileRaceError(house, 'governor-ny')).toBeUndefined();

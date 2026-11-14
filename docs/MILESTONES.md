@@ -149,7 +149,7 @@ perk shows up in the sim.
 **Done when:** a Rare cabinet is worth about +2 skill levels in the sim, and a Governor with
 low LAW and no director sees noticeably more failed bills.
 
-## M9 — Campaign loot & election night
+## M9 — Campaign loot & election night ✅ done
 
 - Engine: reporting timeline per region (poll closings, count progress, shrinking noise),
   call logic, win probability.
@@ -176,33 +176,54 @@ blowouts.
 **Done when:** a new player can clear the beginner track, earn artifacts, unlock Sandbox and
 compare runs.
 
-## M11 — Mobile-first UX & juice
+## M11 — Development best practices
 
-- Portrait phone layout: bottom hand with drag-to-region, swipe decision stack, slim top bar.
-- Landscape tablet layout.
-- Animations (Framer Motion), haptics hooks; installable offline PWA.
+- Code health pass: module boundaries (engine / data / ui), naming, dead code, comments where
+  the "why" isn't obvious.
+- Engine invariants: action validation in one place, typed errors, schema migrations instead
+  of discarding old saves.
+- Testing: coverage of every action and edge case, UI smoke tests in CI (Playwright), the
+  balance sim as a CI job with stored baselines.
+- Tooling: ESLint + Prettier, strict CI (typecheck, lint, test, build, sim), bundle size check,
+  performance budget for a turn on a mid-range phone.
+- Docs: architecture overview and contributor guide.
 
-**Done when:** a full scenario plays comfortably one-handed on a phone and the app installs
-offline.
+**Done when:** CI runs lint, type checks, unit tests, UI smoke tests and the balance-sim
+baseline on every push, and old saves migrate instead of being dropped.
 
-## M12 — States v2 (NY re-cut + California) & advanced scenarios
+## M12 — Total visual revamp
 
-- New York re-cut to 5 regions (2 cities, 2 secondary, 1 rural) and California with 5 (Los
-  Angeles, Bay Area · San Diego, Sacramento & Inland Empire · Central Valley & the North), with
-  mayors, House seats and chapter platforms; map shapes for both.
-- Advanced scenarios: The Underdog Superstar, Blue in a red district, The Carpetbagger,
-  Machine politics, The Comeback.
-- Balance pass on every scenario band.
+- A new visual identity: typography, color system, iconography and card art direction (cards
+  that feel like cards).
+- **Mobile-first layout:** portrait phone with the bottom hand and drag-to-region, a swipe
+  stack for decisions and a slim top bar; a landscape tablet layout.
+- Juice everywhere: card flips and draws, count-ups, map fills, an election night with TV-style
+  graphics, haptics and sound hooks.
+- Installable offline web app (PWA); accessibility pass (contrast, focus, reduced motion).
 
-**Done when:** all advanced scenarios sit inside their difficulty bands in CI.
+**Done when:** a full scenario plays comfortably one-handed on a phone, looks like a premium
+game, and installs offline.
+
+## M13 — Balancing
+
+- A balance pass on everything with the bot harness: every scenario inside its difficulty
+  band; backgrounds within ±8 points of each other per state; native vs transplant gap 10–12;
+  people, items and night actions inside their targets; the economy without runaways.
+- Tune the costs that feel off in play (card prices, people prices, Market weights).
+- Difficulty settings for Sandbox.
+
+**Done when:** every target in DESIGN_V2 is met by the sim in CI.
 
 ---
 
 ## After v2 (expansion)
 
-1. **More states:** about 10 playable states, with finer regions scaled by population (Rhode
-   Island 2, New York 10–12, California and Texas more), plus a US map.
-2. **The presidency:** national primaries and the general election over the playable states,
+1. **More states:** New York re-cut to 5 regions and California (2 cities, 2 secondary,
+   1 rural), growing to about 10 playable states with finer regions scaled by population
+   (Rhode Island 2, New York 10–12, California and Texas more), plus a US map.
+2. **Advanced scenarios:** The Underdog Superstar, Blue in a red district, The Carpetbagger,
+   Machine politics, The Comeback.
+3. **The presidency:** national primaries and the general election over the playable states,
    where the transplant's two-state payoff kicks in.
-3. **Living world:** scandals, random events, recurring rivals, staff poached by opponents.
-4. **Store release:** Capacitor builds, sound, onboarding polish.
+4. **Living world:** scandals, random events, recurring rivals, staff poached by opponents.
+5. **Store release:** Capacitor builds, sound, onboarding polish.

@@ -1214,3 +1214,168 @@ details summary {
 .panel.draft {
   border-color: var(--accent);
 }
+
+/* Election night (M9) */
+.live {
+  color: #ff5a5a;
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.night-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) 1fr;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.needle-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.needle {
+  width: 100%;
+  max-width: 260px;
+}
+
+.needle-hand {
+  transform-origin: 100px 100px;
+  transition: transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.needle-label {
+  fill: var(--text);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.ticker {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+  display: grid;
+  gap: 0.2rem;
+  color: var(--muted);
+}
+
+.ticker li.fresh {
+  color: var(--text);
+  animation: slide-in 0.4s ease-out;
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.called-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 12px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  animation: slide-in 0.5s ease-out;
+}
+
+.called-banner.win {
+  background: rgba(47, 179, 154, 0.2);
+  border: 2px solid #2fb39a;
+}
+
+.called-banner.lose {
+  background: rgba(224, 123, 57, 0.18);
+  border: 2px solid #e07b39;
+}
+
+.night-regions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.night-regions li {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem;
+  border-radius: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.night-regions li.selected {
+  border-color: var(--accent);
+}
+
+.night-region-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.count-bar {
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.count-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.8s ease-out;
+}
+
+.tokens {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.map-region polygon {
+  transition: fill 0.8s ease-out;
+}
+
+.loot {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: var(--panel-2);
+}
+
+.item-chip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.item-chip button {
+  padding: 0.15rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 800px) {
+  .night-grid {
+    grid-template-columns: 1fr;
+  }
+}

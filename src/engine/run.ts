@@ -10,7 +10,7 @@ import { initialRegions } from './traits';
 import { nextElectionYear, turnsInYear } from './time';
 import type { Career, GameState, Politician, RegionId, Skills, Snapshot } from './types';
 
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 export const MAX_AGE_ENDS_RUN = 85;
 export const DEFAULT_START_YEAR = 2027;
 
@@ -79,6 +79,8 @@ export function createRun(config: NewRunConfig): GameState {
     regions: initialRegions(politician),
     record: {},
     hand: [],
+    items: [],
+    nextItemUid: 1,
     nextCardUid: 1,
     recentDecisionIds: [],
     team: emptyTeam(),

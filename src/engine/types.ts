@@ -184,6 +184,55 @@ export interface Race {
   primary?: Primary;
   /** Running as your party's nominee (vs an independent run). */
   nominee?: PartyId;
+  /** Ground-game tokens for election night (DESIGN_V2 §5). */
+  tokens: number;
+  /** Loot milestones already earned this race. */
+  milestones: string[];
+  doorKnocks: number;
+  /** Money raised by fundraising events this turn (for the "haul" milestone). */
+  raisedThisTurn: number;
+}
+
+export type ItemWindow = 'campaign' | 'night' | 'both';
+
+export interface ItemCard {
+  uid: number;
+  itemId: string;
+}
+
+/** One region's count on election night. */
+export interface NightRegion {
+  /** True final player share (decided vote), before night actions. Hidden from the player. */
+  trueShares: number[];
+  /** Pre-election poll share for the player (the prior the needle starts from). */
+  prior: number;
+  /** Early-count skew: reported share differs by this × (1 − counted). Hidden. */
+  skew: number;
+  /** Step at which polls close here. */
+  closeStep: number;
+  /** Steps it takes to count everything after closing. */
+  countSteps: number;
+  /** Player share points added by night actions (applied to the uncounted part). */
+  boost: number;
+  /** Lawyers protect against a bad final draw here. */
+  protected: boolean;
+  calledFor?: number;
+}
+
+export interface ElectionNight {
+  officeId: OfficeId;
+  year: number;
+  step: number;
+  steps: number;
+  regions: Record<RegionId, NightRegion>;
+  tokens: number;
+  /** Statewide late-ad nudge (share points on the uncounted vote). */
+  statewideBoost: number;
+  adBought: boolean;
+  calledFor?: number;
+  finalPoll: number;
+  /** Things that happened, for the ticker. */
+  ticker: string[];
 }
 
 export interface Primary {
@@ -392,6 +441,11 @@ export interface GameState {
   /** Your public record per issue (−2..+2), built from pledges and applied decisions. */
   record: Partial<Record<IssueId, Stance>>;
   hand: CardInstance[];
+  /** Loot items (one-shot) from campaign milestones. */
+  items: ItemCard[];
+  nextItemUid: number;
+  /** Election night in progress. */
+  night?: ElectionNight;
   nextCardUid: number;
   decisions?: DecisionHand;
   market?: Market;
@@ -426,4 +480,10 @@ export type Action =
   | { type: 'JOIN_PARTY'; party: PartyId }
   | { type: 'ASSIGN_PERSON'; uid: number }
   | { type: 'UNASSIGN_ROLE'; role: RoleId }
-  | { type: 'DISCARD_PERSON'; uid: number };
+  | { type: 'DISCARD_PERSON'; uid: number }
+  | { type: 'USE_ITEM'; uid: number; regionId?: RegionId }
+  | { type: 'NIGHT_ADVANCE' }
+  | { type: 'NIGHT_MOBILIZE'; regionId: RegionId }
+  | { type: 'NIGHT_LAWYERS'; regionId: RegionId }
+  | { type: 'NIGHT_AD_BLITZ' }
+  | { type: 'NIGHT_FINISH' };

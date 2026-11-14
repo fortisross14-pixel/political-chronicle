@@ -8,6 +8,7 @@ import { HandPanel } from '../campaign/HandPanel';
 import { MarketPanel } from '../campaign/MarketPanel';
 import { OfficePanel } from '../campaign/OfficePanel';
 import { TeamPanel } from '../campaign/TeamPanel';
+import { ElectionNight } from '../night/ElectionNight';
 import { PlatformBuilder } from '../campaign/PlatformBuilder';
 import { RacePicker } from '../campaign/RacePicker';
 import { RegionPanel } from '../map/RegionPanel';
@@ -66,6 +67,8 @@ export function GovernmentTab({ state, dispatch }: Props) {
       </div>
     </section>
   );
+
+  if (state.night) return <ElectionNight state={state} dispatch={dispatch} />;
 
   if (pending) {
     return (

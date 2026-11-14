@@ -9,10 +9,11 @@ compared.
 - [Design v1 — simulation engine](docs/DESIGN.md)
 - [POC milestones](docs/MILESTONES.md)
 
-Status: **M8 (people cards & the legislature) done** — people cards bought once in the Market
-(assign to campaign manager, chief of staff, party liaison or legislative director, keep in
-reserve, or discard; no salaries), skill boosts and perks while a role is active, and legislatures whose
-control changes each cycle, so bills must pass. Next: M9 (campaign loot & election night).
+Status: **M9 (campaign loot & election night) done** — campaign milestones pay out money,
+cards and one-shot items; a ground game builds tokens; and Election Day becomes a live,
+animated night (results streaming in, needle, calls) where you mobilize, send lawyers and
+run late ads on what's still uncounted. Next: M10 (scenarios, meta-progression & run results),
+then M11 best practices, M12 visual revamp, M13 balancing.
 
 ## Development
 

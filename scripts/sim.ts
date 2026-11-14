@@ -2,7 +2,7 @@
 import { BACKGROUNDS } from '../src/data';
 import { getEventCard } from '../src/data';
 import { buildRunConfig, createRun, eventPrice, projectedIncome } from '../src/engine';
-import { botCharacter, careerFunds, climbCareer, hometownWinRate, reelectionRate } from '../src/sim/bot';
+import { botCharacter, careerFunds, climbCareer, hometownWinRate, playCampaign, reelectionRate, setNightActions } from '../src/sim/bot';
 import type { BotStyle } from '../src/sim/bot';
 
 const runs = Number(process.argv[2] ?? 200);
@@ -29,6 +29,37 @@ for (const b of BACKGROUNDS) {
   const north = hometownWinRate(botCharacter('ny-north', b.id), 'sensible', Math.max(50, runs / 2));
   const nyc = hometownWinRate(botCharacter('ny-nyc', b.id), 'sensible', Math.max(50, runs / 2));
   console.log(`${b.name.padEnd(22)} Watertown ${pct(north.winRate)} (${pct(north.avgShare)})   NYC ${pct(nyc.winRate)} (${pct(nyc.avgShare)})`);
+}
+
+console.log('\nElection night: same seeds with and without night actions (sensible bot)');
+for (const home of ['ny-north', 'ny-nyc']) {
+  let close = 0;
+  let flippedClose = 0;
+  let flipped = 0;
+  let blowoutFlips = 0;
+  const milestones: Record<string, number> = {};
+  const n = runs;
+  for (let i = 0; i < n; i++) {
+    const seed = `night-${home}-${i}`;
+    setNightActions(false);
+    const off = playCampaign(createRun(buildRunConfig(botCharacter(home), seed)), 'sensible').state.elections.at(-1)!;
+    setNightActions(true);
+    const onRun = playCampaign(createRun(buildRunConfig(botCharacter(home), seed)), 'sensible').state;
+    const on = onRun.elections.at(-1)!;
+    for (const m of onRun.log.filter((l) => l.text.startsWith('🏅')).map((l) => l.text.split(':')[0]!.slice(2))) milestones[m] = (milestones[m] ?? 0) + 1;
+    const margin = off.totalShares[0]! - Math.max(...off.totalShares.slice(1));
+    const isClose = Math.abs(margin) < 0.03;
+    if (isClose) close++;
+    if (off.playerWon !== on.playerWon) {
+      flipped++;
+      if (isClose) flippedClose++;
+      if (Math.abs(margin) > 0.06) blowoutFlips++;
+    }
+  }
+  console.log(
+    `${home.padEnd(9)} close races ${pct(close / n)}  flipped by night actions: ${pct(flippedClose / Math.max(1, close))} of close, ${pct(flipped / n)} of all, ${blowoutFlips} blowouts`,
+  );
+  console.log(`          milestones per campaign: ${Object.entries(milestones).map(([k, v]) => `${k} ${(v / n).toFixed(2)}`).join(' · ')}`);
 }
 
 console.log('\nEconomics investment: Watertown public servant, 20 turns (~6 years)');

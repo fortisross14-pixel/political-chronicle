@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { BASIC_CARD_IDS, getEventCard, getRegion, ISSUES_BY_ID, STATES } from '../../data';
-import { activePlatform, previewEvent } from '../../engine';
+import { BASIC_CARD_IDS, getEventCard, getItem, getRegion, ISSUES_BY_ID, MILESTONES_BY_ID, STATES } from '../../data';
+import { activePlatform, itemError, previewEvent } from '../../engine';
 import type { Action, EventCard, GameState, IssueId, RegionId } from '../../engine';
 import { money } from '../format';
 import { effectLabel, PRECISE_PREVIEW_POLICY, stanceLabel } from './labels';
@@ -29,6 +29,8 @@ interface HandEntry {
 
 export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) {
   const platform = activePlatform(state);
+  const race = state.career.race;
+  const items = state.items;
   const [selected, setSelected] = useState<string>('door_knocking');
   const [issue, setIssue] = useState<IssueId>(platform[0]!.issue);
 
@@ -124,6 +126,31 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
           ) : null}
         </div>
 
+        {(race || items.length > 0) && (
+          <div className="loot small">
+            {race && (
+              <span>
+                <strong>{race.tokens}</strong> ground-game tokens for election night
+                {race.milestones.length > 0 && <span className="muted"> · milestones: {race.milestones.map((m) => MILESTONES_BY_ID[m]!.name).join(', ')}</span>}
+              </span>
+            )}
+            {items.map((item) => {
+              const meta = getItem(item.itemId);
+              const error = itemError(state, item.uid, meta.targetsRegion ? regionId : undefined);
+              return (
+                <span key={item.uid} className="item-chip">
+                  <strong>{meta.name}</strong>
+                  <span className="muted"> {meta.window === 'night' ? `— election night: ${meta.nightText}` : `— ${meta.campaignText}`}</span>
+                  {meta.window !== 'night' && (
+                    <button disabled={!!error} title={error} onClick={() => dispatch({ type: 'USE_ITEM', uid: item.uid, regionId: meta.targetsRegion ? regionId : undefined })}>
+                      Use{meta.targetsRegion ? ` in ${getRegion(regionId).seatCity}` : ''}
+                    </button>
+                  )}
+                </span>
+              );
+            })}
+          </div>
+        )}
         <div className="row">
           <button
             className="primary"

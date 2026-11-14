@@ -211,6 +211,24 @@ The election year's 4 turns play like a short roguelike run inside the career:
 **Balance:** total achievable swing is capped at about 1–3 points, so the campaign decides
 most races and election night decides the close ones (~20–30% of races, where the drama is).
 
+### 5.4 As built (M9)
+
+- **Milestones** (once per race), checked at the end of each campaign turn or when they happen:
+  Front-runner → endorsement; Momentum (+3 points in a turn) → $6k; Debate win → dossier;
+  Fundraising haul ($10k in a turn) → ad reservation; Ground game (3 door-knocks) → volunteer
+  list; Party machine (nominee with standing 60+) → poll watchers; Underdog (10+ points
+  down) → a free town hall.
+- **Ground-game tokens:** 2 to start (+2 for organizers), +1 per door-knock (up to +4), plus 1
+  per 2 energy left on the final turn.
+- **Night:** 13 half-hour steps from 8 pm. Polls close by region type (suburbs first, cities
+  last) and count over 4–8 steps; early returns skew by ±4 points and settle as the count
+  fills in. The needle combines the counted vote with the polls for what's left, and a region
+  or race is called at 2.5σ. *Mobilize* adds 1.5 × (0.6 + 0.08·STR) points to the uncounted
+  vote; *Lawyers* recover 30% of a bad draw (max 0.5 points); the *late ad blitz* costs $20k
+  (market-scaled). Total night swing is capped at 1 point plus lawyers.
+- **Measured** (`npm run sim`): in Watertown, ~7% of races are within 3 points; night actions
+  flip about a third of those (~2% of all races) and never a blowout.
+
 ### 5.3 Candidate abilities (special skills)
 
 Beyond the 7 skill levels, a candidate can carry **abilities**: named special moves that let

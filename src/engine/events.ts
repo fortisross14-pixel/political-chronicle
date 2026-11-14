@@ -3,6 +3,7 @@ import { getBackground, getEventCard, getOffice, getRegion, ISSUES_BY_ID, STATES
 import { alignment, clamp, nudgeFavorability, nudgeRecognition, regionAlignment, relevance, skillMult } from './opinion';
 import { GOVERNING, nudgeApproval } from './governing';
 import { adjustStanding } from './parties';
+import { award, GROUND_GAME } from './loot';
 import { effectiveSkills, hasPerk } from './people';
 import { native } from './traits';
 import { Rng } from './rng';
@@ -194,7 +195,23 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
     : `${preview.card.name} in ${where} on ${ISSUES_BY_ID[issue].name}${gaffe ? ' — a gaffe went viral!' : '.'}`;
 
   const standingGain = preview.card.partyStanding ?? 0;
-  return {
+  // Loot bookkeeping on the race: door-knocks build the ground game; fundraisers count toward a haul.
+  if (career.race) {
+    const r = career.race;
+    const knock = preview.card.id === 'door_knocking';
+    career = {
+      ...career,
+      race: {
+        ...r,
+        doorKnocks: r.doorKnocks + (knock ? 1 : 0),
+        tokens: r.tokens + (knock && r.doorKnocks < GROUND_GAME.maxFromDoorKnocks ? GROUND_GAME.perDoorKnock : 0),
+        raisedThisTurn: r.raisedThisTurn + preview.fundsGain,
+      },
+    };
+  }
+  const debateWon =
+    preview.card.id === 'debate' && !gaffe && preview.effects.filter((e) => e.share === 1).every((e) => e.dFavorability > 0);
+  const result = {
     gaffe,
     state: adjustStanding({
       ...state,
@@ -209,4 +226,5 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
       log: [...state.log, { year: state.clock.year, turn: state.clock.turn, text }],
     }, standingGain),
   };
+  return debateWon ? { ...result, state: award(result.state, 'debate_win') } : result;
 }

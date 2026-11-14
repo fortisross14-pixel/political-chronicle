@@ -13,4 +13,6 @@ export * from './parties';
 export * from './traits';
 export * from './people';
 export * from './legislature';
+export * from './loot';
+export * from './night';
 export { applyAction, endTurnBlocker } from './reducer';

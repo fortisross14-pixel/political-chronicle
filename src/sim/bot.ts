@@ -1,9 +1,14 @@
 // A simple "sensible player" bot used to measure balance (DESIGN §12).
-import { BASIC_CARD_IDS, getDecisionCard, getOffice, getPerson, getRegion, ISSUE_IDS } from '../data';
+import { BASIC_CARD_IDS, getDecisionCard, getItem, getOffice, getPerson, getRegion, ISSUE_IDS } from '../data';
 import {
   activePlatform,
   applyAction,
+  counted,
   fileRaceError,
+  lawyersError,
+  mobilizeError,
+  nightFinished,
+  nightView,
   hometownMayoralty,
   invitations,
   joinError,
@@ -189,7 +194,55 @@ function climb(state: GameState): GameState {
 }
 
 
+/**
+ * Election night for the bot. 'sensible' and friends use night items, spend tokens on the
+ * biggest still-uncounted regions once the first returns are in, and send lawyers where it's
+ * tight; 'idle' (and `actions: false`) just watches.
+ */
+export function playNight(state: GameState, style: BotStyle, actions = true): GameState {
+  let s = state;
+  const act = actions && style !== 'idle';
+  for (let guard = 0; guard < 40 && s.night && !nightFinished(s.night); guard++) {
+    if (act) {
+      const night = s.night;
+      for (const item of s.items) {
+        const meta = getItem(item.itemId);
+        if (meta.window === 'campaign') continue;
+        const open = Object.keys(night.regions).filter((id) => counted(night.regions[id]!, night.step) < 1);
+        const target = open.sort((a, b) => getRegion(b).population - getRegion(a).population)[0];
+        if (meta.targetsRegion && !target) continue;
+        try {
+          s = applyAction(s, { type: 'USE_ITEM', uid: item.uid, regionId: target });
+        } catch {
+          // e.g. already protected; skip
+        }
+      }
+      if (s.night!.step >= 1) {
+        for (let k = 0; k < 10 && s.night!.tokens > 0; k++) {
+          const n = s.night!;
+          const open = Object.keys(n.regions)
+            .filter((id) => !mobilizeError(s, id))
+            .sort((a, b) => getRegion(b).population * (1 - counted(n.regions[b]!, n.step)) - getRegion(a).population * (1 - counted(n.regions[a]!, n.step)));
+          if (!open.length) break;
+          const view = nightView(n);
+          // Lawyers where it's close and half counted; otherwise mobilize the biggest uncounted region.
+          const close = Object.keys(n.regions).find((id) => !lawyersError(s, id) && counted(n.regions[id]!, n.step) >= 0.3 && Math.abs(view.margin) < 0.03);
+          s = close ? applyAction(s, { type: 'NIGHT_LAWYERS', regionId: close }) : applyAction(s, { type: 'NIGHT_MOBILIZE', regionId: open[0]! });
+        }
+      }
+    }
+    s = applyAction(s, { type: 'NIGHT_ADVANCE' });
+  }
+  return s.night ? applyAction(s, { type: 'NIGHT_FINISH' }) : s;
+}
+
 /** One full turn: dismiss results, file/platform if needed, decide, shop, campaign, end turn. */
+/** Turn election-night actions off to measure how much they matter. */
+let nightActions = true;
+export function setNightActions(on: boolean): void {
+  nightActions = on;
+}
+
 export function playTurn(state: GameState, style: BotStyle): GameState {
   let s = state;
   if (s.ended) return s;
@@ -205,7 +258,8 @@ export function playTurn(state: GameState, style: BotStyle): GameState {
   if (s.decisions && !s.decisions.resolved) s = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: decide(s, style) });
   s = shop(s, style);
   if (style !== 'idle') s = playEvents(s, style);
-  return applyAction(s, { type: 'END_TURN' });
+  s = applyAction(s, { type: 'END_TURN' });
+  return s.night ? playNight(s, style, nightActions) : s;
 }
 
 /** Funds over a multi-year career. */

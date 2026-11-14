@@ -2,6 +2,7 @@
 import { FIRST_NAMES, getOffice, getRegion, LAST_NAMES, OFFICES, PARTIES, REGIONS, STARTER_HAND } from '../data';
 import { dealDecisions } from './decisions';
 import { effectiveSkills } from './people';
+import { startingTokens } from './night';
 import { adjustStanding, effectivePlatform, member, newPrimary, nominationStatus, PARTY, primaryShare, PRIMARY } from './parties';
 import { clamp, decided, nudgeFavorability, nudgeRecognition, poll, raceViews, regionAlignment, regionIntention, regionWeights, relevance } from './opinion';
 import { Rng } from './rng';
@@ -295,6 +296,10 @@ export function fileRace(state: GameState, officeId: OfficeId): GameState {
     electionYear: electionYearIfFiled(state, officeId),
     platform: [],
     opponents,
+    tokens: startingTokens(state),
+    milestones: [],
+    doorKnocks: 0,
+    raisedThisTurn: 0,
   };
   if (party && status.kind === 'nominee') race.nominee = party;
   if (party && status.kind === 'primary') race.primary = newPrimary(rng, party, pickName(rng, new Set(opponents.map((o) => o.name))));
@@ -358,23 +363,46 @@ export function setPlatform(state: GameState, platform: Pledge[]): GameState {
 
 // ---------- Election Day ----------
 
-export function resolveElection(state: GameState, rng: Rng): GameState {
+export interface ElectionDraw {
+  /** True final shares per region (player first). */
+  regionShares: Record<RegionId, number[]>;
+  /** The player's pre-election poll share per region (decided voters). */
+  priors: Record<RegionId, number>;
+  finalPoll: number;
+}
+
+/** Election Day: draws the true result from the final polls plus noise. */
+export function drawElection(state: GameState, rng: Rng): ElectionDraw {
   const race = state.career.race!;
   const office = getOffice(race.officeId);
-  const weights = regionWeights(race.officeId);
   const finalPoll = poll(state, race).decided[0]!;
   const common = rng.gaussian(0, ELECTION_NOISE.common);
   const regionShares: Record<RegionId, number[]> = {};
-  const totalShares = new Array<number>(race.opponents.length + 1).fill(0);
-
+  const priors: Record<RegionId, number> = {};
   for (const id of office.regionIds) {
     const shares = decided(regionIntention(raceViews(state, race, id), id, office.level, office.partisan));
+    priors[id] = shares[0]!;
     const player = clamp(shares[0]! + common + rng.gaussian(0, ELECTION_NOISE.regional), 0.01, 0.99);
     const othersTotal = 1 - shares[0]!;
-    const final = [player, ...shares.slice(1).map((s) => (othersTotal > 0 ? (s / othersTotal) * (1 - player) : 0))];
-    regionShares[id] = final;
-    final.forEach((s, i) => (totalShares[i]! += s * weights[id]!));
+    regionShares[id] = [player, ...shares.slice(1).map((s) => (othersTotal > 0 ? (s / othersTotal) * (1 - player) : 0))];
   }
+  return { regionShares, priors, finalPoll };
+}
+
+/** Instant resolution (no election night), for bots and tests. */
+export function resolveElection(state: GameState, rng: Rng): GameState {
+  const draw = drawElection(state, rng);
+  return finalizeElection(state, rng, draw.regionShares, draw.finalPoll);
+}
+
+/** Applies a final result: records it, moves you into (or out of) office. */
+export function finalizeElection(state: GameState, rng: Rng, regionShares: Record<RegionId, number[]>, finalPoll: number): GameState {
+  const race = state.career.race!;
+  const office = getOffice(race.officeId);
+  const weights = regionWeights(race.officeId);
+  const totalShares = new Array<number>(race.opponents.length + 1).fill(0);
+  for (const [id, final] of Object.entries(regionShares)) final.forEach((s, i) => (totalShares[i]! += s * weights[id]!));
+  void rng;
 
   const winner = totalShares.indexOf(Math.max(...totalShares));
   const playerWon = winner === 0;

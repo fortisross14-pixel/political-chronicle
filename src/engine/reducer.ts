@@ -1,4 +1,7 @@
-import { fileRace, isPrimaryTurn, opponentsAct, resolveElection, resolvePrimary, setPlatform } from './campaign';
+import { getItem } from '../data';
+import { drawElection, fileRace, finalizeElection, isPrimaryTurn, opponentsAct, resolvePrimary, setPlatform } from './campaign';
+import { checkTurnMilestones, useCampaignItem } from './loot';
+import { adBlitz, advanceNight, finalNightShares, mobilize, sendLawyers, startNight, useNightItem } from './night';
 import { joinParty } from './parties';
 import { rollChambers } from './legislature';
 import { assignPerson, discardPerson, hasPerk, unassignRole } from './people';
@@ -15,6 +18,7 @@ import type { Action, GameState } from './types';
 /** Why the player can't end the turn right now, or undefined if they can. */
 export function endTurnBlocker(state: GameState): string | undefined {
   if (state.ended) return 'Your career is over.';
+  if (state.night) return 'Election night is under way.';
   if (state.pendingResult !== undefined) return 'Review the election result first.';
   if (state.career.race && !state.career.race.platform.length) return 'Choose your platform first.';
   if (state.decisions && !state.decisions.resolved) return 'Resolve this turn’s decisions first (apply 1–3).';
@@ -41,6 +45,18 @@ export function applyAction(state: GameState, action: Action): GameState {
       return buyOffer(state, action.offerIndex);
     case 'DISMISS_RESULT':
       return { ...state, pendingResult: undefined };
+    case 'USE_ITEM':
+      return state.night ? useNightItem(state, action.uid, action.regionId) : useCampaignItem(state, action.uid, action.regionId);
+    case 'NIGHT_ADVANCE':
+      return advanceNight(state);
+    case 'NIGHT_MOBILIZE':
+      return mobilize(state, action.regionId);
+    case 'NIGHT_LAWYERS':
+      return sendLawyers(state, action.regionId);
+    case 'NIGHT_AD_BLITZ':
+      return adBlitz(state);
+    case 'NIGHT_FINISH':
+      return finishNight(state);
     case 'JOIN_PARTY':
       return joinParty(state, action.party);
     case 'ASSIGN_PERSON':
@@ -65,13 +81,32 @@ function endTurn(state: GameState): GameState {
   const rng = new Rng(state.rng);
   let s: GameState = state;
 
-  // Opponents campaign, then the turn is recorded (including the poll).
-  if (s.career.race) s = { ...s, career: { ...s.career, race: opponentsAct(rng, s.career.race) } };
+  // Opponents campaign, milestones pay out, then the turn is recorded (including the poll).
+  if (s.career.race) s = checkTurnMilestones({ ...s, career: { ...s.career, race: opponentsAct(rng, s.career.race) } });
   s = { ...s, snapshots: [...s.snapshots, takeSnapshot(s)] };
 
   if (isPrimaryTurn(s)) s = resolvePrimary(s, rng);
-  else if (s.career.race && isElectionTurn(s.clock, s.career)) s = resolveElection(s, rng);
+  else if (s.career.race && isElectionTurn(s.clock, s.career)) {
+    // Election Day: the result is drawn now and revealed on election night. The calendar waits.
+    const draw = drawElection(s, rng);
+    return startNight(s, rng, draw.regionShares, draw.priors, draw.finalPoll);
+  }
+  return advanceCalendar(s, rng);
+}
 
+/** Ends election night: applies the final count, then moves the calendar on. */
+function finishNight(state: GameState): GameState {
+  const night = state.night;
+  if (!night) throw new Error('No election night.');
+  const rng = new Rng(state.rng);
+  const nightItems = state.items.filter((i) => getItem(i.itemId).window !== 'campaign');
+  let s: GameState = { ...state, night: undefined, items: state.items.filter((i) => !nightItems.includes(i)) };
+  s = finalizeElection(s, rng, finalNightShares(night), night.finalPoll);
+  return advanceCalendar(s, rng);
+}
+
+function advanceCalendar(state: GameState, rng: Rng): GameState {
+  let s = state;
   const months = monthsPerTurn(s.clock.turnsThisYear);
   let { year, turn, turnsThisYear } = s.clock;
   turn += 1;
