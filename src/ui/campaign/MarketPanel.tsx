@@ -48,7 +48,6 @@ export function MarketPanel({ state, dispatch }: { state: GameState; dispatch: (
                 <span className="small">
                   {SKILL_LABELS[c.skill]} {level} → {level + 1}
                   {c.energy ? ` · ⚡${c.energy} now` : ''}
-                  {c.upkeep ? ` · ${money(c.upkeep)}/turn salary` : ''}
                 </span>
                 <button disabled={!!error} title={error} onClick={() => dispatch({ type: 'BUY_CARD', offerIndex: i })}>
                   Buy {money(price)}

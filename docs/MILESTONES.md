@@ -137,9 +137,10 @@ sandbox, people cards, a legislature and an animated election night. See
 likelier to win their first mayoral race, transplant ~20% more money), and each background's
 perk shows up in the sim.
 
-## M8 — People cards & the legislature
+## M8 — People cards & the legislature ✅ done
 
-- People market (2–3 per turn), roster (max 6), signing fee plus salary, firing (card lost).
+- People are free cards: a pick-1-of-3 draft when you file and when you win; assign, keep in
+  reserve, or discard (permanent); roster max 6.
 - Slots: campaign manager, chief of staff, party liaison, legislative director.
 - Bill passage for Governor and federal offices: chamber control per cycle, LAW, DIP, director.
 - ADM, ECO and LEA effects in office (wear, execution, budget cards and the Governor's budget

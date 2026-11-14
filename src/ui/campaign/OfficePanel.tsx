@@ -1,5 +1,5 @@
-import { getOffice, getRegion, ISSUES_BY_ID } from '../../data';
-import { averageApproval } from '../../engine';
+import { getOffice, getRegion, ISSUES_BY_ID, PARTIES } from '../../data';
+import { averageApproval, yourChamber } from '../../engine';
 import type { Action, GameState } from '../../engine';
 import { pct } from '../format';
 import { stanceLabel } from './labels';
@@ -12,6 +12,7 @@ export function OfficePanel({ state, dispatch }: { state: GameState; dispatch: (
   const kept = state.promises.filter((p) => p.year >= term.startedYear && p.kept).length;
   const broken = state.promises.filter((p) => p.year >= term.startedYear && !p.kept).length;
   const campaigning = !!state.career.race;
+  const chamber = yourChamber(state);
 
   return (
     <section className="panel">
@@ -47,6 +48,13 @@ export function OfficePanel({ state, dispatch }: { state: GameState; dispatch: (
         it. Promises this term: <span className="pos">{kept} kept</span>, <span className="neg">{broken} broken</span>. To run for higher office, see
         My party → Nominations.
       </p>
+      {chamber && (
+        <p className="small">
+          Bills must pass {chamber.name}, controlled this cycle by{' '}
+          <strong>{chamber.control === 'split' ? 'neither party (split)' : `the ${PARTIES[chamber.control].nickname}`}</strong>
+          {state.career.affiliation !== 'IND' && chamber.control === state.career.affiliation ? ' — your party.' : '. LAW, DIP and a legislative director help.'}
+        </p>
+      )}
       <details>
         <summary>The platform you won on</summary>
         <ul className="small">

@@ -41,7 +41,7 @@ export function Header({ state, onEndTurn, onMainMenu, onAbandon }: Props) {
         <div
           title={
             state.lastIncome
-              ? `This turn: donors +${money(state.lastIncome.donors)}, salary +${money(state.lastIncome.salary)}, party +${money(state.lastIncome.party)}, staff −${money(state.lastIncome.upkeep)}`
+              ? `This turn: donors +${money(state.lastIncome.donors)}, salary +${money(state.lastIncome.salary)}, party +${money(state.lastIncome.party)}`
               : undefined
           }
         >
@@ -49,7 +49,7 @@ export function Header({ state, onEndTurn, onMainMenu, onAbandon }: Props) {
           <dd>
             {money(state.funds)}
             {state.lastIncome && (
-              <span className="income small"> +{money(state.lastIncome.donors + state.lastIncome.salary + state.lastIncome.party - state.lastIncome.upkeep)}</span>
+              <span className="income small"> +{money(state.lastIncome.donors + state.lastIncome.salary + state.lastIncome.party)}</span>
             )}
           </dd>
         </div>

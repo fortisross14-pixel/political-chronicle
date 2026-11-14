@@ -1,6 +1,7 @@
 // Parties: platform fit, standing, funds, nominations and primaries (DESIGN §7, §8).
 import { getBackground, getOffice, getRegion, ISSUE_IDS, PARTIES, STATES } from '../data';
 import { clamp } from './opinion';
+import { effectiveSkills, hasPerk } from './people';
 import { native, newcomerPenalty, TRAITS } from './traits';
 import type { Rng } from './rng';
 import { monthsFactor } from './time';
@@ -67,12 +68,12 @@ export function stanceAgreement(state: GameState, party: PartyId, issue: IssueId
 
 /** Leadership scales standing you gain with your own party. */
 export function leadershipMultiplier(state: GameState): number {
-  return 0.8 + 0.05 * state.politician.skills.leadership;
+  return 0.8 + 0.05 * effectiveSkills(state).leadership;
 }
 
 /** Diplomacy softens standing you lose (you smooth things over): 1.2 at DIP 0 → 0.7 at DIP 10. */
 export function diplomacyCushion(state: GameState): number {
-  return clamp(1.2 - 0.05 * state.politician.skills.diplomacy, 0.6, 1.2);
+  return clamp(1.2 - 0.05 * effectiveSkills(state).diplomacy, 0.6, 1.2) * (hasPerk(state, 'whipShield') ? 0.5 : 1);
 }
 
 /** Applies a standing change; gains scale with Negotiation. */

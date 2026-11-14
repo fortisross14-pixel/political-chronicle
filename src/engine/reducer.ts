@@ -1,5 +1,7 @@
 import { fileRace, isPrimaryTurn, opponentsAct, resolveElection, resolvePrimary, setPlatform } from './campaign';
 import { joinParty } from './parties';
+import { rollChambers } from './legislature';
+import { assignPerson, discardPerson, hasPerk, pickPerson, unassignRole } from './people';
 import { backgroundEnergyPenalty } from './traits';
 import { dealDecisions, resolveDecisions } from './decisions';
 import { buyOffer, collectIncome, dealMarket } from './economy';
@@ -41,6 +43,16 @@ export function applyAction(state: GameState, action: Action): GameState {
       return { ...state, pendingResult: undefined };
     case 'JOIN_PARTY':
       return joinParty(state, action.party);
+    case 'PICK_PERSON':
+      return pickPerson(state, action.index);
+    case 'SKIP_DRAFT':
+      return { ...state, draft: undefined };
+    case 'ASSIGN_PERSON':
+      return assignPerson(state, action.uid);
+    case 'UNASSIGN_ROLE':
+      return unassignRole(state, action.role);
+    case 'DISCARD_PERSON':
+      return discardPerson(state, action.uid);
     case 'RETIRE':
       if (state.ended) return state;
       return {
@@ -72,10 +84,12 @@ function endTurn(state: GameState): GameState {
     turn = 0;
     turnsThisYear = turnsInYear(s.career, year);
   }
-  s = { ...s, rng: rng.state, clock: { year, turn, turnsThisYear, monthsElapsed: s.clock.monthsElapsed + months } };
+  s = { ...s, clock: { year, turn, turnsThisYear, monthsElapsed: s.clock.monthsElapsed + months } };
 
   const age = ageOf(s);
   s = { ...s, energy: Math.max(1, energyForAge(age) - backgroundEnergyPenalty(s)) };
+  // A new two-year cycle: legislatures change hands.
+  if (turn === 0 && year % 2 === 0 && s.chambers.rolledYear !== year) s = { ...s, chambers: rollChambers(rng, year) };
   if (!s.ended && age >= MAX_AGE_ENDS_RUN) {
     s = {
       ...s,
@@ -83,9 +97,11 @@ function endTurn(state: GameState): GameState {
       log: [...s.log, { year, turn, text: `At ${Math.floor(age)}, it is time to step away from public life.` }],
     };
   }
+  s = { ...s, rng: rng.state };
   if (s.ended) return { ...s, decisions: undefined, market: undefined };
   s = governTick(collectIncome(s));
   // The last year of a term opens the re-election campaign (or retire instead).
   if (s.career.office && !s.career.race && s.clock.turn === 0 && isReelectionYear(s)) s = fileRace(s, s.career.office.officeId);
+  if (hasPerk(s, 'roadWarrior')) s = { ...s, energy: s.energy + 1 };
   return dealMarket(dealDecisions(s));
 }

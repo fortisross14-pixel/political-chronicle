@@ -11,4 +11,6 @@ export * from './economy';
 export * from './governing';
 export * from './parties';
 export * from './traits';
+export * from './people';
+export * from './legislature';
 export { applyAction, endTurnBlocker } from './reducer';

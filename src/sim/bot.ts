@@ -1,5 +1,5 @@
 // A simple "sensible player" bot used to measure balance (DESIGN §12).
-import { BASIC_CARD_IDS, getDecisionCard, getOffice, getRegion, ISSUE_IDS } from '../data';
+import { BASIC_CARD_IDS, getDecisionCard, getOffice, getPerson, getRegion, ISSUE_IDS } from '../data';
 import {
   activePlatform,
   applyAction,
@@ -7,6 +7,7 @@ import {
   hometownMayoralty,
   invitations,
   joinError,
+  pickError,
   raceOptions,
   buyError,
   offerPrice,
@@ -14,6 +15,7 @@ import {
   buildRunConfig,
   createRun,
   decisionImpact,
+  DECISIONS_PER_TURN,
   poll,
   previewEvent,
   regionWeights,
@@ -64,7 +66,7 @@ function decide(state: GameState, style: BotStyle): string[] {
   const weights = jid ? regionWeights(jid) : {};
   if (style === 'flipflop' && state.career.office) {
     const breakers = ids.filter((id) => decisionImpact(state, getDecisionCard(id)).promisesBroken.length > 0);
-    if (breakers.length) return breakers;
+    if (breakers.length) return breakers.slice(0, DECISIONS_PER_TURN);
   }
   const ranked = ids
     .map((id) => {
@@ -76,7 +78,7 @@ function decide(state: GameState, style: BotStyle): string[] {
     })
     .sort((a, b) => b.value - a.value);
   const good = ranked.filter((r) => r.value > 0).map((r) => r.id);
-  return good.length ? good : [ranked[0]!.id];
+  return (good.length ? good : [ranked[0]!.id]).slice(0, DECISIONS_PER_TURN);
 }
 
 /** Best expected value of holding this card somewhere in the race, on some platform topic. */
@@ -171,6 +173,23 @@ function climb(state: GameState): GameState {
   return next ? applyAction(s, { type: 'FILE_RACE', officeId: next.id }) : s;
 }
 
+const RARITY_RANK = { common: 0, rare: 1, epic: 2, legendary: 3 } as const;
+
+/** Take the rarest person on offer; swap them in if they beat whoever holds the role. 'idle' ignores drafts. */
+function takeDraft(state: GameState, style: BotStyle): GameState {
+  if (!state.draft) return state;
+  if (style === 'idle' || pickError(state, 0)) return applyAction(state, { type: 'SKIP_DRAFT' });
+  const best = state.draft.options
+    .map((id, index) => ({ index, person: getPerson(id) }))
+    .sort((a, b) => RARITY_RANK[b.person.rarity] - RARITY_RANK[a.person.rarity])[0]!;
+  let s = applyAction(state, { type: 'PICK_PERSON', index: best.index });
+  const card = s.team.cards.at(-1)!;
+  const holder = s.team.assigned[best.person.role];
+  const current = holder !== undefined ? getPerson(s.team.cards.find((c) => c.uid === holder)!.personId) : undefined;
+  if (current && RARITY_RANK[best.person.rarity] > RARITY_RANK[current.rarity]) s = applyAction(s, { type: 'ASSIGN_PERSON', uid: card.uid });
+  return s;
+}
+
 /** One full turn: dismiss results, file/platform if needed, decide, shop, campaign, end turn. */
 export function playTurn(state: GameState, style: BotStyle): GameState {
   let s = state;
@@ -184,6 +203,7 @@ export function playTurn(state: GameState, style: BotStyle): GameState {
     if (!fileRaceError(s, officeId)) s = applyAction(s, { type: 'FILE_RACE', officeId });
   }
   if (s.career.race && !s.career.race.platform.length) s = applyAction(s, { type: 'SET_PLATFORM', platform: botPlatform(s, style) });
+  s = takeDraft(s, style);
   if (s.decisions && !s.decisions.resolved) s = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: decide(s, style) });
   s = shop(s, style);
   if (style !== 'idle') s = playEvents(s, style);
@@ -246,7 +266,13 @@ export function hometownWinRate(input: CreationInput, style: BotStyle, runs: num
 }
 
 /** First-term mayors who campaign sensibly, then govern in `style`: how often are they re-elected? */
-export function reelectionRate(input: CreationInput, style: BotStyle, runs: number): { reelected: number; terms: number; avgApproval: number; integrity: number } {
+export function reelectionRate(
+  input: CreationInput,
+  style: BotStyle,
+  runs: number,
+  /** Applied once, right after the first win (e.g. to hand the mayor a chief of staff). */
+  setup: (s: GameState) => GameState = (s) => s,
+): { reelected: number; terms: number; avgApproval: number; integrity: number } {
   let reelected = 0;
   let terms = 0;
   let approval = 0;
@@ -255,6 +281,7 @@ export function reelectionRate(input: CreationInput, style: BotStyle, runs: numb
     let s = createRun(buildRunConfig(input, `reelect-${input.residentRegionId}-${i}`));
     s = playCampaign(s, 'sensible').state;
     if (!s.elections.at(-1)!.playerWon) continue;
+    s = setup(s);
     terms++;
     for (let guard = 0; guard < 30 && s.elections.length < 2 && !s.ended; guard++) {
       const before = s;

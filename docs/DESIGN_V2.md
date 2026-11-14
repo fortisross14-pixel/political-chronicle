@@ -120,28 +120,29 @@ overlapping.
 
 ## 3. People cards: cabinet and campaign
 
-People are cards you **buy** (signing fee plus salary each turn, paid from donor and party
-money), **assign** to a slot, and **keep across roles**. Resigning, moving to a new office or
-losing an election never loses them. **Firing** someone removes the card forever, with a small
-integrity hit and a chance they turn up later on an opponent's staff.
+People are **free cards**; this is a casual game. No signing fees and no salaries. You get a
+card, then either **assign** it to its role, keep it in **reserve** (the "back pocket") for a
+later role, or **discard** it, which is permanent. Resigning, moving to a new office or losing
+an election never loses anyone.
 
-| Slot | When | Boost | Example perks |
+| Role | Active when | Boost | Example perks |
 |---|---|---|---|
-| **Campaign manager** | Always, when running | +1 energy per turn, event efficiency, opponent intel | "Ground general" +2 GOTV tokens · "Spin doctor" halves gaffe damage |
-| **Chief of staff** | In office | +ADM (1–3) | "Fixer": once per term, cancel a bill's bad effect |
-| **Party liaison** | In office, party member | +LEA for standing gains, softens whip-vote penalties | "Old guard": primaries count standing ×1.5 |
-| **Legislative director** ("political rep") | Governor, House, Senate | +DIP (1–3): bill passage with other chambers (§4) | "Across the aisle": whip penalties halved on bipartisan bills |
+| **Campaign manager** | You're running | CHA / STR | *Road warrior*: +1 energy per turn · *Spin doctor*: gaffes cost half |
+| **Chief of staff** | You hold any office | ADM / ECO / LEA | *Fixer*: declining a crisis costs half |
+| **Party liaison** | In office as a party member | LEA / DIP | *Whip shield*: standing lost with your party is halved |
+| **Legislative director** ("political rep") | Governor, House or Senate | LAW / DIP | *Across the aisle*: +10% passage against an opposing chamber |
 
-- **Rarity:** Common, Rare, Epic, Legendary. Boosts range from +1 to +3 skill-equivalents,
-  and Rare and above add a perk. Salary scales with rarity and your office.
-- **The People market:** 2–3 candidates each turn, separate from the card Market. Legendary
-  people are rare and expensive.
-- **Roster:** at most 6 people, so you have to choose who to keep.
-- **Balance target:** a full Rare cabinet should be worth roughly +2 skill levels where it
-  applies. Salaries should be enough that a broke politician can't keep an all-star team.
-  Today's digital-director skill card becomes a Common person card.
-
----
+- **Getting people:** a **pick-1-of-3 draft** when you file for a race and when you win one,
+  weighted by rarity (common, rare, epic, legendary) and never repeating someone you hold.
+  You can skip. Later, campaign loot (M9) and scenario rewards (M10) will hand out people too.
+- **Roster:** at most 6 people, assigned and reserve together. A full roster means
+  discarding before you can take someone new.
+- **Boosts** add to your skills only while the role is active (a legislative director does
+  nothing for a mayor), up to 10.
+- **Starting people:** a public servant starts with a common chief of staff from their old
+  job.
+- **Pool (M8):** 19 people: 6 campaign managers, 6 chiefs of staff, 3 party liaisons and 4
+  legislative directors.
 
 ## 4. Legislature (new, needed for LAW, DIP and the legislative director)
 
@@ -149,7 +150,12 @@ From Governor up, and for House and Senate members, signing a bill now has a **p
 check**: `pass = base(chamber control) + 3% × LAW + 3% × DIP (only when you don't control the chamber) + director boost`.
 
 - Chamber control is rolled per cycle (yours, split, or the other party's), so it's a
-  roguelike variable you see in advance.
+  roguelike variable you see in advance. **As built:** every even year; state legislatures
+  lean with their state (NY is usually blue); Congress is 40% blue, 20% split, 40% red.
+- **As built:** base chance 85% in your own chamber, 60% split, 35% against you, 50% for
+  independents; +3% per LAW, +3% per DIP when it isn't your chamber, +10% *across the aisle*;
+  clamped 10–97%. Crises and ethics cards always go through. A failed bill still counts for
+  party standing (you voted), and you keep half the promise credit.
 - A failed bill has no policy effect, but you keep half the promise credit ("you fought for
   it").
 - Mayors skip this check (city councils are abstracted).

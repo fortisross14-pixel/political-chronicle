@@ -277,6 +277,8 @@ export interface DecisionHand {
   cardIds: string[];
   resolved: boolean;
   applied: string[];
+  /** Applied bills that failed to pass the legislature. */
+  failed?: string[];
 }
 
 export interface MarketOffer {
@@ -289,19 +291,39 @@ export interface Market {
   offers: MarketOffer[];
 }
 
-export interface StaffMember {
-  cardId: string;
-  skill: SkillId;
-  upkeep: number;
+export type RoleId = 'campaignManager' | 'chiefOfStaff' | 'partyLiaison' | 'legislativeDirector';
+
+export interface TeamCard {
+  uid: number;
+  personId: string;
+}
+
+export interface Team {
+  /** Everyone you hold, assigned or in reserve ("back pocket"). */
+  cards: TeamCard[];
+  assigned: Partial<Record<RoleId, number>>;
+  nextUid: number;
+}
+
+export interface PeopleDraft {
+  /** Pick one of these person ids (or skip). */
+  options: string[];
+  reason: string;
+}
+
+export type ChamberControl = PartyId | 'split';
+
+export interface Chambers {
+  /** State legislatures, by state. */
+  state: Record<StateId, ChamberControl>;
+  congress: ChamberControl;
+  rolledYear: number;
 }
 
 export interface IncomeBreakdown {
   donors: number;
   salary: number;
-  upkeep: number;
   party: number;
-  /** Staff who quit because you couldn't pay them. */
-  quit: string[];
 }
 
 // ---------- Elections ----------
@@ -378,8 +400,11 @@ export interface GameState {
   nextCardUid: number;
   decisions?: DecisionHand;
   market?: Market;
-  /** Hired staff from skill cards with upkeep. */
-  staff: StaffMember[];
+  /** People cards: the roster, who fills each role, and any pending pick (DESIGN_V2 §3). */
+  team: Team;
+  draft?: PeopleDraft;
+  /** Who controls each legislature this cycle. */
+  chambers: Chambers;
   /** Funds received/paid at the start of the current turn. */
   lastIncome?: IncomeBreakdown;
   /** Recently dealt decision cards, to avoid repeats. */
@@ -404,4 +429,9 @@ export type Action =
   | { type: 'BUY_CARD'; offerIndex: number }
   | { type: 'DISMISS_RESULT' }
   | { type: 'RETIRE' }
-  | { type: 'JOIN_PARTY'; party: PartyId };
+  | { type: 'JOIN_PARTY'; party: PartyId }
+  | { type: 'PICK_PERSON'; index: number }
+  | { type: 'SKIP_DRAFT' }
+  | { type: 'ASSIGN_PERSON'; uid: number }
+  | { type: 'UNASSIGN_ROLE'; role: RoleId }
+  | { type: 'DISCARD_PERSON'; uid: number };

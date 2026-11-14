@@ -70,7 +70,7 @@ export const BACKGROUNDS: Background[] = [
     credibleIssues: ['transit', 'education'],
     favoredStates: ['NY', 'IL', 'MA'],
     perks: { partyStandingFloor: 40 },
-    perkText: 'Join a party with at least 40 standing. (A free staff card arrives with people cards.)',
+    perkText: 'Join a party with at least 40 standing; starts with a chief of staff from your old job.',
     weaknessText: 'Establishment: outsider scenarios penalize you.',
   },
   {

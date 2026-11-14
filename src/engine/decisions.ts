@@ -4,6 +4,8 @@
 import { DECISION_CARDS, getBackground, getDecisionCard, getOffice, getRegion, STATES } from '../data';
 import { activeLevel, turnNo } from './events';
 import { executionMultiplier, nudgeApproval } from './governing';
+import { passageChance, rollPassage, yourChamber } from './legislature';
+import { effectiveSkills, hasPerk } from './people';
 import { adjustStanding, effectivePlatform, member, PARTY, stanceAgreement } from './parties';
 import { clamp, nudgeFavorability, nudgeRecognition, regionAlignment, relevance } from './opinion';
 import { Rng } from './rng';
@@ -14,13 +16,13 @@ export const DECISIONS_PER_TURN = 3;
 export const STRATEGY_EXTRA_CARD = 7;
 
 export function handSize(state: GameState): number {
-  return state.politician.skills.strategy >= STRATEGY_EXTRA_CARD ? DECISIONS_PER_TURN + 1 : DECISIONS_PER_TURN;
+  return effectiveSkills(state).strategy >= STRATEGY_EXTRA_CARD ? DECISIONS_PER_TURN + 1 : DECISIONS_PER_TURN;
 }
 
 /** Leadership (and a veteran's calm) cut what declining a crisis costs. */
 export function crisisCostMultiplier(state: GameState): number {
-  const lea = clamp(1.25 - 0.05 * state.politician.skills.leadership, 0.6, 1.25);
-  return lea * (getBackground(state.politician.backgroundId).perks.crisisCost ?? 1);
+  const lea = clamp(1.25 - 0.05 * effectiveSkills(state).leadership, 0.6, 1.25);
+  return lea * (getBackground(state.politician.backgroundId).perks.crisisCost ?? 1) * (hasPerk(state, 'fixer') ? 0.5 : 1);
 }
 const RECENT_MEMORY = 9;
 
@@ -90,6 +92,8 @@ export interface DecisionImpact {
   standing: number;
   /** Rejecting this card costs standing (a whip vote the party wants applied). */
   rejectStanding: number;
+  /** Chance it passes the legislature (1 when no vote is needed). */
+  passage: number;
   promisesKept: IssueId[];
   promisesBroken: IssueId[];
 }
@@ -103,6 +107,7 @@ export function decisionImpact(state: GameState, card: DecisionCard): DecisionIm
     funds: card.effects?.funds ?? 0,
     standing: 0,
     rejectStanding: 0,
+    passage: passageChance(state, card),
     promisesKept: [],
     promisesBroken: [],
   };
@@ -177,6 +182,8 @@ export function resolveDecisions(state: GameState, apply: string[]): GameState {
   const notes: string[] = [];
   const at = { year: state.clock.year, turn: state.clock.turn };
   let standing = 0;
+  const rng = new Rng(state.rng);
+  const failed: string[] = [];
 
   for (const id of hand.cardIds) {
     const card = getDecisionCard(id);
@@ -192,6 +199,15 @@ export function resolveDecisions(state: GameState, apply: string[]): GameState {
       continue;
     }
     const impact = decisionImpact(state, card);
+    if (!rollPassage(state, card, rng)) {
+      // It died in the legislature: no policy effect, but you get half credit for fighting for it.
+      failed.push(id);
+      standing += impact.standing;
+      integrity += impact.promisesKept.length * Math.round(DECISION_EFFECT.promiseKeptIntegrity / 2);
+      if (approval) for (const r of home) approval[r] = nudgeApproval(approval[r]!, impact.promisesKept.length * DECISION_EFFECT.promiseKeptEffect * 0.5);
+      notes.push(`“${card.title}” failed in ${yourChamber(state)?.name ?? 'the legislature'}`);
+      continue;
+    }
     for (const [r, dF] of Object.entries(impact.favorability)) {
       regions[r] = { ...regions[r]!, favorability: nudgeFavorability(regions[r]!.favorability, dF) };
     }
@@ -220,7 +236,8 @@ export function resolveDecisions(state: GameState, apply: string[]): GameState {
     promises,
     integrity: clamp(Math.round(integrity), 0, 100),
     career: office && approval ? { ...state.career, office: { ...office, approval } } : state.career,
-    decisions: { ...hand, resolved: true, applied: [...apply] },
-    log: [...state.log, { ...at, text: `${verb}: ${titles}.${notes.length ? ` You ${notes.join('; ')}.` : ''}` }],
+    rng: rng.state,
+    decisions: { ...hand, resolved: true, applied: [...apply], failed },
+    log: [...state.log, { ...at, text: `${verb}: ${titles}.${notes.length ? ` ${notes.map((n) => (n.startsWith('“') ? n : `You ${n}`)).join('; ')}.` : ''}` }],
   }, standing);
 }

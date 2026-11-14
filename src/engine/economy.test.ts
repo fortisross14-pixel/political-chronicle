@@ -5,7 +5,6 @@ import {
   applyAction,
   buildRunConfig,
   buyError,
-  collectIncome,
   createRun,
   dealMarket,
   eventPrice,
@@ -51,17 +50,6 @@ describe('income', () => {
     const s = readyRun();
     const normalYear = { ...s, clock: { ...s.clock, turnsThisYear: 3 } };
     expect(projectedIncome(normalYear).donors / projectedIncome(s).donors).toBeCloseTo(4 / 3, 1);
-  });
-
-  it('staff are paid every turn and quit (taking the skill point) when you are broke', () => {
-    const s: GameState = { ...readyRun(), staff: [{ cardId: 'digital_director', skill: 'charisma', upkeep: 2000 }] };
-    const paid = collectIncome({ ...s, funds: 50_000 });
-    expect(paid.lastIncome!.upkeep).toBe(2000);
-    expect(paid.staff).toHaveLength(1);
-    const broke = collectIncome({ ...s, funds: -10_000 });
-    expect(broke.staff).toHaveLength(0);
-    expect(broke.politician.skills.charisma).toBe(s.politician.skills.charisma - 1);
-    expect(broke.lastIncome!.quit).toEqual(['digital_director']);
   });
 
   it('is collected at the start of every turn', () => {
@@ -120,15 +108,11 @@ describe('Market', () => {
     expect(buyError(capped, 0)).toMatch(/capped/);
   });
 
-  it('staff skill cards add a payroll entry; courses can cost energy', () => {
-    const s = withOffers({ ...resolved(), funds: 1e6 }, [
-      { kind: 'skill', cardId: 'digital_director' },
-      { kind: 'skill', cardId: 'think_tank' },
-    ]);
-    const hired = applyAction(s, { type: 'BUY_CARD', offerIndex: 0 });
-    expect(hired.staff).toEqual([{ cardId: 'digital_director', skill: 'charisma', upkeep: 2000 }]);
-    const studied = applyAction(hired, { type: 'BUY_CARD', offerIndex: 0 });
-    expect(studied.energy).toBe(hired.energy - 2);
+  it('courses can cost energy', () => {
+    const s = withOffers({ ...resolved(), funds: 1e6 }, [{ kind: 'skill', cardId: 'think_tank' }]);
+    const studied = applyAction(s, { type: 'BUY_CARD', offerIndex: 0 });
+    expect(studied.energy).toBe(s.energy - 2);
+    expect(studied.politician.skills.law).toBe(s.politician.skills.law + 1);
   });
 });
 

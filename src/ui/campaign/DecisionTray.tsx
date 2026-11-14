@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getDecisionCard, getRegion, ISSUES_BY_ID, PARTIES } from '../../data';
-import { decisionError, decisionImpact, DECISIONS_PER_TURN } from '../../engine';
+import { decisionError, decisionImpact, DECISIONS_PER_TURN, yourChamber } from '../../engine';
 import type { Action, GameState } from '../../engine';
 import { money } from '../format';
 import { effectLabel, PRECISE_PREVIEW_POLICY, stanceLabel } from './labels';
@@ -17,7 +17,8 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
       <section className="panel">
         <h2>{title}</h2>
         <p className="muted small">
-          You {inOffice ? 'signed' : 'backed'} {hand.applied.map((id) => `“${getDecisionCard(id).title}”`).join(', ')}. New cards next turn.
+          You {inOffice ? 'signed' : 'backed'} {hand.applied.map((id) => `“${getDecisionCard(id).title}”`).join(', ')}.
+          {hand.failed?.length ? ` Failed to pass: ${hand.failed.map((id) => `“${getDecisionCard(id).title}”`).join(', ')}.` : ''} New cards next turn.
         </p>
       </section>
     );
@@ -86,6 +87,11 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
                   </div>
                 )}
               </dl>
+              {impact.passage < 1 && (
+                <p className={`small ${impact.passage >= 0.7 ? 'pos' : impact.passage >= 0.45 ? '' : 'neg'}`}>
+                  {Math.round(impact.passage * 100)}% chance to pass {yourChamber(state)?.name}
+                </p>
+              )}
               {impact.promisesKept.length > 0 && <p className="fit good small">Keeps a campaign promise</p>}
               {impact.promisesBroken.length > 0 && <p className="fit bad small">Breaks a campaign promise</p>}
               {card.rejectCost && <p className="muted small">{inOffice ? 'Shelving this will cost approval.' : 'Declining costs you some goodwill.'}</p>}

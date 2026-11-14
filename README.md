@@ -9,10 +9,10 @@ compared.
 - [Design v1 — simulation engine](docs/DESIGN.md)
 - [POC milestones](docs/MILESTONES.md)
 
-Status: **M7 (character v2) done** — home state (any of 50) and resident state/city (native
-or transplant), 7 backgrounds with perks, weaknesses and state affinities, and the 7 skills
-(CHA, ECO, DIP, STR, ADM, LEA, LAW) wired into campaigning, money, parties and governing.
-Next: M8 (people cards & the legislature). See [the v2 roadmap](docs/MILESTONES.md).
+Status: **M8 (people cards & the legislature) done** — free people cards from drafts
+(assign to campaign manager, chief of staff, party liaison or legislative director, keep in
+reserve, or discard), skill boosts and perks while a role is active, and legislatures whose
+control changes each cycle, so bills must pass. Next: M9 (campaign loot & election night).
 
 ## Development
 

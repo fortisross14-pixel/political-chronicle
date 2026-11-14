@@ -4,6 +4,7 @@ import type { SkillCard } from '../data';
 import { turnNo } from './events';
 import { poll } from './opinion';
 import { adjustStanding, partyFunds } from './parties';
+import { effectiveSkills } from './people';
 import { native, TRAITS } from './traits';
 import { Rng } from './rng';
 import { monthsFactor } from './time';
@@ -74,51 +75,29 @@ export function competitiveness(state: GameState): number {
   return Math.max(0.3, 1 - Math.abs(you - 0.5) * 1.2);
 }
 
-export function projectedIncome(state: GameState): Omit<IncomeBreakdown, 'quit'> {
+export function projectedIncome(state: GameState): IncomeBreakdown {
   const f = monthsFactor(state.clock);
   const regions = economicJurisdiction(state);
-  const outsiders = native(state) ? 0 : (TRAITS.outsideDonorBase * state.politician.skills.economics) / 3;
+  const eco = effectiveSkills(state).economics;
+  const outsiders = native(state) ? 0 : (TRAITS.outsideDonorBase * eco) / 3;
   const recognition = weightsOf(regions).reduce((s, [id, w]) => s + w * state.regions[id]!.recognition, 0);
   const phase = state.career.race ? INCOME.campaignMultiplier : state.career.office ? INCOME.officeMultiplier : INCOME.idleMultiplier;
   const statewide = regions.length > 1;
   const donors =
-    (INCOME.donorBase + INCOME.donorPerFundraisingRecognition * state.politician.skills.economics * recognition + outsiders) *
+    (INCOME.donorBase + INCOME.donorPerFundraisingRecognition * eco * recognition + outsiders) *
     (statewide ? INCOME.statewideMultiplier : 1) *
     phase *
     f;
   const salary = state.career.office ? SALARY[getOffice(state.career.office.officeId).level] * f : 0;
-  const upkeep = state.staff.reduce((s, m) => s + m.upkeep, 0) * f;
   const round = (v: number) => Math.round(v / 100) * 100;
-  return { donors: round(donors), salary: round(salary), upkeep: round(upkeep), party: partyFunds(state, competitiveness(state)) };
+  return { donors: round(donors), salary: round(salary), party: partyFunds(state, competitiveness(state)) };
 }
 
-/** Start-of-turn money: donors and salary in, staff salaries out. Unpaid staff quit. */
+/** Start-of-turn money: donors, salary and party funds. */
 export function collectIncome(state: GameState): GameState {
   if (state.ended) return state;
   const income = projectedIncome(state);
-  let funds = state.funds + income.donors + income.salary + income.party;
-  let staff = [...state.staff];
-  const skills = { ...state.politician.skills };
-  const quit: string[] = [];
-  const f = monthsFactor(state.clock);
-  while (staff.length && funds < staff.reduce((s, m) => s + m.upkeep * f, 0)) {
-    const leaving = staff.pop()!;
-    quit.push(leaving.cardId);
-    skills[leaving.skill] = Math.max(1, skills[leaving.skill] - 1);
-  }
-  const upkeep = Math.round(staff.reduce((s, m) => s + m.upkeep * f, 0) / 100) * 100;
-  funds -= upkeep;
-  const log = quit.length
-    ? [...state.log, { year: state.clock.year, turn: state.clock.turn, text: `Couldn’t make payroll: ${quit.map((id) => getSkillCard(id).name.replace(/^Hire an? /, '')).join(', ')} quit.` }]
-    : state.log;
-  return {
-    ...state,
-    funds,
-    staff,
-    politician: { ...state.politician, skills },
-    lastIncome: { donors: income.donors, salary: income.salary, upkeep, party: income.party, quit },
-    log,
-  };
+  return { ...state, funds: state.funds + income.donors + income.salary + income.party, lastIncome: income };
 }
 
 // ---------- Market ----------
@@ -126,7 +105,7 @@ export function collectIncome(state: GameState): GameState {
 function availableSkillCards(state: GameState): SkillCard[] {
   const cap = skillCap(state);
   return SKILL_CARDS.filter(
-    (c) => (!c.requiresParty || state.career.affiliation !== 'IND') && state.politician.skills[c.skill] < cap && !state.staff.some((m) => m.cardId === c.id),
+    (c) => (!c.requiresParty || state.career.affiliation !== 'IND') && state.politician.skills[c.skill] < cap,
   );
 }
 
@@ -193,7 +172,6 @@ export function buyOffer(state: GameState, offerIndex: number): GameState {
     ...withStanding,
     energy: state.energy - card.energy,
     politician: { ...state.politician, skills },
-    staff: card.upkeep ? [...state.staff, { cardId: card.id, skill: card.skill, upkeep: card.upkeep }] : state.staff,
     log: entry(`${card.name}: ${card.skill} is now ${skills[card.skill]}.`),
   };
 }

@@ -1,6 +1,7 @@
 // Races: filing, platform, AI opponents and Election Day (DESIGN §5.3, §7).
 import { FIRST_NAMES, getOffice, getRegion, LAST_NAMES, OFFICES, PARTIES, REGIONS, STARTER_HAND } from '../data';
 import { dealDecisions } from './decisions';
+import { dealDraft, effectiveSkills } from './people';
 import { adjustStanding, effectivePlatform, member, newPrimary, nominationStatus, PARTY, primaryShare, PRIMARY } from './parties';
 import { clamp, decided, nudgeFavorability, nudgeRecognition, poll, raceViews, regionAlignment, regionIntention, regionWeights, relevance } from './opinion';
 import { Rng } from './rng';
@@ -226,7 +227,7 @@ export interface OpponentIntel {
 }
 
 export function opponentIntel(state: GameState, race: Race, c: Candidate): OpponentIntel {
-  const str = state.politician.skills.strategy;
+  const str = effectiveSkills(state).strategy;
   const intel: OpponentIntel = {};
   if (str < INTEL.standings) return intel;
   const office = getOffice(race.officeId);
@@ -303,8 +304,10 @@ export function fileRace(state: GameState, officeId: OfficeId): GameState {
   const clock = state.clock.turn === 0 ? { ...state.clock, turnsThisYear: turnsInYear(career, state.clock.year) } : state.clock;
   let uid = state.nextCardUid;
   const dealt = STARTER_HAND.map((cardId) => ({ uid: uid++, cardId }));
+  const withDraft = dealDraft(state, rng, 'Your campaign is hiring');
   return {
     ...state,
+    draft: withDraft.draft,
     rng: rng.state,
     clock,
     career,
@@ -411,9 +414,11 @@ export function resolveElection(state: GameState, rng: Rng): GameState {
     : `Lost the race for ${office.name}: ${pct(totalShares[0]!)} to ${record.candidates[winner]!.name}'s ${pct(totalShares[winner]!)}.${gaveUpSeat ? ` You gave up your seat as ${getOffice(rest.office!.officeId).name} to run.` : ''}`;
   const standingDelta = office.partisan ? (playerWon ? PARTY.wonRace : PARTY.lostRace) : playerWon ? PARTY.wonMayor : 0;
   const withStanding = adjustStanding({ ...state, career }, standingDelta);
+  const draft = playerWon ? dealDraft(state, rng, 'Winners attract talent').draft : state.draft;
 
   return {
     ...state,
+    draft,
     career: withStanding.career,
     elections: [...state.elections, record],
     pendingResult: state.elections.length,

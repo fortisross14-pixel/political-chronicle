@@ -8,8 +8,6 @@ export interface SkillCard {
   pricePerLevel: number;
   /** Energy spent this turn to take the course. */
   energy: number;
-  /** Staff: a recurring cost per 3 months; if you can't pay, they leave and the skill drops back. */
-  upkeep?: number;
   /** Party-only cards arrive with parties (M6). */
   requiresParty?: boolean;
   /** Party standing gained. */
@@ -25,7 +23,6 @@ export const SKILL_CARDS: SkillCard[] = [
   { id: 'management_course', name: 'Public-management course', skill: 'administration', pricePerLevel: 4000, energy: 2, description: 'How to run an agency without it running you.' },
   { id: 'leadership_retreat', name: 'Leadership retreat', skill: 'leadership', pricePerLevel: 5000, energy: 1, description: 'Crisis drills and hard calls. Your team notices.' },
   { id: 'think_tank', name: 'Think-tank fellowship', skill: 'law', pricePerLevel: 4000, energy: 2, description: 'A semester of white papers. Sharper on policy and the law.' },
-  { id: 'digital_director', name: 'Hire a digital director', skill: 'charisma', pricePerLevel: 6000, energy: 0, upkeep: 2000, description: 'A staffer who lives online and sharpens every message. Costs a salary every turn.' },
   { id: 'party_mentorship', name: 'Mentorship with a party elder', skill: 'leadership', pricePerLevel: 5000, energy: 1, requiresParty: true, standing: 5, description: 'Learn how the party really works — and get on the leadership’s radar. +5 party standing.' },
 ];
 

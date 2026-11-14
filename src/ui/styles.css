@@ -1123,3 +1123,94 @@ details summary {
   background: var(--panel-2);
   border-radius: 0 8px 8px 0;
 }
+
+/* People cards (M8) */
+.person-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.6rem;
+}
+
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.role-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.6rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
+.role-head,
+.person-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.empty-slot {
+  margin: 0.5rem 0;
+}
+
+.person-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.7rem;
+  border-radius: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+}
+
+.person-card.dim {
+  opacity: 0.6;
+}
+
+.person-card.rare {
+  border-color: #4f8df0;
+}
+
+.person-card.epic {
+  border-color: #a970ff;
+}
+
+.person-card.legendary {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(232, 184, 74, 0.35);
+}
+
+.rarity {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.rarity.rare {
+  color: #8ab4f8;
+}
+
+.rarity.epic {
+  color: #c9a2ff;
+}
+
+.rarity.legendary {
+  color: var(--accent);
+}
+
+.chip.perk {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.panel.draft {
+  border-color: var(--accent);
+}

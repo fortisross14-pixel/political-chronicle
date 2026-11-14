@@ -1,6 +1,7 @@
 // In office: approval, the term clock and re-election (DESIGN §6.3, §7).
 import { getOffice } from '../data';
 import { clamp, nudgeFavorability } from './opinion';
+import { effectiveSkills } from './people';
 import { monthsFactor } from './time';
 import type { GameState, OfficeTerm, Pledge, RegionId } from './types';
 
@@ -43,13 +44,14 @@ export function newTerm(officeId: string, electionYear: number, regionShares: Re
 
 /** Administration slows approval wear: 1.25× at ADM 0, 1.0 at 5, 0.75 at 10. */
 export function administrationWear(state: GameState): number {
-  return clamp(1.25 - 0.05 * state.politician.skills.administration, 0.6, 1.25);
+  return clamp(1.25 - 0.05 * effectiveSkills(state).administration, 0.6, 1.25);
 }
 
 /** How hard a signed bill lands: ADM, plus ECO on budget and tax bills. 1.0 at 5. */
 export function executionMultiplier(state: GameState, budgetBill: boolean): number {
-  const adm = 0.8 + 0.04 * state.politician.skills.administration;
-  const eco = budgetBill ? 0.8 + 0.04 * state.politician.skills.economics : 1;
+  const skills = effectiveSkills(state);
+  const adm = 0.8 + 0.04 * skills.administration;
+  const eco = budgetBill ? 0.8 + 0.04 * skills.economics : 1;
   return adm * eco;
 }
 

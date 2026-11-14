@@ -3,12 +3,14 @@ import { fileRace } from './campaign';
 import { dealMarket } from './economy';
 import { averageApproval } from './governing';
 import { poll } from './opinion';
-import { seedFromString } from './rng';
+import { Rng, seedFromString } from './rng';
+import { rollChambers } from './legislature';
+import { emptyTeam, grantPerson } from './people';
 import { initialRegions } from './traits';
 import { nextElectionYear, turnsInYear } from './time';
 import type { Career, GameState, Politician, RegionId, Skills, Snapshot } from './types';
 
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 export const MAX_AGE_ENDS_RUN = 85;
 export const DEFAULT_START_YEAR = 2027;
 
@@ -79,14 +81,17 @@ export function createRun(config: NewRunConfig): GameState {
     hand: [],
     nextCardUid: 1,
     recentDecisionIds: [],
-    staff: [],
+    team: emptyTeam(),
+    chambers: rollChambers(new Rng(seedFromString(`${config.seed}:chambers`)), startYear),
     eventHistory: [],
     elections: [],
     promises: [],
     snapshots: [],
     log: [{ year: startYear, turn: 0, text: `${politician.name} enters public life.` }],
   };
-  return dealMarket(raceOfficeId ? fileRace(base, raceOfficeId) : base);
+  // Public servants bring someone from their old job.
+  const staffed = politician.backgroundId === 'public_servant' ? grantPerson(base, 'cs_pham') : base;
+  return dealMarket(raceOfficeId ? fileRace(staffed, raceOfficeId) : staffed);
 }
 
 export function takeSnapshot(state: GameState): Snapshot {
