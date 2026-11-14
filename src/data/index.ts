@@ -19,7 +19,7 @@ export type { Trinket, TrinketWindow } from './trinkets';
 export type { Reward, Scenario, ScenarioSetup, StarGoal, StarRule } from './meta';
 export { EVENT_CARDS, EVENT_CARDS_BY_ID, BASIC_CARD_IDS, PACK_EVENT_IDS, MARKET_COST_FACTOR, getEventCard } from './eventCards';
 export { DECISION_CARDS, DECISION_CARDS_BY_ID, getDecisionCard } from './decisionCards';
-export { FIRST_NAMES, LAST_NAMES } from './names';
+export { FEMALE_FIRST_NAMES, FIRST_NAMES, LAST_NAMES } from './names';
 
 export const STATES: Record<StateId, UsState> = { NY: NEW_YORK };
 

@@ -30,7 +30,7 @@ test('on a phone, decisions are swiped and cards are dragged onto a region', asy
   await page.getByRole('button', { name: /^Confirm 1 stance/ }).click();
 
   // Drag Door-knocking onto the Mill Street chip.
-  await page.getByRole('button', { name: /^Play cards/ }).click();
+  await page.getByRole('button', { name: /^Campaign/ }).click();
   const energy = Number((await page.locator('.stat', { hasText: 'Energy' }).locator('.count').innerText()).trim());
   const chip = page.locator('.region-chip', { hasText: 'Mill Street' });
   await chip.scrollIntoViewIfNeeded();

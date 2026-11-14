@@ -14,8 +14,8 @@ export const TRINKET_EFFECT = {
   gotv: 0.01,
   /** Phone bank: late-voter points on the uncounted vote. */
   phoneBank: 0.008,
-  surpriseRecognition: 0.03,
-  surpriseFavorability: 0.03,
+  surpriseRecognition: 0.06,
+  surpriseFavorability: 0.06,
   officeHours: 0.03,
   starRecognition: 0.05,
   starFavorability: 0.04,

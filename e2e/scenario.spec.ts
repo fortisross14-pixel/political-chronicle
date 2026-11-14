@@ -17,6 +17,7 @@ test('a scenario plays from the menu: starter pack, launch, campaign, results an
   await expect(page.locator('.scenario-hud h2')).toHaveText(/Mayor of Watertown/);
 
   // Launch the Watertown race: topics on the 7-step sliders, then launch.
+  await page.getByRole('button', { name: /^Launch a campaign/ }).click();
   await page
     .locator('.race-slot.open', { hasText: 'Mayor of Watertown' })
     .getByRole('button', { name: /^Launch/ })

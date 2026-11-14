@@ -25,6 +25,11 @@ export const CITY_SPREAD: Record<MediaChannel, number> = { tv: 0.85, cable: 0.8,
 /** Share heard in the race's other districts (House and statewide races), by medium. */
 export const DISTRICT_SPREAD: Record<MediaChannel, number> = { tv: 0.45, cable: 0.45, radio: 0.35, social: 0.35, inPerson: 0.03 };
 
+/** How hard the player's campaign events hit (M19: a focused campaign should move its area). */
+export const EVENT_POWER = 1.5;
+/** Extra weight on persuasion that goes against an area's views. */
+export const BACKLASH = 1.6;
+
 /** Campaign events count this much when you run for re-election: the record speaks louder. */
 export const INCUMBENT_CAMPAIGN = 0.6;
 
@@ -171,7 +176,9 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
     const align = regionAlignment(id, issue, stance);
     const you = state.regions[id]!;
     const gain = card.reach * m;
-    const dF = card.persuasion * topical * m * r.issueSalience[issue] * align * relevance(issue, level) * cred;
+    // Campaigning against what an area believes backfires harder than agreeing with it helps.
+    const backlash = align < 0 ? BACKLASH : 1;
+    const dF = card.persuasion * EVENT_POWER * backlash * topical * m * r.issueSalience[issue] * align * relevance(issue, level) * cred;
     preview.effects.push({
       regionId: id,
       share,

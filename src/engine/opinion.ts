@@ -37,7 +37,8 @@ export function relevance(issue: IssueId, level: OfficeLevel): number {
 /** 0.6 + 0.08 × skill: 1 → 0.68, 5 → 1.0, 10 → 1.4. */
 export function skillMult(skills: Skills, ids: SkillId[]): number {
   const avg = ids.reduce((sum, id) => sum + skills[id], 0) / ids.length;
-  return 0.6 + 0.08 * avg;
+  // Skills matter: a 3 campaigns at ×0.76, a 7 at ×1.24, a 10 at ×1.6.
+  return 0.4 + 0.12 * avg;
 }
 
 /** Moves favorability with diminishing returns toward the extreme it is heading to. */

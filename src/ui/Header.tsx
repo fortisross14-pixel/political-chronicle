@@ -1,4 +1,7 @@
 import { getOffice, PARTIES } from '../data';
+import { ART_IDS } from '../data/artManifest';
+import { PortraitArt } from './cards/CardArt';
+import { playerPortrait } from './portraits';
 import { ageOf, averageApproval, isElectionYear, turnLabel } from '../engine';
 import type { GameState } from '../engine';
 import { Bolt } from './cards/GameCard';
@@ -34,7 +37,11 @@ export function Header({ state, onMainMenu, onAbandon }: Props) {
     <header className="header">
       <div className="header-id">
         <span className={`avatar ${side}`} aria-hidden="true">
-          {initials}
+          {ART_IDS.has(playerPortrait(politician)) ? (
+            <PortraitArt id={playerPortrait(politician)} name={politician.name} role="campaignManager" />
+          ) : (
+            initials
+          )}
         </span>
         <div className="who">
           <strong>{politician.name}</strong>

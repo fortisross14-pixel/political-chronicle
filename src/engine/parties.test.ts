@@ -197,8 +197,8 @@ describe('M6 acceptance: Watertown → House → Governor', () => {
   });
 
   it('the same path as a Blue is much harder — the red-region/blue-state tension', () => {
-    const blue = Array.from({ length: 8 }, (_, i) => climbCareer(botCharacter('ny-north'), 40, `accept-blue-${i}`, 'DU'));
-    const red = Array.from({ length: 8 }, (_, i) => climbCareer(botCharacter('ny-north'), 40, `accept-blue-${i}`));
-    expect(blue.filter((r) => r.reachedHouse).length).toBeLessThan(red.filter((r) => r.reachedHouse).length);
+    const blue = Array.from({ length: 12 }, (_, i) => climbCareer(botCharacter('ny-north'), 40, `accept-blue-${i}`, 'DU'));
+    const red = Array.from({ length: 12 }, (_, i) => climbCareer(botCharacter('ny-north'), 40, `accept-blue-${i}`));
+    expect(blue.filter((r) => r.reachedGovernor).length).toBeLessThan(red.filter((r) => r.reachedGovernor).length);
   });
 });

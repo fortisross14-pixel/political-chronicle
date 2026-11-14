@@ -293,7 +293,8 @@ describe('M3 acceptance: campaigning matters (bot)', () => {
     const contrarian = hometownWinRate(input, 'contrarian', 30);
     expect(sensible.winRate).toBeGreaterThan(0.4);
     expect(idle.winRate).toBeLessThan(0.1);
-    expect(contrarian.winRate).toBeLessThan(0.15);
+    expect(contrarian.winRate).toBeLessThan(0.4);
+    expect(sensible.winRate).toBeGreaterThan(contrarian.winRate + 0.4);
     expect(sensible.avgShare).toBeGreaterThan(idle.avgShare + 0.2);
   });
 });

@@ -7,7 +7,7 @@ import { DecisionTray } from '../campaign/DecisionTray';
 import { ElectionResult } from '../campaign/ElectionResult';
 import { HandPanel } from '../campaign/HandPanel';
 import { TrinketBar } from '../campaign/TrinketBar';
-import { LaunchScreen, RaceBoard } from '../campaign/LaunchFlow';
+import { LaunchScreen, LaunchButton } from '../campaign/LaunchFlow';
 import { PackShop } from '../campaign/Packs';
 import { PolicyHand } from '../campaign/PolicyHand';
 import { OfficePanel } from '../campaign/OfficePanel';
@@ -116,11 +116,11 @@ export function GovernmentTab({ state, dispatch }: Props) {
   const todo = !!state.decisions && !state.decisions.resolved;
   const canLaunch = !race && raceBoardHasOpen(state);
   const sections: { id: Section; label: string; badge?: string; alert?: boolean }[] = [
-    { id: 'desk', label: 'Desk', badge: todo || canLaunch ? '!' : undefined, alert: true },
+    { id: 'desk', label: 'Government', badge: todo || canLaunch ? '!' : undefined, alert: true },
     { id: 'map', label: 'Map' },
     {
       id: 'cards',
-      label: 'Play cards',
+      label: 'Campaign',
       badge: state.energy > 0 && (canHoldEvents || state.policyHand.length) ? String(state.energy) : undefined,
     },
     { id: 'packs', label: 'Packs' },
@@ -149,15 +149,18 @@ export function GovernmentTab({ state, dispatch }: Props) {
           <>
             {state.scenario && <ScenarioHud state={state} />}
             {state.decisions && <DecisionTray key={state.decisions.turnNo} state={state} dispatch={dispatch} />}
-            <TrinketBar state={state} dispatch={dispatch} windows={['campaign', 'mobilize', 'governing']} />
-            {campaigning && <CampaignPanel state={state} />}
-            {inOffice && <OfficePanel state={state} dispatch={dispatch} />}
             {!race && (
-              <RaceBoard state={state} title={inOffice ? 'Your next race' : 'Launch a campaign'} onPick={(id) => setLaunching(id)} />
+              <LaunchButton
+                state={state}
+                label={inOffice ? 'Launch your next campaign' : 'Launch a campaign'}
+                onPick={(id) => setLaunching(id)}
+              />
             )}
+            {inOffice && <TrinketBar state={state} dispatch={dispatch} windows={['governing']} />}
+            {inOffice && <OfficePanel state={state} dispatch={dispatch} />}
             {(canHoldEvents || state.policyHand.length > 0) && state.energy > 0 && (!state.decisions || state.decisions.resolved) && (
               <button className="next-step" onClick={() => setSection('cards')}>
-                {state.energy} energy left: play your cards
+                {state.energy} energy left: go campaign
               </button>
             )}
           </>
@@ -165,6 +168,8 @@ export function GovernmentTab({ state, dispatch }: Props) {
         {shown === 'map' && map}
         {shown === 'cards' && (
           <>
+            {campaigning && <CampaignPanel state={state} />}
+            <TrinketBar state={state} dispatch={dispatch} windows={['campaign', 'mobilize']} />
             {canHoldEvents ? (
               <HandPanel
                 key={race ? `${race.officeId}-${race.electionYear}` : `office-${state.career.office!.termEndsYear}`}

@@ -365,6 +365,25 @@ seat: win Syracuse), Big city 80 / 100.
 
 ---
 
+## M19 — Casual balance, slots and a cleaner layout ✅ done
+
+- **Campaigning pays off.** Persuasion counts 1.5× (campaigning against an area's views backfires
+  1.6×), skills scale harder (Charisma 3 → ×0.76, 7 → ×1.24, 10 → ×1.6), the surprise appearance
+  doubles, small-town opponents campaign less (2 events a turn, the second 0.7) and their events
+  spread less across the city (40%). A focused campaign in one neighborhood takes it from ~34% to
+  ~54% in four turns while the city tips your way.
+- **Measured (bot):** Watertown mayor 100%, Buffalo 85%, NYC 48%; idle 3%; keeper re-elected 100%,
+  flip-flopper 5%. Missions first try / prepared: Hometown 100/100, Keep your word 90/100, Pick a
+  side 55/95, Big city 80/100; Underdog 23/53, Blue in the North 33/70, Small town to the top 47/70.
+- **Trinket slots:** empty slots open a picker filtered by when the trinket works.
+- **Launch a campaign:** one big button opens the race picker, filtered by Open now / Mayor / House /
+  Senate / Governor.
+- **Tabs:** Government (decisions, launching, office, governing trinkets) and Campaign (the poll,
+  campaign and Election Day trinkets, campaign actions, political events).
+- **Every card the same size**; faces match the gender of the name; the header shows your face.
+
+---
+
 ## After v2 (expansion)
 
 1. **More states:** California, Texas and smaller states (4–6 districts for Iowa-sized states),

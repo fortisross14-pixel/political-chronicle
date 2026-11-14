@@ -26,7 +26,7 @@ import {
 } from '../../engine';
 import type { Action, GameState, IssueId, OfficeId, PartyId, Pledge } from '../../engine';
 import { PersonCard, Stars } from '../cards/CardViews';
-import { PortraitArt } from '../cards/CardArt';
+import { Painted, PortraitArt } from '../cards/CardArt';
 import { Info } from '../Info';
 import { opponentPortrait, playerPortrait } from '../portraits';
 import { money, pct } from '../format';
@@ -36,8 +36,67 @@ import { cue } from '../fx/sound';
 
 const LEVEL_LABEL = { mayor: 'Mayor', house: 'U.S. House', senate: 'U.S. Senate', governor: 'Governor' } as const;
 
-export function RaceBoard({ state, onPick, title }: { state: GameState; onPick: (id: OfficeId) => void; title: string }) {
-  const board = raceBoard(state);
+type RaceFilter = 'open' | 'all' | 'mayor' | 'house' | 'senate' | 'governor';
+const RACE_FILTERS: { id: RaceFilter; label: string }[] = [
+  { id: 'open', label: 'Open now' },
+  { id: 'all', label: 'All' },
+  { id: 'mayor', label: 'Mayor' },
+  { id: 'house', label: 'House' },
+  { id: 'senate', label: 'Senate' },
+  { id: 'governor', label: 'Governor' },
+];
+
+/** The Desk's big button: opens the race picker. */
+export function LaunchButton({ state, onPick, label }: { state: GameState; onPick: (id: OfficeId) => void; label: string }) {
+  const [open, setOpen] = useState(false);
+  const count = raceBoard(state).filter((r) => r.status === 'open').length;
+  return (
+    <>
+      <button className="launch-cta" onClick={() => setOpen(true)}>
+        <span className="launch-cta-art" aria-hidden="true">
+          <Painted id="arena_rally" />
+        </span>
+        <span className="launch-cta-text">
+          <strong>{label}</strong>
+          <span>{count ? `${count} race${count === 1 ? '' : 's'} open now` : 'No race open yet'}</span>
+        </span>
+      </button>
+      {open &&
+        createPortal(
+          <div className="overlay" role="dialog" aria-modal="true" aria-label="Pick a race" onClick={() => setOpen(false)}>
+            <div className="overlay-sheet race-picker" onClick={(e) => e.stopPropagation()}>
+              <RaceBoard
+                state={state}
+                title="Pick a race"
+                onClose={() => setOpen(false)}
+                onPick={(id) => {
+                  setOpen(false);
+                  onPick(id);
+                }}
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
+
+export function RaceBoard({
+  state,
+  onPick,
+  title,
+  onClose,
+}: {
+  state: GameState;
+  onPick: (id: OfficeId) => void;
+  title: string;
+  onClose?: () => void;
+}) {
+  const [filter, setFilter] = useState<RaceFilter>(() => (raceBoard(state).some((r) => r.status === 'open') ? 'open' : 'all'));
+  const board = raceBoard(state).filter(
+    (r) => filter === 'all' || (filter === 'open' ? r.status === 'open' : getOffice(r.officeId).level === filter),
+  );
   const order = { open: 0, later: 1, locked: 2 } as const;
   const rung = { mayor: 0, house: 1, senate: 2, governor: 3 } as const;
   const sorted = [...board].sort(
@@ -50,7 +109,22 @@ export function RaceBoard({ state, onPick, title }: { state: GameState; onPick: 
     <section className="panel race-board">
       <div className="panel-head">
         <h2>{title}</h2>
-        <span className="muted small">Campaigns open 7 turns before the vote and close at 4.</span>
+        <Info label="campaign windows" align="right">
+          Campaigns open 7 turns before the vote and close at 4. Launch early to get ahead of your opponents.
+        </Info>
+        {onClose && <button onClick={onClose}>Close</button>}
+      </div>
+      <div className="segmented filter-row" role="group" aria-label="Filter races">
+        {RACE_FILTERS.map((f) => (
+          <button
+            key={f.id}
+            className={filter === f.id ? 'active' : undefined}
+            aria-pressed={filter === f.id}
+            onClick={() => setFilter(f.id)}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
       <ul className="race-list">
         {sorted.map((slot) => {
@@ -79,14 +153,17 @@ export function RaceBoard({ state, onPick, title }: { state: GameState; onPick: 
             </li>
           );
         })}
-        <li className="race-slot locked">
-          <div className="race-main">
-            <span className="race-level">President</span>
-            <strong>President of the United States</strong>
-            <span className="muted small">Nov 2028 · it’s a free country</span>
-          </div>
-          <span className="race-status small">Out of reach for now</span>
-        </li>
+        {filter === 'all' && (
+          <li className="race-slot locked">
+            <div className="race-main">
+              <span className="race-level">President</span>
+              <strong>President of the United States</strong>
+              <span className="muted small">Nov 2028 · it’s a free country</span>
+            </div>
+            <span className="race-status small">Out of reach for now</span>
+          </li>
+        )}
+        {sorted.length === 0 && filter !== 'all' && <li className="muted small">Nothing here right now.</li>}
       </ul>
     </section>
   );

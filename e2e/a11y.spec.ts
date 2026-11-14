@@ -22,7 +22,7 @@ test('menu, every Government section, profile, party and election night pass WCA
   expect(await audit(page)).toEqual([]);
   await page.getByRole('button', { name: /Continue/ }).click();
   expect(await audit(page)).toEqual([]);
-  for (const n of ['Play cards', 'Packs', 'Team', 'Map']) {
+  for (const n of ['Campaign', 'Packs', 'Team', 'Map']) {
     await page.getByRole('button', { name: new RegExp(`^${n}`) }).click();
     expect(await audit(page), n).toEqual([]);
   }
@@ -60,6 +60,7 @@ test('the starter pack, the launch screen and the topic sliders pass WCAG AA che
   await expect(page.locator('.pack-overlay')).toBeVisible();
   expect(await audit(page), 'pack').toEqual([]);
   await page.getByRole('button', { name: /^Keep (\d cards|this card)/ }).click();
+  await page.getByRole('button', { name: /^Launch a campaign/ }).click();
   await page
     .locator('.race-slot.open', { hasText: 'Mayor of Watertown' })
     .getByRole('button', { name: /^Launch/ })

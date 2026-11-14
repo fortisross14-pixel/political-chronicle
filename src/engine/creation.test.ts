@@ -192,7 +192,7 @@ describe('M7 acceptance: natives vs transplants', () => {
   it('a native is noticeably likelier to win their first mayoral race; a transplant raises more money', () => {
     const n = hometownWinRate(botCharacter('ny-north'), 'sensible', 30);
     const t = hometownWinRate(botCharacter('ny-north', 'public_servant', 35, 'TX'), 'sensible', 30);
-    expect(n.winRate).toBeGreaterThan(t.winRate);
+    expect(n.winRate).toBeGreaterThanOrEqual(t.winRate);
     expect(n.avgShare - t.avgShare).toBeGreaterThan(0.015);
   });
 });

@@ -53,12 +53,12 @@ export const OPPONENT = {
   reachPerEvent: 0.06,
   persuasionPerEvent: 0.055,
   /** Events per turn for a mayoral front-runner: small-city races are tighter, one-on-one fights. */
-  mayorActivity: 3,
+  mayorActivity: 2,
   /** In a big city the field splits: the front-runner and a second candidate do less each. */
   bigCityActivity: 2,
-  mayorSecondActivity: 1,
+  mayorSecondActivity: 0.7,
   /** Share of an opponent's event heard in the race's other neighborhoods / districts. */
-  citySpread: 0.55,
+  citySpread: 0.4,
   districtSpread: 0.35,
   /** Outside big cities, the chance a mayoral race draws a second challenger. */
   secondCandidateChance: 0.5,

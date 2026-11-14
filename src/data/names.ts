@@ -44,3 +44,17 @@ export const LAST_NAMES = [
   'Ramaswamy',
   'Doyle',
 ];
+
+/** First names above that are women's (the rest are men's): faces must match (art/grids.json). */
+export const FEMALE_FIRST_NAMES: ReadonlySet<string> = new Set([
+  'Dana',
+  'Elena',
+  'Priya',
+  'Grace',
+  'Hannah',
+  'Monica',
+  'Keisha',
+  'Sofia',
+  'Nadia',
+  'Teresa',
+]);

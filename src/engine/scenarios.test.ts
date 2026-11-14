@@ -146,9 +146,9 @@ describe('M10/M15 acceptance: beginner missions sit in their difficulty bands', 
   // Target 80–90% for sensible play (DESIGN_V2 §8.1). 20 bot runs are noisy (±9 points), so CI
   // allows a few points either side; the full report (npm run sim) measures them precisely.
   const bands: Record<string, [number, number]> = {
-    hometown_favorite: [0.7, 0.97],
-    keep_your_word: [0.7, 0.97],
-    pick_a_side: [0.55, 0.97],
+    hometown_favorite: [0.8, 1],
+    keep_your_word: [0.75, 1],
+    pick_a_side: [0.6, 1],
     big_city_small_town: [0.7, 1],
   };
   for (const scn of SCENARIOS.filter((x) => x.track === 'beginner')) {

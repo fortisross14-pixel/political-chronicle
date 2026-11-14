@@ -13,8 +13,11 @@ test('a veteran builds a Sandbox politician with a loadout and the run saves acr
   await page.getByRole('button', { name: /^Sandbox/ }).click();
   await page.getByPlaceholder(/Sam Ortega/).fill('Jo Park');
   await page.getByRole('button', { name: 'Start career' }).click();
-  await page.locator('.loadout-card', { hasText: 'War chest' }).click();
-  await page.locator('.loadout-card', { hasText: 'Rapid-response pager' }).click();
+  await page.getByRole('button', { name: 'Trinket slot 1: pick a trinket' }).click();
+  await page.getByRole('dialog', { name: 'Pick a trinket' }).getByRole('button', { name: 'War chest' }).click();
+  await page.getByRole('button', { name: 'Trinket slot 2: pick a trinket' }).click();
+  await page.getByRole('dialog', { name: 'Pick a trinket' }).getByRole('button', { name: 'Rapid-response pager' }).click();
+  await expect(page.getByRole('button', { name: 'War chest: change' })).toBeVisible();
   await page.getByRole('button', { name: 'Start career' }).click();
   await expect(page.locator('.who strong')).toHaveText('Jo Park');
   await page.reload();

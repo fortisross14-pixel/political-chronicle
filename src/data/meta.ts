@@ -182,8 +182,8 @@ export const SCENARIOS: Scenario[] = [
     setup: {
       character: { gender: 'male', age: 29, homeState: 'OH', residentRegionId: 'ny-wny', backgroundId: 'organizer' },
       startYear: 2029,
-      opponentRecognition: 1.4,
-      opponentActivity: 1,
+      opponentRecognition: 1.7,
+      opponentActivity: 2,
     },
     objective: { officeId: 'mayor-buffalo', by: 2029, text: 'Become Mayor of Buffalo in 2029' },
     stars: [
@@ -207,7 +207,8 @@ export const SCENARIOS: Scenario[] = [
       startYear: 2028,
       party: { id: 'DU', standing: 60 },
       funds: 40000,
-      opponentRecognition: 0.8,
+      opponentRecognition: 1.5,
+      opponentActivity: 2.5,
     },
     objective: { officeId: 'house-ny-north', by: 2030, text: 'Win the North Country House seat as a Blue by 2030' },
     stars: [
@@ -229,6 +230,8 @@ export const SCENARIOS: Scenario[] = [
     setup: {
       character: { gender: 'male', age: 31, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'public_servant' },
       startYear: 2027,
+      opponentRecognition: 1.2,
+      opponentActivity: 1.2,
     },
     objective: { officeId: 'governor-ny', by: 2038, text: 'Become Governor of New York by 2038' },
     stars: [
