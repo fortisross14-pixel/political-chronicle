@@ -384,6 +384,24 @@ seat: win Syracuse), Big city 80 / 100.
 
 ---
 
+## M20 — The campaign trail and a fairer first mission ✅ done
+
+- **Trail:** every area's poll, recognition, favorability and approval are saved at the start of each
+  turn of the current race (and of the current term in office); a new campaign or term starts a new
+  trail (`engine/trail.ts`).
+- **Map:** every layer compares the area now with the start of the turn; tapping an area shows the
+  layer's value and its change this turn, plus the voter status. Under the map, a chart of the
+  selected area by turn (one line per candidate for the vote, or the chosen metric) with a hover
+  tooltip.
+- **Spending matters:** free actions (door-knocking, social posts, call time) work once a turn and
+  count ×0.6; cards from packs count ×2.2. Hometown favorite's opponent is better known (×1.15), so
+  it takes a few good turns to lead.
+- **Measured (bot):** Hometown favorite first try / prepared 70 / 90 (zero-spend 37 / 73); Watertown
+  sandbox 75 (zero-spend 46), Buffalo 63, NYC 29; keeper re-elected 100%. Advanced: Underdog 20 /
+  47, Blue in the North 23 / 50, Small town to the top 20 / 43.
+
+---
+
 ## After v2 (expansion)
 
 1. **More states:** California, Texas and smaller states (4–6 districts for Iowa-sized states),

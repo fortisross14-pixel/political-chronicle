@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { getOffice, getRegion } from '../../data';
 import { MAPS } from '../../data/geometry';
-import { counted, decided, poll, reportedShares } from '../../engine';
-import type { GameState, RegionId } from '../../engine';
+import { areaPoints, counted, decided, poll, reportedShares } from '../../engine';
+import type { AreaPoint, GameState, RegionId, TrailPoint } from '../../engine';
 import { favorabilityColor, leadColor, leanColor, recognitionColor, sideColor } from './colors';
 
 export type MapLayer = 'vote' | 'shift' | 'approval' | 'lean' | 'recognition' | 'favorability' | 'night';
@@ -56,11 +56,67 @@ function delta(v: number): string {
   return `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}`;
 }
 
+// ---------- Metrics: what each layer measures, now and at the start of the turn ----------
+
+type MetricId = 'vote' | 'recognition' | 'favorability' | 'approval';
+
+const METRIC_OF: Partial<Record<MapLayer, MetricId>> = {
+  vote: 'vote',
+  shift: 'vote',
+  recognition: 'recognition',
+  favorability: 'favorability',
+  approval: 'approval',
+};
+
+export const METRIC_LABEL: Record<MetricId, string> = {
+  vote: 'Your vote share',
+  recognition: 'Your recognition',
+  favorability: 'Your favorability',
+  approval: 'Your approval',
+};
+
+function metricValue(m: MetricId, p: AreaPoint | undefined): number | undefined {
+  if (!p) return undefined;
+  if (m === 'vote') return p.shares ? decided(p.shares)[0] : undefined;
+  if (m === 'recognition') return p.rec;
+  if (m === 'favorability') return p.fav;
+  return p.approval;
+}
+
+function fmtMetric(m: MetricId, v: number): string {
+  return m === 'favorability' ? `${v >= 0 ? '+' : '−'}${Math.abs(Math.round(v * 100))}` : `${(v * 100).toFixed(1)}%`;
+}
+
+/** The office the map's areas belong to, and its trail (race first, then the term). */
+function trailFor(state: GameState): { officeId?: string; trail: TrailPoint[]; poll: boolean } {
+  const race = state.career.race?.platform.length ? state.career.race : undefined;
+  if (race) return { officeId: race.officeId, trail: race.trail ?? [], poll: true };
+  const office = state.career.office;
+  return office ? { officeId: office.officeId, trail: office.trail ?? [], poll: false } : { trail: [], poll: false };
+}
+
+/** Every area now, and at the start of this turn. */
+export function areaNowAndStart(state: GameState): {
+  now: Record<string, AreaPoint>;
+  start: Record<string, AreaPoint>;
+  trail: TrailPoint[];
+} {
+  const t = trailFor(state);
+  if (!t.officeId) return { now: {}, start: {}, trail: [] };
+  const now = areaPoints(state, t.officeId, t.poll);
+  const last = t.trail.at(-1)?.areas;
+  const legacy = state.career.race?.prevPoll;
+  const start: Record<string, AreaPoint> =
+    last ?? (legacy ? Object.fromEntries(Object.entries(now).map(([id, p]) => [id, { ...p, shares: legacy[id] }])) : {});
+  return { now, start, trail: t.trail };
+}
+
 export function StateMap({ state, layer, selected, onSelect, hover, popup }: Props) {
   const geo = MAPS[mapIdFor(state)]!;
   const race = state.career.race?.platform.length ? state.career.race : undefined;
   const intention = race ? poll(state, race).regions : {};
-  const prev = race?.prevPoll ?? {};
+  const { now, start } = areaNowAndStart(state);
+  const metric = METRIC_OF[layer];
   const raceIds = race ? new Set(getOffice(race.officeId).regionIds) : undefined;
   const night = state.night;
   const field = state.career.race?.opponents ?? [];
@@ -89,10 +145,10 @@ export function StateMap({ state, layer, selected, onSelect, hover, popup }: Pro
       return shares ? leaderFill(shares, true) : '#253247';
     }
     if (layer === 'shift') {
-      const now = intention[id];
-      const before = prev[id];
-      if (!now || !before) return '#253247';
-      return favorabilityColor((now[0]! - before[0]!) * 30);
+      const a = metricValue('vote', now[id]);
+      const b = metricValue('vote', start[id]);
+      if (a === undefined || b === undefined) return '#253247';
+      return favorabilityColor((a - b) * 30);
     }
     if (layer === 'approval') {
       const a = state.career.office?.approval[id];
@@ -110,7 +166,13 @@ export function StateMap({ state, layer, selected, onSelect, hover, popup }: Pro
       return a === undefined ? undefined : `${Math.round(a * 100)}%`;
     }
     if (layer === 'vote' && intention[id]) return `You ${Math.round(decided(intention[id]!)[0]! * 100)}%`;
-    if (layer === 'shift' && intention[id] && prev[id]) return delta(intention[id]![0]! - prev[id]![0]!);
+    if (layer === 'shift') {
+      const a = metricValue('vote', now[id]);
+      const b = metricValue('vote', start[id]);
+      return a !== undefined && b !== undefined ? delta(a - b) : undefined;
+    }
+    if (layer === 'recognition') return `${Math.round(state.regions[id]!.recognition * 100)}%`;
+    if (layer === 'favorability') return fmtMetric('favorability', state.regions[id]!.favorability);
     return undefined;
   };
   const dim = (id: RegionId) =>
@@ -181,17 +243,33 @@ export function StateMap({ state, layer, selected, onSelect, hover, popup }: Pro
           );
         })}
       </svg>
-      {popup && open && <AreaPopup state={state} regionId={open} onClose={() => setOpen(null)} />}
+      {popup && open && <AreaPopup state={state} regionId={open} metric={metric} onClose={() => setOpen(null)} />}
     </div>
   );
 }
 
 /** "Downtown: Ellis 54.1 (+1.6) · Bican 23.0 (−1.1) · Undecided 22.9 (−0.5)" */
-export function AreaPopup({ state, regionId, onClose }: { state: GameState; regionId: RegionId; onClose: () => void }) {
+export function AreaPopup({
+  state,
+  regionId,
+  metric,
+  onClose,
+}: {
+  state: GameState;
+  regionId: RegionId;
+  metric?: MetricId;
+  onClose: () => void;
+}) {
   const race = state.career.race?.platform.length ? state.career.race : undefined;
   const region = getRegion(regionId);
   const shares = race ? poll(state, race).regions[regionId] : undefined;
-  const before = race?.prevPoll?.[regionId];
+  const { now, start } = areaNowAndStart(state);
+  const before = start[regionId]?.shares;
+  const m = metric && metric !== 'vote' ? metric : undefined;
+  const mNow = m
+    ? metricValue(m, now[regionId] ?? { rec: state.regions[regionId]!.recognition, fav: state.regions[regionId]!.favorability })
+    : undefined;
+  const mStart = m ? metricValue(m, start[regionId]) : undefined;
   const list = names(state);
   const rows = shares
     ? shares.map((v, i) => ({ name: i < list.length ? list[i]! : 'Undecided', v, d: before ? v - before[i]! : undefined, i }))
@@ -206,6 +284,17 @@ export function AreaPopup({ state, regionId, onClose }: { state: GameState; regi
           ×
         </button>
       </div>
+      {m && mNow !== undefined && (
+        <div className="area-metric">
+          <span>{METRIC_LABEL[m]}</span>
+          <b className="num">{fmtMetric(m, mNow)}</b>
+          {mStart !== undefined && (
+            <span className={`num small ${mNow - mStart >= 0 ? 'pos' : 'neg'}`}>
+              ({m === 'favorability' ? fmtMetric(m, mNow - mStart) : delta(mNow - mStart)} this turn)
+            </span>
+          )}
+        </div>
+      )}
       {sorted.length ? (
         <ul>
           {sorted.map((r) => (

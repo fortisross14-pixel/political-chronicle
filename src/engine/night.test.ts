@@ -153,7 +153,8 @@ describe('loot', () => {
     const start = s.career.race!.tokens;
     for (let i = 0; i < 3; i++)
       s = applyAction(
-        { ...s, energy: 6 },
+        // A fresh turn each time: free actions work once a turn.
+        { ...s, energy: 6, eventHistory: [] },
         { type: 'PLAY_EVENT', cardUid: 'door_knocking', regionId: 'wt-arsenal', issue: s.career.race!.platform[0]!.issue },
       );
     expect(s.career.race!.tokens).toBe(start + 3);

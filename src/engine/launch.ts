@@ -1,5 +1,6 @@
 // Launching a campaign (DESIGN_V2 §2): pick the race, a campaign manager, up to 5 topics and how
 // much of your own money goes in. Campaigns open 7 turns before Election Day and close at 4.
+import { trailPoint } from './trail';
 import { reject } from './errors';
 import { getOffice, getRegion, OFFICES, PARTIES } from '../data';
 import { fileRace, MAX_PLATFORM, setPlatform } from './campaign';
@@ -152,6 +153,8 @@ export function launchCampaign(state: GameState, a: Omit<LaunchAction, 'type'>):
   s = { ...s, wealth: s.wealth - donation, funds: s.funds + donation };
   s = fileRace(s, a.officeId, window.electionYear, window.turnsLeft);
   s = setPlatform(s, a.platform);
+  // The race's trail starts here: turn one's starting point.
+  s = { ...s, career: { ...s.career, race: { ...s.career.race!, trail: [trailPoint(s, a.officeId, true)] } } };
   const penalty = selfFundingPenalty(a.officeId, donation);
   const regions = { ...s.regions };
   if (penalty > 0)

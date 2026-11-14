@@ -25,6 +25,7 @@ export * from './world';
 export * from './trinkets';
 export * from './demographics';
 export * from './levels';
+export * from './trail';
 export { applyAction } from './reducer';
 export { endTurnBlocker, validateAction } from './validate';
 export { GameError } from './errors';

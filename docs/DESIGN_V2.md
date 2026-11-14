@@ -551,3 +551,14 @@ an independent mayor passes 70% of bills before skills, 90% with a friendly coun
 split one, 55% against an opposing one. A bill the city loves is harder to vote down (+15% per unit
 of fit). Force the vote passes the next bill regardless — the way to pass a law voters love that
 the council won't.
+
+## 16. The campaign trail (M20, as built)
+
+At the start of every turn the game records each area of the race (or of the office) — vote share,
+recognition, favorability, approval. The map compares now with the start of the turn, so your own
+moves show up as you make them; the turn's starting point is saved when the next turn begins.
+The chart under the map plots the selected area turn by turn. Only the current race and the current
+term keep a trail.
+
+Free basic actions work once a turn and are weak; the cards you buy carry a campaign. A player who
+spends nothing can still win a beginner race with good points and trinkets, but rarely on a first try.

@@ -27,6 +27,9 @@ export const DISTRICT_SPREAD: Record<MediaChannel, number> = { tv: 0.45, cable: 
 
 /** How hard the player's campaign events hit (M19: a focused campaign should move its area). */
 export const EVENT_POWER = 1.5;
+/** Basic cards (always in hand) vs cards from packs. */
+export const BASIC_POWER = 0.6;
+export const PACK_POWER = 2.2;
 /** Extra weight on persuasion that goes against an area's views. */
 export const BACKLASH = 1.6;
 
@@ -132,6 +135,8 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
   else if (!activePlatform(state).length) preview.error = 'Launch a campaign first.';
   else if (state.decisions && !state.decisions.resolved) preview.error = 'Resolve this turn’s decisions first.';
   else if (card.energy > state.energy) preview.error = 'Not enough energy this turn.';
+  else if (card.basic && state.eventHistory.some((e) => e.turnNo === turnNo(state) && e.cardId === card.id))
+    preview.error = 'Free actions work once a turn: play a card from a pack.';
   else if (stance === undefined && !card.fundraising) preview.error = 'Pick one of your platform topics.';
   else if (card.requiresParty && state.career.affiliation === 'IND') preview.error = 'Party members only.';
 
@@ -152,7 +157,9 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
   const topical = card.issueBonus?.includes(issue) ? ISSUE_BONUS : 1;
   // Defending your own seat, voters judge your record more than your campaign (DESIGN_V2 §13).
   const defending = state.career.race && state.career.office?.officeId === state.career.race.officeId ? INCUMBENT_CAMPAIGN : 1;
-  const mult = skillMult(skills, card.skills) * hometown * fatigue * perk * manager * defending;
+  // The free basics keep you in the game; the cards you buy are what win it.
+  const tier = card.basic ? BASIC_POWER : PACK_POWER;
+  const mult = skillMult(skills, card.skills) * hometown * fatigue * perk * manager * defending * tier;
   const cred = credibility(state, issue, stance);
   const targets: [RegionId, number][] = [[regionId, 1]];
   const city = cityRegionsOf(regionId);
@@ -269,7 +276,7 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
         energy: state.energy - preview.card.energy,
         eventHistory: [
           ...state.eventHistory,
-          { turnNo: turnNo(state), regionId, issue, ...(preview.card.fundraising ? { fundraiser: true } : {}) },
+          { turnNo: turnNo(state), regionId, issue, cardId: preview.card.id, ...(preview.card.fundraising ? { fundraiser: true } : {}) },
         ],
         log: [...state.log, { year: state.clock.year, turn: state.clock.turn, text }],
       },

@@ -4889,3 +4889,100 @@ img.card-art.painted.portrait {
   object-fit: cover;
   object-position: center 20%;
 }
+
+/* ---------- Trail chart under the map ---------- */
+.trail-chart {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.trail-chart figcaption {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.trail-chart figcaption strong {
+  font-family: var(--display);
+  font-size: 1rem;
+  color: #fff;
+}
+
+.trail-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 4px 0;
+  font-size: 0.8rem;
+}
+
+.trail-legend i,
+.trail-tip i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+
+.trail-plot {
+  position: relative;
+}
+
+.trail-plot svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.trail-grid {
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 1;
+}
+
+.trail-cross {
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.trail-axis {
+  fill: #b9c8ee;
+  font-size: 12px;
+}
+
+.trail-axis.now {
+  fill: var(--accent);
+  font-weight: 700;
+}
+
+.trail-tip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  pointer-events: none;
+  background: rgba(8, 16, 40, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.area-metric {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 6px 0 2px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.area-metric b {
+  font-family: var(--display);
+  font-size: 1.2rem;
+}

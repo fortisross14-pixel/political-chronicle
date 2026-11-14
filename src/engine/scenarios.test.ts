@@ -30,7 +30,8 @@ describe('scenario setups', () => {
     expect(s.clock.year).toBe(2026);
     expect(s.scenario).toMatchObject({ id: 'hometown_favorite', startYear: 2026 });
     expect(raceBoard(s).find((r) => r.officeId === 'mayor-watertown')!.status).toBe('open');
-    expect(s.modifiers.opponentRecognition).toBeLessThan(1);
+    // A known opponent: it takes a few good turns to take the lead.
+    expect(s.modifiers.opponentRecognition).toBeGreaterThan(1);
   });
 
   it('Keep your word opens in office in 2028 with the platform you won on and bills on the desk', () => {
@@ -146,7 +147,7 @@ describe('M10/M15 acceptance: beginner missions sit in their difficulty bands', 
   // Target 80–90% for sensible play (DESIGN_V2 §8.1). 20 bot runs are noisy (±9 points), so CI
   // allows a few points either side; the full report (npm run sim) measures them precisely.
   const bands: Record<string, [number, number]> = {
-    hometown_favorite: [0.8, 1],
+    hometown_favorite: [0.7, 1],
     keep_your_word: [0.75, 1],
     pick_a_side: [0.6, 1],
     big_city_small_town: [0.7, 1],

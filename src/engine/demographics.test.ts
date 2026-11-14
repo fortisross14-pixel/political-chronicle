@@ -76,3 +76,20 @@ describe('demographics', () => {
     expect(prev['wt-mill']!.reduce((a, b) => a + b, 0)).toBeCloseTo(1);
   });
 });
+
+describe('the campaign trail', () => {
+  it('records every area at the start of each turn, and free actions work once a turn', () => {
+    let s = readyRun();
+    expect(s.career.race!.trail).toHaveLength(1);
+    s = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: [s.decisions!.cardIds[0]!] });
+    const issue = s.career.race!.platform[0]!.issue;
+    s = applyAction(s, { type: 'PLAY_EVENT', cardUid: 'door_knocking', regionId: 'wt-mill', issue });
+    expect(previewEvent(s, 'door_knocking', 'wt-mill', issue).error).toMatch(/once a turn/);
+    s = applyAction(s, { type: 'END_TURN' });
+    const trail = s.career.race!.trail!;
+    expect(trail).toHaveLength(2);
+    expect(Object.keys(trail[1]!.areas)).toHaveLength(7);
+    expect(trail[1]!.areas['wt-mill']!.rec).toBeGreaterThan(trail[0]!.areas['wt-mill']!.rec);
+    expect(trail[1]!.areas['wt-mill']!.shares!.reduce((a, b) => a + b, 0)).toBeCloseTo(1);
+  });
+});

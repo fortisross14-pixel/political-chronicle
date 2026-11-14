@@ -210,8 +210,10 @@ export interface Race {
   used?: string[];
   /** Voters mobilized before Election Day: share points added to your vote everywhere. */
   gotv?: number;
-  /** Each area's poll (player, opponents…, undecided) when the last turn ended: the map's "shift". */
+  /** Each area's poll (player, opponents…, undecided) when the last turn ended (older saves). */
   prevPoll?: Record<RegionId, number[]>;
+  /** Every area's numbers at the start of each turn of this race (DESIGN_V2 §16). */
+  trail?: TrailPoint[];
   /** Personal money put into this campaign. */
   selfFunded?: number;
   /** Turns left until Election Day when you launched (7 at the earliest, 4 at the latest). */
@@ -287,6 +289,23 @@ export interface OfficeTerm {
   used?: string[];
   /** Force the vote (trinket): the next bill passes regardless of the chamber. */
   forceVote?: boolean;
+  /** Every area's numbers at the start of each turn of this term. */
+  trail?: TrailPoint[];
+}
+
+/** One area at one moment: your recognition and favorability, the poll and your approval. */
+export interface AreaPoint {
+  rec: number;
+  fav: number;
+  /** Player, opponents…, undecided (while campaigning). */
+  shares?: number[];
+  approval?: number;
+}
+
+export interface TrailPoint {
+  /** "May–Aug 2026" */
+  label: string;
+  areas: Record<RegionId, AreaPoint>;
 }
 
 export interface PromiseEvent {
@@ -483,6 +502,8 @@ export interface LogEntry {
 
 export interface EventPlay {
   turnNo: number;
+  /** Which card (older saves: missing). */
+  cardId?: string;
   regionId: RegionId;
   issue: IssueId;
   /** Fundraisers don't tire voters of a topic, but they do tire donors. */

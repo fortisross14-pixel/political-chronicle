@@ -44,7 +44,8 @@ import type { CreationInput, GameState, IssueId, OfficeId, PartyId, Pledge, Rari
 
 /** 'flipflop' campaigns sensibly but, in office, signs bills that break its promises. */
 /** 'climber' plays like 'sensible', joins its best-fitting party and runs for higher office. */
-export type BotStyle = 'sensible' | 'idle' | 'contrarian' | 'investor' | 'flipflop' | 'climber';
+/** 'frugal' plays like 'sensible' but never spends: no packs, no money of its own. */
+export type BotStyle = 'sensible' | 'idle' | 'contrarian' | 'investor' | 'flipflop' | 'climber' | 'frugal';
 
 /** Platform fitted to an office's voters (or deliberately against them), on the 7-step scale. */
 export function botPlatform(state: GameState, style: BotStyle, officeId: OfficeId): Pledge[] {
@@ -161,7 +162,7 @@ function staff(state: GameState): GameState {
 /** Shopping: regular campaign packs while running, political events in office, people when thin. */
 function shop(state: GameState, style: BotStyle): GameState {
   let s = state;
-  if (style === 'idle') return s;
+  if (style === 'idle' || style === 'frugal') return s;
   const wants: ['people' | 'policy' | 'campaign', 'regular' | 'golden' | 'elite'][] = [];
   if (s.team.cards.length < 3) wants.push(['people', 'regular']);
   if (s.career.race)
@@ -279,7 +280,7 @@ function launchIfReady(state: GameState, style: BotStyle): GameState {
     (a, b) => getPerson(b.personId).stars.campaignManager - getPerson(a.personId).stars.campaignManager,
   )[0];
   const donation =
-    style === 'idle'
+    style === 'idle' || style === 'frugal'
       ? 0
       : donationShare !== undefined
         ? Math.round(s.wealth * donationShare)

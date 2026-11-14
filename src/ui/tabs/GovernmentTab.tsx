@@ -16,6 +16,7 @@ import { TeamPanel } from '../campaign/TeamPanel';
 import { ElectionNight } from '../night/ElectionNight';
 import { RegionPanel } from '../map/RegionPanel';
 import { MAP_LAYERS, mapIdFor, mapRegions, StateMap } from '../map/StateMap';
+import { TrailChart } from '../map/TrailChart';
 import type { MapLayer } from '../map/StateMap';
 import { ICONS } from '../icons';
 
@@ -72,6 +73,7 @@ export function GovernmentTab({ state, dispatch }: Props) {
           <div className="map-stage">
             <StateMap state={state} layer={shownLayer} selected={selected} onSelect={setSelected} popup />
           </div>
+          <TrailChart state={state} regionId={selected} layer={shownLayer} />
           <p className="muted small">
             {shownLayer === 'vote' && 'Colour of whoever leads; grey where undecided voters are the biggest bloc. Tap an area.'}
             {shownLayer === 'shift' && 'Teal: you gained this turn; orange: you slipped. Tap an area for the numbers.'}

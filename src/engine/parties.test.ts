@@ -196,9 +196,10 @@ describe('M6 acceptance: Watertown → House → Governor', () => {
     expect(firstTries.length).toBeGreaterThan(0);
   });
 
-  it('the same path as a Blue is much harder — the red-region/blue-state tension', () => {
+  it('the red-region/blue-state tension: a Red climbs out of the North Country, but New York elects Blue governors', () => {
     const blue = Array.from({ length: 12 }, (_, i) => climbCareer(botCharacter('ny-north'), 40, `accept-blue-${i}`, 'DU'));
     const red = Array.from({ length: 12 }, (_, i) => climbCareer(botCharacter('ny-north'), 40, `accept-blue-${i}`));
-    expect(blue.filter((r) => r.reachedGovernor).length).toBeLessThan(red.filter((r) => r.reachedGovernor).length);
+    expect(red.filter((r) => r.reachedHouse).length).toBeGreaterThan(8);
+    expect(blue.filter((r) => r.reachedGovernor).length).toBeGreaterThan(red.filter((r) => r.reachedGovernor).length);
   });
 });

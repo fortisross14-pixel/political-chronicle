@@ -86,7 +86,7 @@ export const SCENARIOS: Scenario[] = [
     setup: {
       character: { gender: 'female', age: 34, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'public_servant' },
       startYear: 2027,
-      opponentRecognition: 0.55,
+      opponentRecognition: 1.15,
     },
     objective: { officeId: 'mayor-watertown', by: 2027, text: 'Win the 2027 race for Mayor of Watertown' },
     stars: [
@@ -108,9 +108,9 @@ export const SCENARIOS: Scenario[] = [
     setup: {
       character: { gender: 'male', age: 41, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'veteran' },
       startYear: 2028,
-      office: { officeId: 'mayor-watertown', approval: 0.52, platform: WATERTOWN_PLATFORM, wonYear: 2027, share: 0.52 },
+      office: { officeId: 'mayor-watertown', approval: 0.45, platform: WATERTOWN_PLATFORM, wonYear: 2027, share: 0.52 },
       // A well-funded challenger campaigns hard for the whole window.
-      opponentActivity: 2,
+      opponentActivity: 3,
     },
     objective: { officeId: 'mayor-watertown', by: 2031, minYear: 2031, text: 'Win re-election as Mayor of Watertown in 2031' },
     stars: [
@@ -182,8 +182,8 @@ export const SCENARIOS: Scenario[] = [
     setup: {
       character: { gender: 'male', age: 29, homeState: 'OH', residentRegionId: 'ny-wny', backgroundId: 'organizer' },
       startYear: 2029,
-      opponentRecognition: 1.7,
-      opponentActivity: 2,
+      opponentRecognition: 1.4,
+      opponentActivity: 1.2,
     },
     objective: { officeId: 'mayor-buffalo', by: 2029, text: 'Become Mayor of Buffalo in 2029' },
     stars: [
@@ -230,8 +230,8 @@ export const SCENARIOS: Scenario[] = [
     setup: {
       character: { gender: 'male', age: 31, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'public_servant' },
       startYear: 2027,
-      opponentRecognition: 1.2,
-      opponentActivity: 1.2,
+      opponentRecognition: 1.1,
+      opponentActivity: 0.5,
     },
     objective: { officeId: 'governor-ny', by: 2038, text: 'Become Governor of New York by 2038' },
     stars: [

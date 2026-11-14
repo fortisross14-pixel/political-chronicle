@@ -12,6 +12,7 @@ import { evaluateScenario } from './scenarios';
 import { endTurnBlocker, validateAction } from './validate';
 import { applyTrinket } from './trinkets';
 import { syncLevels } from './levels';
+import { extendTrails } from './trail';
 import { hasAbility } from './traits';
 import { rollChambers } from './legislature';
 import { assignPerson, discardPerson, hasPerk, unassignRole } from './people';
@@ -167,7 +168,7 @@ function advanceCalendar(state: GameState, rng: Rng): GameState {
       };
     }
   }
-  return dealDecisions(s);
+  return extendTrails(dealDecisions(s));
 }
 
 /** New Year: last year's other races are decided, and a term you didn't defend ends. */
