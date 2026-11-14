@@ -1,104 +1,103 @@
-import { getPerson, PERK_TEXT, ROLE_HINTS, ROLE_LABELS } from '../../data';
-import type { Person } from '../../data';
-import { PortraitArt } from '../cards/CardArt';
-import { GameCard } from '../cards/GameCard';
-import { ROLES, roleActive, ROSTER_LIMIT, SKILL_CODES } from '../../engine';
-import type { Action, GameState, SkillId } from '../../engine';
+// Your people: four roles and a roster of up to 10. Anyone can take any role; stars say how well.
+import { getPerson, ROLE_HINTS, ROLE_LABELS } from '../../data';
+import { roleActive, roleOf, roleStars, ROLES, ROSTER_LIMIT } from '../../engine';
+import type { Action, GameState, RoleId } from '../../engine';
+import { PersonCard, Stars } from '../cards/CardViews';
 
-const RARITY_LABEL = { common: 'Common', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' } as const;
-
-export function PersonCard({ person, children, dim, cost }: { person: Person; children?: React.ReactNode; dim?: boolean; cost?: string }) {
-  return (
-    <GameCard
-      className={`person-card ${person.rarity}`}
-      tone={person.rarity}
-      title={person.name}
-      typeLine={ROLE_LABELS[person.role]}
-      art={<PortraitArt name={person.name} role={person.role} />}
-      cost={cost}
-      rarity={RARITY_LABEL[person.rarity]}
-      foil={person.rarity === 'epic' || person.rarity === 'legendary'}
-      dim={dim}
-    >
-      <span className="chips">
-        {(Object.entries(person.boosts) as [SkillId, number][]).map(([id, v]) => (
-          <span key={id} className="chip">
-            {SKILL_CODES[id]} +{v}
-          </span>
-        ))}
-        {person.perk && <span className="chip perk">{PERK_TEXT[person.perk]}</span>}
-      </span>
-      <span>{person.bio}</span>
-      {children && <span className="gcard-actions">{children}</span>}
-    </GameCard>
-  );
-}
+export { PersonCard };
 
 export function TeamPanel({ state, dispatch }: { state: GameState; dispatch: (a: Action) => void }) {
   const { cards, assigned } = state.team;
-  const assignedUids = new Set(Object.values(assigned));
-  const reserve = cards.filter((c) => !assignedUids.has(c.uid));
-
+  const ranked = (role: RoleId) => [...cards].sort((a, b) => getPerson(b.personId).stars[role] - getPerson(a.personId).stars[role]);
   return (
-    <section className="panel">
-      <div className="panel-head">
-        <h2>Your team</h2>
-        <span className="muted small">
-          {cards.length}/{ROSTER_LIMIT} people · hire more in the Market (one-time price, no salary)
-        </span>
-      </div>
-      <div className="role-grid">
-        {ROLES.map((role) => {
-          const uid = assigned[role];
-          const card = uid !== undefined ? cards.find((c) => c.uid === uid) : undefined;
-          const active = roleActive(state, role);
-          return (
-            <div key={role} className="role-slot">
-              <div className="role-head">
-                <strong>{ROLE_LABELS[role]}</strong>
-                <span className={active ? 'fit good' : 'fit mixed'}>{active ? 'active' : 'inactive'}</span>
+    <div className="stack">
+      <section className="panel">
+        <div className="panel-head">
+          <h2>Roles</h2>
+          <span className="muted small">Idle roles do nothing until they apply</span>
+        </div>
+        <div className="role-grid">
+          {ROLES.map((role) => {
+            const uid = assigned[role];
+            const holder = uid !== undefined ? cards.find((c) => c.uid === uid) : undefined;
+            const active = roleActive(state, role);
+            return (
+              <div key={role} className={`role-slot${active ? ' active' : ''}`}>
+                <div className="role-head">
+                  <strong>{ROLE_LABELS[role]}</strong>
+                  <span className={active ? 'fit good' : 'fit mixed'}>{active ? 'Working' : 'Idle'}</span>
+                </div>
+                <span className="muted small">{ROLE_HINTS[role]}</span>
+                <div className="role-holder">
+                  {holder ? (
+                    <>
+                      <strong>{getPerson(holder.personId).name}</strong>
+                      <Stars value={getPerson(holder.personId).stars[role]} label={ROLE_LABELS[role]} />
+                    </>
+                  ) : (
+                    <span className="muted small">Empty</span>
+                  )}
+                </div>
+                <label className="field inline">
+                  <span className="sr-only">Assign {ROLE_LABELS[role]}</span>
+                  <select
+                    value={uid ?? ''}
+                    onChange={(e) =>
+                      e.target.value === ''
+                        ? dispatch({ type: 'UNASSIGN_ROLE', role })
+                        : dispatch({ type: 'ASSIGN_PERSON', uid: Number(e.target.value), role })
+                    }
+                  >
+                    <option value="">Nobody</option>
+                    {ranked(role).map((c) => {
+                      const p = getPerson(c.personId);
+                      const other = roleOf(state, c.uid);
+                      return (
+                        <option key={c.uid} value={c.uid}>
+                          {p.name} · {p.stars[role]}★{other && other !== role ? ` (now ${ROLE_LABELS[other].toLowerCase()})` : ''}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </label>
+                {active && roleStars(state, role) === 0 && cards.length > 0 && <span className="small neg">Nobody working this role</span>}
               </div>
-              <span className="muted small">{ROLE_HINTS[role]}</span>
-              {card ? (
-                <PersonCard person={getPerson(card.personId)} dim={!active}>
-                  <button onClick={() => dispatch({ type: 'UNASSIGN_ROLE', role })}>To reserve</button>
-                </PersonCard>
-              ) : (
-                <p className="muted small empty-slot">Empty</p>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      {reserve.length > 0 && (
-        <>
-          <h3>Reserve</h3>
-          <p className="muted small">Kept for later roles. They stay with you through moves and lost elections. Discarding is permanent.</p>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="panel-head">
+          <h2>Roster</h2>
+          <span className="muted small">
+            {cards.length}/{ROSTER_LIMIT} · get more from people packs
+          </span>
+        </div>
+        {cards.length === 0 ? (
+          <p className="muted small">Nobody yet. Open a people pack.</p>
+        ) : (
           <div className="card-row">
-            {reserve.map((c) => {
+            {cards.map((c) => {
               const person = getPerson(c.personId);
+              const role = roleOf(state, c.uid);
               return (
-                <PersonCard key={c.uid} person={person}>
-                  <button onClick={() => dispatch({ type: 'ASSIGN_PERSON', uid: c.uid })}>
-                    {assigned[person.role] !== undefined ? 'Swap in' : 'Assign'}
-                  </button>
+                <PersonCard key={c.uid} person={person} className={role ? 'assigned' : undefined}>
+                  <span className="small">{role ? ROLE_LABELS[role] : 'On the bench'}</span>
                   <button
                     className="danger"
                     onClick={() => {
                       if (window.confirm(`Let ${person.name} go for good?`)) dispatch({ type: 'DISCARD_PERSON', uid: c.uid });
                     }}
                   >
-                    Discard
+                    Let go
                   </button>
                 </PersonCard>
               );
             })}
           </div>
-        </>
-      )}
-      {cards.length > 0 && reserve.length === 0 && (
-        <p className="muted small">Assigned people can be discarded from the reserve: move them there first.</p>
-      )}
-    </section>
+        )}
+      </section>
+    </div>
   );
 }

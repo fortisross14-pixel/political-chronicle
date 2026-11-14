@@ -1,6 +1,5 @@
 // Races: filing, platform, AI opponents and Election Day (DESIGN §5.3, §7).
-import { reject } from './errors';
-import { FIRST_NAMES, getOffice, getRegion, LAST_NAMES, OFFICES, PARTIES, REGIONS, STARTER_HAND } from '../data';
+import { FIRST_NAMES, getOffice, getRegion, LAST_NAMES, PARTIES, REGIONS } from '../data';
 import { dealDecisions } from './decisions';
 import { effectiveSkills } from './people';
 import { startingTokens } from './night';
@@ -19,7 +18,8 @@ import {
 } from './opinion';
 import { Rng } from './rng';
 import { newTerm } from './governing';
-import { nextElectionYear, turnsInYear } from './time';
+import { turnsInYear } from './time';
+import { recordPlayerElection, seatIncumbent } from './world';
 import type {
   Affiliation,
   Candidate,
@@ -36,7 +36,6 @@ import type {
 } from './types';
 
 export const MAX_PLATFORM = 5;
-export const VALID_STANCES = [-2, -1, 1, 2] as const;
 export const MAX_LOSS_STREAK = 3;
 
 export const ELECTION_NOISE = { common: 0.015, regional: 0.025 };
@@ -64,54 +63,6 @@ export const PARTISAN_OPPONENT: Record<
   senate: { recognition: 0.2, incumbentChance: 0.35, activity: 4 },
   governor: { recognition: 0.2, incumbentChance: 0.35, activity: 4 },
 };
-
-// ---------- Eligibility ----------
-
-export interface RaceOption {
-  officeId: OfficeId;
-  electionYear: number;
-  eligible: boolean;
-  reason?: string;
-}
-
-/** The election year a race filed now would be decided in. */
-export function electionYearIfFiled(state: GameState, officeId: OfficeId): number {
-  // Mid-year, this year's calendar is already fixed, so the earliest race is next year's.
-  const from = state.clock.year + (state.clock.turn > 0 ? 1 : 0);
-  return nextElectionYear(getOffice(officeId), from);
-}
-
-export function raceOptions(state: GameState): RaceOption[] {
-  const homeState = getRegion(state.politician.residentRegionId).state;
-  const held = state.career.office;
-  return OFFICES.filter((o) => o.state === homeState).map((office) => {
-    const option: RaceOption = { officeId: office.id, electionYear: electionYearIfFiled(state, office.id), eligible: true };
-    const block = (reason: string) => Object.assign(option, { eligible: false, reason });
-    if (held?.officeId === office.id) return block('Your current office — re-election opens automatically in its last year.');
-    if (held && !office.partisan) return block('You can’t run for another mayoralty while in office.');
-    const status = nominationStatus(state, office.id);
-    if (status.kind === 'denied') return block(status.text);
-    return option;
-  });
-}
-
-export function fileRaceError(state: GameState, officeId: OfficeId): string | undefined {
-  if (state.ended) return 'Your career is over.';
-  const race = state.career.race;
-  const swappingReelection =
-    !!race && race.officeId === state.career.office?.officeId && !race.platform.length && race.officeId !== officeId;
-  if (race && !swappingReelection) return 'You are already running.';
-  const held = state.career.office;
-  if (held && held.officeId === officeId) {
-    if (state.clock.year !== held.termEndsYear) return `Re-election opens in ${held.termEndsYear}.`;
-    return undefined;
-  }
-  if (state.pendingResult !== undefined) return 'Review the last election first.';
-  const option = raceOptions(state).find((o) => o.officeId === officeId);
-  if (!option) return 'That office is not available.';
-  if (!option.eligible) return option.reason;
-  return undefined;
-}
 
 // ---------- Opponents ----------
 
@@ -332,13 +283,13 @@ export function opponentsAct(rng: Rng, race: Race): Race {
 
 // ---------- Filing & platform ----------
 
-export function fileRace(state: GameState, officeId: OfficeId): GameState {
-  const error = fileRaceError(state, officeId);
-  reject(error);
+/** Opens a race. `turnsLeft` is how many turns remain until Election Day; opponents already
+ * campaigned for the turns of the window you let pass (launching early is an edge). */
+export function fileRace(state: GameState, officeId: OfficeId, electionYear: number, turnsLeft = 7): GameState {
   const rng = new Rng(state.rng);
   const status = nominationStatus(state, officeId);
   const party = member(state);
-  const opponents = generateOpponents(rng, officeId, state.career.office?.officeId === officeId, state.career.affiliation).map((c) => {
+  let opponents = generateOpponents(rng, officeId, state.career.office?.officeId === officeId, state.career.affiliation).map((c) => {
     const scale = state.modifiers.opponentRecognition;
     if (scale === 1) return c;
     return {
@@ -346,9 +297,10 @@ export function fileRace(state: GameState, officeId: OfficeId): GameState {
       regions: Object.fromEntries(Object.entries(c.regions).map(([id, r]) => [id, { ...r, recognition: r.recognition * scale }])),
     };
   });
-  const race: Race = {
+  opponents = seatIncumbent(state, officeId, opponents, rng);
+  let race: Race = {
     officeId,
-    electionYear: electionYearIfFiled(state, officeId),
+    electionYear,
     platform: [],
     opponents,
     tokens: startingTokens(state) + state.modifiers.extraTokens,
@@ -356,26 +308,19 @@ export function fileRace(state: GameState, officeId: OfficeId): GameState {
     doorKnocks: 0,
     raisedThisTurn: 0,
   };
+  for (let k = 0; k < Math.max(0, 7 - turnsLeft); k++) race = opponentsAct(rng, race);
   if (party && status.kind === 'nominee') race.nominee = party;
   if (party && status.kind === 'primary') race.primary = newPrimary(rng, party, pickName(rng, new Set(opponents.map((o) => o.name))));
-  const replaced = state.career.race;
   const career = { ...state.career, race };
   // At the start of a year the calendar can still become a 4-turn election year.
   const clock = state.clock.turn === 0 ? { ...state.clock, turnsThisYear: turnsInYear(career, state.clock.year) } : state.clock;
-  let uid = state.nextCardUid;
-  const dealt = STARTER_HAND.map((cardId) => ({ uid: uid++, cardId }));
   return {
     ...state,
     rng: rng.state,
     clock,
     career,
-    hand: [...state.hand, ...dealt],
-    nextCardUid: uid,
     log: [
       ...state.log,
-      ...(replaced
-        ? [{ year: clock.year, turn: clock.turn, text: `Not seeking re-election as ${getOffice(replaced.officeId).name}.` }]
-        : []),
       {
         year: clock.year,
         turn: clock.turn,
@@ -387,26 +332,15 @@ export function fileRace(state: GameState, officeId: OfficeId): GameState {
               : race.nominee
                 ? `Running as the ${PARTIES[race.nominee].name} nominee for ${getOffice(officeId).name} (${race.electionYear}).`
                 : state.career.affiliation === 'IND'
-                  ? `Filed as an independent for ${getOffice(officeId).name} (${race.electionYear}).`
-                  : `Filed for ${getOffice(officeId).name} (${race.electionYear}).`,
+                  ? `Launched an independent campaign for ${getOffice(officeId).name} (${race.electionYear}).`
+                  : `Launched a campaign for ${getOffice(officeId).name} (${race.electionYear}).`,
       },
     ],
   };
 }
 
-export function platformError(state: GameState, platform: Pledge[]): string | undefined {
-  if (!state.career.race) return 'You are not running for anything.';
-  if (state.career.race.platform.length) return 'Your platform is locked for this race.';
-  if (platform.length < 1) return 'Choose at least one topic.';
-  if (platform.length > MAX_PLATFORM) return `Choose at most ${MAX_PLATFORM} topics.`;
-  if (new Set(platform.map((p) => p.issue)).size !== platform.length) return 'Each topic can be chosen once.';
-  if (platform.some((p) => !(VALID_STANCES as readonly number[]).includes(p.stance))) return 'Pick a side on every topic.';
-  return undefined;
-}
-
+/** Locks the race platform (checked by `launchError` first) and folds it into your record. */
 export function setPlatform(state: GameState, platform: Pledge[]): GameState {
-  const error = platformError(state, platform);
-  reject(error);
   const record = { ...state.record };
   for (const p of platform) {
     const old = record[p.issue];
@@ -495,14 +429,17 @@ export function finalizeElection(state: GameState, regionShares: Record<RegionId
   const standingDelta = office.partisan ? (playerWon ? PARTY.wonRace : PARTY.lostRace) : playerWon ? PARTY.wonMayor : 0;
   const withStanding = adjustStanding({ ...state, career }, standingDelta);
 
-  return {
-    ...state,
-    career: withStanding.career,
-    elections: [...state.elections, record],
-    pendingResult: state.elections.length,
-    ended: lossStreak >= MAX_LOSS_STREAK ? { reason: 'losses', year: race.electionYear } : state.ended,
-    log: [...state.log, { year: state.clock.year, turn: state.clock.turn, text }],
-  };
+  return recordPlayerElection(
+    {
+      ...state,
+      career: withStanding.career,
+      elections: [...state.elections, record],
+      pendingResult: state.elections.length,
+      ended: lossStreak >= MAX_LOSS_STREAK ? { reason: 'losses', year: race.electionYear } : state.ended,
+      log: [...state.log, { year: state.clock.year, turn: state.clock.turn, text }],
+    },
+    record,
+  );
 }
 
 // ---------- Primaries ----------

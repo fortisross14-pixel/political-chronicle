@@ -1,14 +1,14 @@
 {
   "mayor.ny-north.sensible": {
-    "value": 0.725,
+    "value": 1,
     "tolerance": 0.12
   },
   "mayor.ny-wny.sensible": {
-    "value": 0.8,
+    "value": 0.95,
     "tolerance": 0.12
   },
   "mayor.ny-nyc.sensible": {
-    "value": 0.6,
+    "value": 0.625,
     "tolerance": 0.12
   },
   "mayor.ny-north.idle": {
@@ -16,7 +16,7 @@
     "tolerance": 0.05
   },
   "mayor.ny-north.transplant": {
-    "value": 0.575,
+    "value": 0.8,
     "tolerance": 0.12
   },
   "reelect.ny-north.keeper": {
@@ -24,19 +24,19 @@
     "tolerance": 0.12
   },
   "reelect.ny-north.flipflop": {
-    "value": 0.042,
+    "value": 0.075,
     "tolerance": 0.12
   },
   "climb.governor.reached": {
-    "value": 1,
+    "value": 0.35,
     "tolerance": 0.15
   },
   "climb.governor.firstTry": {
-    "value": 0.6,
+    "value": 0,
     "tolerance": 0.2
   },
   "scenario.hometown_favorite": {
-    "value": 0.85,
+    "value": 1,
     "tolerance": 0.15
   },
   "scenario.keep_your_word": {
@@ -44,11 +44,11 @@
     "tolerance": 0.15
   },
   "scenario.pick_a_side": {
-    "value": 0.75,
+    "value": 0.85,
     "tolerance": 0.15
   },
   "scenario.big_city_small_town": {
-    "value": 0.7,
+    "value": 0.25,
     "tolerance": 0.15
   }
 }

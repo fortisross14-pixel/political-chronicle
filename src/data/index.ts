@@ -6,23 +6,16 @@ export { PARTIES, PARTY_IDS } from './parties';
 export { BACKGROUNDS, BACKGROUNDS_BY_ID, getBackground } from './backgrounds';
 export type { Background, BackgroundPerks } from './backgrounds';
 export { US_STATES, US_STATE_NAMES } from './usStates';
-export { PEOPLE, PEOPLE_BY_ID, getPerson, ROLE_LABELS, ROLE_HINTS, PERK_TEXT, RARITY_WEIGHT, PERSON_PRICE } from './people';
-export type { Person, PersonPerk, Rarity, Role } from './people';
+export { PEOPLE, PEOPLE_BY_ID, getPerson, bestRole, ROLE_LABELS, ROLE_SHORT, ROLE_HINTS, PERK_TEXT } from './people';
+export type { Person, PersonPerk, Rarity, Role, RoleStars } from './people';
+export { PACK_SIZE, PACK_ODDS, PACK_PRICE, PACK_KIND_LABEL, PACK_TIER_LABEL, PACK_KEEP } from './packs';
+export { POLICY_CARDS, POLICY_CARDS_BY_ID, getPolicyCard } from './policyCards';
+export type { PolicyCard, PolicyEffect } from './policyCards';
 export { ITEMS, ITEMS_BY_ID, getItem, MILESTONES, MILESTONES_BY_ID } from './items';
 export type { Item, Milestone } from './items';
 export { ABILITIES, ABILITIES_BY_ID, ARTIFACTS, ARTIFACTS_BY_ID, MAX_ABILITIES, SCENARIOS, SCENARIOS_BY_ID, getScenario } from './meta';
 export type { Ability, Artifact, Reward, Scenario, ScenarioSetup, StarGoal, StarRule } from './meta';
-export {
-  EVENT_CARDS,
-  EVENT_CARDS_BY_ID,
-  BASIC_CARD_IDS,
-  STARTER_HAND,
-  MARKET_COST_FACTOR,
-  MARKET_WEIGHTS,
-  getEventCard,
-} from './eventCards';
-export { SKILL_CARDS, SKILL_CARDS_BY_ID, getSkillCard } from './skillCards';
-export type { SkillCard } from './skillCards';
+export { EVENT_CARDS, EVENT_CARDS_BY_ID, BASIC_CARD_IDS, PACK_EVENT_IDS, MARKET_COST_FACTOR, getEventCard } from './eventCards';
 export { DECISION_CARDS, DECISION_CARDS_BY_ID, getDecisionCard } from './decisionCards';
 export { FIRST_NAMES, LAST_NAMES } from './names';
 

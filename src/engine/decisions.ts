@@ -29,10 +29,12 @@ export function crisisCostMultiplier(state: GameState): number {
 const RECENT_MEMORY = 9;
 
 export const DECISION_EFFECT = {
-  /** Favorability (campaigning) per unit of salience × alignment in the jurisdiction. */
+  /** Favorability (campaigning: a public stance) per unit of salience × alignment in the jurisdiction. */
   favorability: 0.05,
-  /** Approval (in office) per unit of salience × alignment in the jurisdiction. */
-  approval: 0.04,
+  /** Approval (in office: a law you sign) per unit of salience × alignment in the jurisdiction. */
+  approval: 0.07,
+  /** A signed law also moves how the whole jurisdiction feels about you. */
+  lawFavorability: 0.03,
   spillover: 0.3,
   press: 0.01,
   promiseKeptIntegrity: 2,
@@ -129,15 +131,14 @@ export function decisionImpact(state: GameState, card: DecisionCard): DecisionIm
     for (const tag of card.tags)
       fit += region.issueSalience[tag.issue] * regionAlignment(id, tag.issue, tag.stance) * relevance(tag.issue, level);
     if (home.includes(id)) {
-      if (inOffice)
-        impact.approval[id] =
-          DECISION_EFFECT.approval *
-          fit *
-          executionMultiplier(
-            state,
-            card.tags.some((t) => t.issue === 'taxes'),
-          );
-      else impact.favorability[id] = DECISION_EFFECT.favorability * fit;
+      if (inOffice) {
+        const exec = executionMultiplier(
+          state,
+          card.tags.some((t) => t.issue === 'taxes'),
+        );
+        impact.approval[id] = DECISION_EFFECT.approval * fit * exec;
+        impact.favorability[id] = DECISION_EFFECT.lawFavorability * fit * exec;
+      } else impact.favorability[id] = DECISION_EFFECT.favorability * fit;
     } else {
       impact.favorability[id] = DECISION_EFFECT.favorability * fit * DECISION_EFFECT.spillover;
     }
@@ -158,7 +159,8 @@ export function decisionImpact(state: GameState, card: DecisionCard): DecisionIm
 
   for (const tag of card.tags) {
     const pledge = promisesInForce(state).find((p) => p.issue === tag.issue);
-    if (!pledge) continue;
+    // A neutral position promises nothing either way.
+    if (!pledge || Math.abs(pledge.stance) < 1e-6) continue;
     const kept = Math.sign(pledge.stance) === Math.sign(tag.stance);
     (kept ? impact.promisesKept : impact.promisesBroken).push(tag.issue);
     impact.integrity += kept

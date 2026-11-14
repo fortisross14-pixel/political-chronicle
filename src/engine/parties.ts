@@ -2,7 +2,7 @@
 import { reject } from './errors';
 import { getBackground, getOffice, getRegion, ISSUE_IDS, PARTIES, STATES } from '../data';
 import { clamp } from './opinion';
-import { effectiveSkills, hasPerk } from './people';
+import { effectiveSkills, hasPerk, ROLE_EFFECT, roleStars } from './people';
 import { native, newcomerPenalty, TRAITS } from './traits';
 import type { Rng } from './rng';
 import { monthsFactor } from './time';
@@ -68,14 +68,18 @@ export function stanceAgreement(state: GameState, party: PartyId, issue: IssueId
   return clamp(1 - Math.abs(stance - effectivePlatform(party, homeStateId(state))[issue].position) / 2, -1, 1);
 }
 
-/** Leadership scales standing you gain with your own party. */
+/** Leadership and your party liaison scale standing you gain with your own party. */
 export function leadershipMultiplier(state: GameState): number {
-  return 0.8 + 0.05 * effectiveSkills(state).leadership;
+  return (0.8 + 0.05 * effectiveSkills(state).leadership) * (1 + ROLE_EFFECT.standingPerStar * roleStars(state, 'partyLiaison'));
 }
 
 /** Diplomacy softens standing you lose (you smooth things over): 1.2 at DIP 0 → 0.7 at DIP 10. */
 export function diplomacyCushion(state: GameState): number {
-  return clamp(1.2 - 0.05 * effectiveSkills(state).diplomacy, 0.6, 1.2) * (hasPerk(state, 'whipShield') ? 0.5 : 1);
+  return (
+    clamp(1.2 - 0.05 * effectiveSkills(state).diplomacy, 0.6, 1.2) *
+    (hasPerk(state, 'whipShield') ? 0.5 : 1) *
+    Math.max(0.5, 1 - ROLE_EFFECT.standingPerStar * roleStars(state, 'partyLiaison'))
+  );
 }
 
 /** Applies a standing change; gains scale with Negotiation. */
@@ -98,9 +102,9 @@ export interface Invitation {
   switching: boolean;
 }
 
-/** Parties notice you once you've run for office. */
+/** What joining each party would look like. */
 export function invitations(state: GameState): Invitation[] {
-  if (state.ended || !state.elections.length) return [];
+  if (state.ended) return [];
   return (Object.keys(PARTIES) as PartyId[])
     .filter((p) => p !== state.career.affiliation)
     .map((party) => {
@@ -119,7 +123,6 @@ export function invitations(state: GameState): Invitation[] {
 export function joinError(state: GameState, party: PartyId): string | undefined {
   if (state.ended) return 'Your career is over.';
   if (state.career.affiliation === party) return 'You are already a member.';
-  if (!state.elections.length) return 'Parties notice you once you’ve run for office.';
   if (state.career.race && getOffice(state.career.race.officeId).partisan)
     return 'You can’t change parties in the middle of a partisan race.';
   return undefined;

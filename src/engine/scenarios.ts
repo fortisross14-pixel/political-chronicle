@@ -3,7 +3,6 @@ import { getOffice, getScenario, PARTIES } from '../data';
 import type { Scenario, StarRule } from '../data';
 import { autoAllocate, buildRunConfig } from './creation';
 import { dealDecisions } from './decisions';
-import { dealMarket } from './economy';
 import { newTerm } from './governing';
 import { nudgeRecognition } from './opinion';
 import { createRun } from './run';
@@ -29,7 +28,8 @@ export function createScenarioRun(scenarioId: string, start: ScenarioStart): Gam
   let s = createRun({
     ...config,
     earliestYear: setup.startYear,
-    noRace: !!setup.office,
+    exactYear: !!setup.office,
+    raceOfficeId: scenario.objective.officeId,
     artifacts: setup.pure ? [] : start.artifacts,
     modifiers: { opponentRecognition: setup.opponentRecognition ?? 1 },
   });
@@ -72,7 +72,14 @@ export function createScenarioRun(scenarioId: string, start: ScenarioStart): Gam
       regions,
       record: Object.fromEntries(o.platform.map((p) => [p.issue, p.stance])),
       elections: [past],
-      career: { ...s.career, office: term },
+      career: { ...s.career, office: term, platform: o.platform.map((p) => ({ ...p })) },
+      world: {
+        ...s.world,
+        seats: {
+          ...s.world.seats,
+          [o.officeId]: { holder: start.name, affiliation: setup.party?.id ?? 'IND', since: o.wonYear, isPlayer: true },
+        },
+      },
       log: [...s.log, { year: setup.startYear, turn: 0, text: `You are ${office.name}.` }],
     };
   }
@@ -87,9 +94,9 @@ export function createScenarioRun(scenarioId: string, start: ScenarioStart): Gam
   s = {
     ...s,
     clock: { ...s.clock, turnsThisYear: turnsInYear(s.career, s.clock.year) },
-    scenario: { id: scenarioId, startYear: setup.startYear },
+    scenario: { id: scenarioId, startYear: s.startYear },
   };
-  return dealMarket(dealDecisions({ ...s, decisions: undefined, market: undefined }));
+  return dealDecisions({ ...s, decisions: undefined });
 }
 
 /** The winning election that completes the objective, if any. */

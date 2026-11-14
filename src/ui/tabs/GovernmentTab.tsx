@@ -1,23 +1,24 @@
 import { useEffect, useState } from 'react';
 import { getOffice, STATES } from '../../data';
+import { raceBoard } from '../../engine';
 import type { Action, GameState, RegionId } from '../../engine';
 import { CampaignPanel } from '../campaign/CampaignPanel';
 import { DecisionTray } from '../campaign/DecisionTray';
 import { ElectionResult } from '../campaign/ElectionResult';
 import { HandPanel } from '../campaign/HandPanel';
-import { MarketPanel } from '../campaign/MarketPanel';
+import { LaunchScreen, RaceBoard } from '../campaign/LaunchFlow';
+import { PackShop } from '../campaign/Packs';
+import { PolicyHand } from '../campaign/PolicyHand';
 import { OfficePanel } from '../campaign/OfficePanel';
 import { ScenarioHud } from '../campaign/ScenarioHud';
 import { TeamPanel } from '../campaign/TeamPanel';
 import { ElectionNight } from '../night/ElectionNight';
-import { PlatformBuilder } from '../campaign/PlatformBuilder';
-import { RacePicker } from '../campaign/RacePicker';
 import { RegionPanel } from '../map/RegionPanel';
 import { MAP_LAYERS, StateMap } from '../map/StateMap';
 import type { MapLayer } from '../map/StateMap';
 import { ICONS } from '../icons';
 
-type Section = 'desk' | 'map' | 'cards' | 'market' | 'team';
+type Section = 'desk' | 'map' | 'cards' | 'packs' | 'team';
 
 interface Props {
   state: GameState;
@@ -32,6 +33,7 @@ export function GovernmentTab({ state, dispatch }: Props) {
   const canHoldEvents = campaigning || (inOffice && !race);
   const [layer, setLayer] = useState<MapLayer>(campaigning ? 'vote' : inOffice ? 'approval' : 'lean');
   const [section, setSection] = useState<Section>('desk');
+  const [launching, setLaunching] = useState<string | null>(null);
   const [selected, setSelected] = useState<RegionId>(race ? getOffice(race.officeId).regionIds[0]! : state.politician.residentRegionId);
   useEffect(() => {
     if (campaigning) setLayer('vote');
@@ -106,12 +108,16 @@ export function GovernmentTab({ state, dispatch }: Props) {
   }
 
   const todo = !!state.decisions && !state.decisions.resolved;
-  const needsSetup = (!!race && !race.platform.length) || (!race && !inOffice);
+  const canLaunch = !race && raceBoardHasOpen(state);
   const sections: { id: Section; label: string; badge?: string; alert?: boolean }[] = [
-    { id: 'desk', label: 'Desk', badge: todo || needsSetup ? '!' : undefined, alert: true },
+    { id: 'desk', label: 'Desk', badge: todo || canLaunch ? '!' : undefined, alert: true },
     { id: 'map', label: 'Map' },
-    ...(canHoldEvents ? [{ id: 'cards' as const, label: 'Play cards', badge: state.energy > 0 ? String(state.energy) : undefined }] : []),
-    { id: 'market', label: 'Market', badge: state.market?.offers.length ? String(state.market.offers.length) : undefined },
+    {
+      id: 'cards',
+      label: 'Play cards',
+      badge: state.energy > 0 && (canHoldEvents || state.policyHand.length) ? String(state.energy) : undefined,
+    },
+    { id: 'packs', label: 'Packs' },
     { id: 'team', label: 'Team', badge: state.team.cards.length ? String(state.team.cards.length) : undefined },
   ];
   const shown = sections.some((x) => x.id === section) ? section : 'desk';
@@ -136,33 +142,47 @@ export function GovernmentTab({ state, dispatch }: Props) {
         {shown === 'desk' && (
           <>
             {state.scenario && <ScenarioHud state={state} />}
-            {race && !race.platform.length && (
-              <PlatformBuilder key={`${race.officeId}-${race.electionYear}`} state={state} dispatch={dispatch} />
-            )}
-            {!race && !state.career.office && <RacePicker state={state} dispatch={dispatch} />}
             {state.decisions && <DecisionTray key={state.decisions.turnNo} state={state} dispatch={dispatch} />}
             {campaigning && <CampaignPanel state={state} />}
             {inOffice && <OfficePanel state={state} dispatch={dispatch} />}
-            {canHoldEvents && state.energy > 0 && (!state.decisions || state.decisions.resolved) && (
+            {!race && (
+              <RaceBoard state={state} title={inOffice ? 'Your next race' : 'Launch a campaign'} onPick={(id) => setLaunching(id)} />
+            )}
+            {(canHoldEvents || state.policyHand.length > 0) && state.energy > 0 && (!state.decisions || state.decisions.resolved) && (
               <button className="next-step" onClick={() => setSection('cards')}>
-                You have {state.energy} energy left. Play your cards
+                {state.energy} energy left: play your cards
               </button>
             )}
           </>
         )}
         {shown === 'map' && map}
-        {shown === 'cards' && canHoldEvents && (
-          <HandPanel
-            key={race ? `${race.officeId}-${race.electionYear}` : `office-${state.career.office!.termEndsYear}`}
-            state={state}
-            dispatch={dispatch}
-            regionId={selected}
-            onRegionChange={setSelected}
-          />
+        {shown === 'cards' && (
+          <>
+            {canHoldEvents ? (
+              <HandPanel
+                key={race ? `${race.officeId}-${race.electionYear}` : `office-${state.career.office!.termEndsYear}`}
+                state={state}
+                dispatch={dispatch}
+                regionId={selected}
+                onRegionChange={setSelected}
+              />
+            ) : (
+              <section className="panel">
+                <h2>Campaign actions</h2>
+                <p className="muted small">Launch a campaign to play them.</p>
+              </section>
+            )}
+            <PolicyHand state={state} dispatch={dispatch} regionId={selected} />
+          </>
         )}
-        {shown === 'market' && <MarketPanel state={state} dispatch={dispatch} />}
+        {shown === 'packs' && <PackShop state={state} dispatch={dispatch} />}
         {shown === 'team' && <TeamPanel state={state} dispatch={dispatch} />}
       </div>
+      {launching && <LaunchScreen state={state} officeId={launching} dispatch={dispatch} onClose={() => setLaunching(null)} />}
     </div>
   );
+}
+
+function raceBoardHasOpen(state: GameState): boolean {
+  return raceBoard(state).some((r) => r.status === 'open');
 }

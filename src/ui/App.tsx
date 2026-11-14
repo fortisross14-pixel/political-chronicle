@@ -15,14 +15,17 @@ import { StartScreen } from './StartScreen';
 import { GovernmentTab } from './tabs/GovernmentTab';
 import { PartyTab } from './tabs/PartyTab';
 import { ProfileTab } from './tabs/ProfileTab';
+import { WorldTab } from './tabs/WorldTab';
+import { PackOpening } from './campaign/Packs';
 
-type TabId = 'government' | 'profile' | 'party';
+type TabId = 'government' | 'profile' | 'party' | 'world';
 type Screen = 'menu' | 'scenarios' | 'sandbox' | 'hall' | 'game';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'government', label: 'Government' },
   { id: 'profile', label: 'My profile' },
   { id: 'party', label: 'My party' },
+  { id: 'world', label: 'World' },
 ];
 
 /** A news-style lower third with the latest thing that happened. It fades on its own. */
@@ -40,7 +43,6 @@ function Breaking({ state }: { state: GameState }) {
 /** The sound each action makes when it succeeds. */
 const ACTION_CUES: Partial<Record<Action['type'], Cue>> = {
   PLAY_EVENT: 'play',
-  BUY_CARD: 'coin',
   RESOLVE_DECISIONS: 'stamp',
   END_TURN: 'turn',
   ASSIGN_PERSON: 'deal',
@@ -51,7 +53,11 @@ const ACTION_CUES: Partial<Record<Action['type'], Cue>> = {
   NIGHT_LAWYERS: 'stamp',
   NIGHT_AD_BLITZ: 'coin',
   NIGHT_ADVANCE: 'tick',
-  SET_PLATFORM: 'stamp',
+  LAUNCH_CAMPAIGN: 'turn',
+  BUY_PACK: 'coin',
+  KEEP_FROM_PACK: 'deal',
+  PLAY_POLICY: 'play',
+  ASK_TO_JOIN: 'stamp',
   DISMISS_RESULT: 'tap',
 };
 
@@ -202,7 +208,11 @@ export function App() {
         {tab === 'government' && <GovernmentTab state={state} dispatch={dispatch} />}
         {tab === 'profile' && <ProfileTab state={state} />}
         {tab === 'party' && <PartyTab state={state} dispatch={dispatch} />}
+        {tab === 'world' && <WorldTab state={state} />}
       </main>
+      {state.packs.length > 0 && !state.night && (
+        <PackOpening key={`${state.packs.length}-${state.packs[0]!.cards.join()}`} state={state} dispatch={dispatch} />
+      )}
       <footer className="dock">
         <Breaking state={state} />
         {blocker && !state.ended && !state.night && <p className="dock-hint small">{blocker}</p>}

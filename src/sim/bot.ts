@@ -1,54 +1,76 @@
 // A simple "sensible player" bot used to measure balance (DESIGN §12).
-import { BASIC_CARD_IDS, getDecisionCard, getItem, getOffice, getPerson, getRegion, ISSUE_IDS } from '../data';
+import { BASIC_CARD_IDS, getDecisionCard, getItem, getOffice, getPerson, getPolicyCard, getRegion, ISSUE_IDS } from '../data';
 import {
   activePlatform,
   applyAction,
+  askError,
+  campaignWindow,
   counted,
   createScenarioRun,
-  fileRaceError,
+  donationNorm,
+  joinChance,
   lawyersError,
   mobilizeError,
   nightFinished,
   nightView,
   hometownMayoralty,
   invitations,
-  joinError,
-  raceOptions,
-  buyError,
-  offerPrice,
+  launchError,
+  raceBoard,
   autoAllocate,
   buildRunConfig,
+  buyPackError,
   createRun,
   decisionImpact,
   DECISIONS_PER_TURN,
+  MAX_PLATFORM,
+  packPrice,
+  policyError,
+  positionOf,
   previewEvent,
   regionWeights,
   relevance,
+  roleActive,
+  ROLES,
+  stanceAt,
 } from '../engine';
-import type { CreationInput, GameState, IssueId, PartyId, Pledge } from '../engine';
+import type { CreationInput, GameState, IssueId, OfficeId, PartyId, Pledge } from '../engine';
 
 /** 'flipflop' campaigns sensibly but, in office, signs bills that break its promises. */
 /** 'climber' plays like 'sensible', joins its best-fitting party and runs for higher office. */
 export type BotStyle = 'sensible' | 'idle' | 'contrarian' | 'investor' | 'flipflop' | 'climber';
 
-/** Platform fitted to the race's voters (or deliberately against them). */
-export function botPlatform(state: GameState, style: BotStyle): Pledge[] {
-  const race = state.career.race!;
-  const office = getOffice(race.officeId);
-  const weights = regionWeights(race.officeId);
+/** Platform fitted to an office's voters (or deliberately against them), on the 7-step scale. */
+export function botPlatform(state: GameState, style: BotStyle, officeId: OfficeId): Pledge[] {
+  const office = getOffice(officeId);
+  const weights = regionWeights(officeId);
   const avg = (issue: IssueId, key: 'issueOpinion' | 'issueSalience') =>
     office.regionIds.reduce((sum, id) => sum + getRegion(id)[key][issue] * weights[id]!, 0);
-  return ISSUE_IDS.map((issue) => ({
+  const ideal = ISSUE_IDS.map((issue) => ({
     issue,
     score: avg(issue, 'issueSalience') * relevance(issue, office.level),
     opinion: avg(issue, 'issueOpinion'),
   }))
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
     .map(({ issue, opinion }) => {
-      const sign = (opinion < 0 ? -1 : 1) * (style === 'contrarian' ? -1 : 1);
-      return { issue, stance: sign * (Math.abs(opinion) >= 1 ? 2 : 1) };
+      const pos = positionOf(opinion) || (opinion < 0 ? -1 : 1);
+      return { issue, stance: stanceAt(style === 'contrarian' ? -pos : pos) };
     });
+  const prev = state.career.platform;
+  if (!prev?.length) return ideal.slice(0, MAX_PLATFORM);
+  // Later campaigns, within the rules: drop the worst-fitting topic, move the next-worst one step
+  // toward these voters, and top up with the best new topics.
+  const fit = (p: Pledge) => avg(p.issue, 'issueSalience') * (1 - Math.abs(p.stance - avg(p.issue, 'issueOpinion')) / 1.5);
+  const ranked = [...prev].sort((a, b) => fit(a) - fit(b));
+  const kept = ranked.slice(prev.length > 1 ? 1 : 0).map((p) => ({ ...p }));
+  const worst = kept[0];
+  if (worst && kept.length > 1) {
+    const pos = positionOf(worst.stance);
+    const target = positionOf(avg(worst.issue, 'issueOpinion'));
+    if (target !== pos) worst.stance = stanceAt(pos + Math.sign(target - pos));
+  }
+  const extra = ideal.filter((p) => !prev.some((q) => q.issue === p.issue)).slice(0, MAX_PLATFORM - kept.length);
+  return [...kept, ...extra];
 }
 
 function jurisdictionId(state: GameState): string | undefined {
@@ -89,57 +111,71 @@ function decide(state: GameState, style: BotStyle): string[] {
   return (good.length ? good : [ranked[0]!.id]).slice(0, DECISIONS_PER_TURN);
 }
 
-/** Best expected value of holding this card somewhere in the race, on some platform topic. */
-function cardValue(state: GameState, cardId: string, style: BotStyle): number {
-  const jid = jurisdictionId(state);
-  const platform = activePlatform(state);
-  if (!jid || !platform.length) return 0;
-  const probe: GameState = { ...state, energy: 99, hand: [...state.hand, { uid: -1, cardId }] };
-  let best = 0;
-  for (const regionId of getOffice(jid).regionIds) {
-    for (const p of platform) {
-      const pv = previewEvent(probe, -1, regionId, p.issue);
-      if (!pv.error) best = Math.max(best, score(probe, pv.effects) + pv.fundsGain * moneyWeight(style));
+/** Keeps the best of each pack: every person (roster permitting), the most valuable single card. */
+function openPacks(state: GameState, style: BotStyle): GameState {
+  let s = state;
+  for (let guard = 0; guard < 10 && s.packs.length; guard++) {
+    const pack = s.packs[0]!;
+    let keep: number[] = [];
+    if (pack.kind === 'people') keep = pack.cards.map((_, i) => i).slice(0, Math.max(0, 10 - s.team.cards.length));
+    else if (style !== 'idle') {
+      const rank = { common: 0, rare: 1, epic: 2, legendary: 3 } as const;
+      const scored = pack.cards.map((id, i) => ({ i, r: rank[cardRarityOf(pack.kind, id)] }));
+      const room = pack.kind === 'policy' ? 5 - s.policyHand.length : 8 - s.hand.length - s.items.length;
+      if (room > 0) keep = [scored.sort((a, b) => b.r - a.r)[0]!.i];
     }
+    s = applyAction(s, { type: 'KEEP_FROM_PACK', keep });
   }
-  return best;
+  return s;
 }
 
-const RARITY_RANK = { common: 0, rare: 1, epic: 2, legendary: 3 } as const;
+function cardRarityOf(kind: 'people' | 'policy' | 'campaign', id: string): 'common' | 'rare' | 'epic' | 'legendary' {
+  if (kind === 'people') return getPerson(id).rarity;
+  if (kind === 'policy') return getPolicyCard(id).rarity;
+  return id.startsWith('item:') ? getItem(id.slice(5)).rarity : 'common';
+}
 
-/** Shopping: the investor buys Fundraising first; everyone buys the best value-for-money events. */
+/** Puts the best available person in every active role. */
+function staff(state: GameState): GameState {
+  let s = state;
+  const taken = new Set<number>();
+  for (const role of ROLES) {
+    if (!roleActive(s, role)) continue;
+    const best = s.team.cards
+      .filter((c) => !taken.has(c.uid))
+      .sort((a, b) => getPerson(b.personId).stars[role] - getPerson(a.personId).stars[role])[0];
+    if (!best) continue;
+    taken.add(best.uid);
+    if (s.team.assigned[role] !== best.uid) s = applyAction(s, { type: 'ASSIGN_PERSON', uid: best.uid, role });
+  }
+  return s;
+}
+
+/** Shopping: regular campaign packs while running, political events in office, people when thin. */
 function shop(state: GameState, style: BotStyle): GameState {
   let s = state;
   if (style === 'idle') return s;
-  for (let guard = 0; guard < 6; guard++) {
-    const offers = s.market?.offers ?? [];
-    let pick: { index: number; value: number } | undefined;
-    offers.forEach((o, index) => {
-      if (buyError(s, index)) return;
-      const price = offerPrice(o, s);
-      if (o.kind === 'skill') {
-        if (style === 'investor' && o.cardId === 'donor_gala') pick = { index, value: Infinity };
-        return;
-      }
-      if (o.kind === 'person') {
-        // Hire if the role is empty or this person outranks the holder, and it's not most of the bank.
-        const person = getPerson(o.cardId);
-        const holder = s.team.assigned[person.role];
-        const current = holder !== undefined ? getPerson(s.team.cards.find((c) => c.uid === holder)!.personId) : undefined;
-        const better = !current || RARITY_RANK[person.rarity] > RARITY_RANK[current.rarity];
-        if (better && price <= s.funds * 0.4) pick = { index, value: Infinity };
-        return;
-      }
-      const value = cardValue(s, o.cardId, style) / (price + 3000);
-      if (value > 1e-7 && (!pick || value > pick.value)) pick = { index, value };
-    });
-    if (!pick) break;
-    const bought = s.market!.offers[pick.index]!;
-    s = applyAction(s, { type: 'BUY_CARD', offerIndex: pick.index });
-    if (bought.kind === 'person') {
-      // Bought people go to reserve if the role is taken; the bot only buys upgrades, so swap them in.
-      s = applyAction(s, { type: 'ASSIGN_PERSON', uid: s.team.cards.at(-1)!.uid });
-    }
+  const wants: ['people' | 'policy' | 'campaign', 'regular' | 'golden'][] = [];
+  if (s.team.cards.length < 3) wants.push(['people', 'regular']);
+  if (s.career.race)
+    for (let k = 0; k < 3; k++) wants.push(['campaign', s.funds > packPrice('campaign', 'golden') * 6 ? 'golden' : 'regular']);
+  if (s.career.office) wants.push(['policy', 'regular']);
+  for (const [kind, tier] of wants) {
+    // Keep a reserve: never spend more than a third of the war chest on one pack.
+    if (buyPackError(s, kind, tier) || packPrice(kind, tier) > s.funds / 3) continue;
+    if (kind === 'campaign' && s.hand.length + s.items.length >= 6) continue;
+    s = openPacks(applyAction(s, { type: 'BUY_PACK', kind, tier }), style);
+  }
+  return s;
+}
+
+/** Plays every political event it can. */
+function playPolicies(state: GameState): GameState {
+  let s = state;
+  for (const inst of [...s.policyHand]) {
+    const card = getPolicyCard(inst.cardId);
+    const regionId = card.targetsRegion ? (s.career.office ? Object.keys(s.career.office.approval)[0] : undefined) : undefined;
+    if (!policyError(s, inst.uid, regionId)) s = applyAction(s, { type: 'PLAY_POLICY', uid: inst.uid, regionId });
   }
   return s;
 }
@@ -172,29 +208,52 @@ function playEvents(state: GameState, style: BotStyle): GameState {
 
 const LADDER: Record<string, number> = { mayor: 0, house: 1, senate: 2, governor: 3 };
 
-/** Join the best-fitting party once noticed; file for the next rung when a race opens this year. */
+/** Climber: ask its best-fitting party once it holds office; launch for the next rung when it opens. */
 let forcedParty: PartyId | undefined;
+
+/** The race the bot launches next, if any is open. */
+function nextRace(s: GameState, style: BotStyle): OfficeId | undefined {
+  const open = raceBoard(s).filter((r) => r.status === 'open');
+  const office = s.career.office;
+  if (style === 'climber' && office && s.career.affiliation !== 'IND') {
+    const rung = LADDER[getOffice(office.officeId).level]!;
+    const home = s.politician.residentRegionId;
+    const up = open
+      .map((r) => getOffice(r.officeId))
+      .filter((o) => LADDER[o.level]! > rung && (o.level !== 'house' || o.regionIds.includes(home)) && o.level !== 'senate')
+      .sort((a, b) => LADDER[a.level]! - LADDER[b.level]!)[0];
+    // Only climb when the next rung's election comes before (or with) the end of the current term.
+    if (up && campaignWindow(s, up.id).electionYear <= office.termEndsYear) return up.id;
+  }
+  if (office) return open.some((r) => r.officeId === office.officeId) ? office.officeId : undefined;
+  const last = [...s.elections].reverse().find((e) => e.kind === 'general');
+  const target = last && !getOffice(last.officeId).partisan ? last.officeId : hometownMayoralty(s.politician.residentRegionId);
+  return target && open.some((r) => r.officeId === target) ? target : undefined;
+}
 
 function climb(state: GameState): GameState {
   let s = state;
-  if (s.career.affiliation === 'IND' && s.elections.length && !s.career.race) {
+  if (s.career.affiliation === 'IND' && s.career.office && !s.career.race) {
     const best = invitations(s)
       .filter((i) => !forcedParty || i.party === forcedParty)
       .sort((a, b) => b.alignment - a.alignment)[0];
-    if (best && !joinError(s, best.party)) s = applyAction(s, { type: 'JOIN_PARTY', party: best.party });
+    if (best && !askError(s, best.party) && joinChance(s, best.party) > 0.3) s = applyAction(s, { type: 'ASK_TO_JOIN', party: best.party });
   }
-  const office = s.career.office;
-  const autoReelection = s.career.race?.officeId === office?.officeId && !s.career.race?.platform.length;
-  if (!office || (s.career.race && !autoReelection) || s.clock.turn !== 0 || s.career.affiliation === 'IND') return s;
-  const rung = LADDER[getOffice(office.officeId).level]!;
-  const home = s.politician.residentRegionId;
-  const targets = raceOptions(s)
-    .filter((o) => o.eligible && o.electionYear === s.clock.year && !fileRaceError(s, o.officeId))
-    .map((o) => getOffice(o.officeId))
-    .filter((o) => LADDER[o.level]! > rung && (o.level !== 'house' || o.regionIds.includes(home)) && o.level !== 'senate')
-    .sort((a, b) => LADDER[a.level]! - LADDER[b.level]!);
-  const next = targets[0];
-  return next ? applyAction(s, { type: 'FILE_RACE', officeId: next.id }) : s;
+  return s;
+}
+
+function launchIfReady(state: GameState, style: BotStyle): GameState {
+  const s = state;
+  if (s.career.race || s.packs.length) return s;
+  const officeId = nextRace(s, style);
+  if (!officeId) return s;
+  const platform = botPlatform(s, style, officeId);
+  const manager = [...s.team.cards].sort(
+    (a, b) => getPerson(b.personId).stars.campaignManager - getPerson(a.personId).stars.campaignManager,
+  )[0];
+  const donation = style === 'idle' ? 0 : Math.round(Math.min(s.wealth * 0.6, donationNorm(officeId) * 0.5));
+  const action = { type: 'LAUNCH_CAMPAIGN' as const, officeId, platform, donation, managerUid: manager?.uid };
+  return launchError(s, action) ? s : applyAction(s, action);
 }
 
 /**
@@ -259,17 +318,13 @@ export function playTurn(state: GameState, style: BotStyle): GameState {
   if (s.ended) return s;
   if (s.pendingResult !== undefined) s = applyAction(s, { type: 'DISMISS_RESULT' });
   if (s.ended) return s;
+  s = openPacks(s, style);
   if (style === 'climber') s = climb(s);
-  if (!s.career.race && !s.career.office) {
-    const last = [...s.elections].reverse().find((e) => e.kind === 'general');
-    const officeId =
-      last && !getOffice(last.officeId).partisan ? last.officeId : (hometownMayoralty(s.politician.residentRegionId) ?? 'mayor-watertown');
-    if (!fileRaceError(s, officeId)) s = applyAction(s, { type: 'FILE_RACE', officeId });
-  }
-  if (s.career.race && !s.career.race.platform.length) s = applyAction(s, { type: 'SET_PLATFORM', platform: botPlatform(s, style) });
+  s = openPacks(launchIfReady(s, style), style);
+  s = staff(s);
   if (s.decisions && !s.decisions.resolved) s = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: decide(s, style) });
   s = shop(s, style);
-  if (style !== 'idle') s = playEvents(s, style);
+  if (style !== 'idle') s = playPolicies(playEvents(s, style));
   s = applyAction(s, { type: 'END_TURN' });
   return s.night ? playNight(s, style, nightActions) : s;
 }
@@ -297,11 +352,9 @@ export interface BotResult {
   officeId: string;
 }
 
-/** Plays one campaign from filing to Election Day. */
+/** Plays from a blank start (or between races) through the next Election Day. */
 export function playCampaign(state: GameState, style: BotStyle): { state: GameState; result: BotResult } {
   let s = state;
-  if (!s.career.race) throw new Error('No race to play');
-  s = applyAction(s, { type: 'SET_PLATFORM', platform: botPlatform(s, style) });
   const target = s.elections.length + 1;
   for (let guard = 0; guard < 40 && s.elections.length < target; guard++) s = playTurn(s, style);
   const e = s.elections.at(-1)!;

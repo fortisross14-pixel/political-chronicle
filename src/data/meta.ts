@@ -1,3 +1,4 @@
+import { stanceAt } from '../engine/stance';
 import type { CreationInput } from '../engine/creation';
 import type { OfficeId, PartyId, Pledge } from '../engine/types';
 
@@ -93,11 +94,11 @@ export interface Scenario {
 }
 
 const WATERTOWN_PLATFORM: Pledge[] = [
-  { issue: 'guns', stance: 2 },
-  { issue: 'taxes', stance: 2 },
-  { issue: 'small_biz', stance: 2 },
-  { issue: 'climate', stance: 1 },
-  { issue: 'industry', stance: -1 },
+  { issue: 'guns', stance: stanceAt(3) },
+  { issue: 'taxes', stance: stanceAt(3) },
+  { issue: 'small_biz', stance: stanceAt(3) },
+  { issue: 'climate', stance: stanceAt(2) },
+  { issue: 'industry', stance: stanceAt(-2) },
 ];
 
 export const SCENARIOS: Scenario[] = [
@@ -181,8 +182,9 @@ export const SCENARIOS: Scenario[] = [
       character: { gender: 'female', age: 44, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'business' },
       startYear: 2029,
       office: { officeId: 'house-ny-north', approval: 0.6, platform: WATERTOWN_PLATFORM, wonYear: 2028, share: 0.68 },
-      party: { id: 'RP', standing: 55 },
+      party: { id: 'RP', standing: 62 },
       funds: 40000,
+      opponentRecognition: 0.8,
     },
     objective: { officeId: 'governor-ny', by: 2034, text: 'Become Governor of New York by 2034' },
     stars: [

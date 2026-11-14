@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { nightState, seed } from './helpers';
 
-test('a scenario plays from the menu to the results and the Hall of Runs', async ({ page }) => {
+test('a scenario plays from the menu: starter pack, launch, campaign, results and the Hall of Runs', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('dialog', (d) => d.accept());
@@ -11,13 +11,29 @@ test('a scenario plays from the menu to the results and the Hall of Runs', async
   await page.getByRole('button', { name: /Hometown favorite/ }).click();
   await page.getByPlaceholder(/Sam Ortega/).fill('Casey Moran');
   await page.getByRole('button', { name: 'Start scenario' }).click();
+
+  // The free people pack: keep all three.
+  await page.getByRole('button', { name: /^Keep 3 cards/ }).click();
   await expect(page.locator('.scenario-hud h2')).toHaveText(/Mayor of Watertown/);
 
+  // Launch the Watertown race: topics on the 7-step sliders, then launch.
+  await page
+    .locator('.race-slot.open', { hasText: 'Mayor of Watertown' })
+    .getByRole('button', { name: /^Launch/ })
+    .click();
+  await page.getByRole('button', { name: /Campaign topics/ }).click();
   for (const label of ['Strongly: Protect gun rights', 'Strongly: Cut taxes broadly']) {
     await page.getByRole('radio', { name: label, exact: true }).first().click();
   }
-  await page.getByRole('button', { name: 'Lock in platform' }).click();
-  for (let t = 0; t < 4; t++) {
+  await page.getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('button', { name: 'Launch the campaign' }).click();
+  // Two free launch packs: keep one card from each.
+  for (let i = 0; i < 2; i++) {
+    await page.locator('.pack-overlay .gcard').first().click();
+    await page.getByRole('button', { name: /^Keep this card/ }).click();
+  }
+
+  for (let t = 0; t < 7; t++) {
     await page.locator('.decision-card button').first().click();
     await page.getByRole('button', { name: /^Confirm/ }).click();
     await page.getByRole('button', { name: 'End turn' }).click();

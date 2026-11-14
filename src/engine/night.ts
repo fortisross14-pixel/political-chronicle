@@ -1,11 +1,11 @@
 // Election night: results stream in region by region; spend ground game on what's still being
 // counted (DESIGN_V2 §5.2). The true result is drawn when polls close; the night reveals it.
 import { GameError, reject } from './errors';
-import { getBackground, getEventCard, getItem, getOffice, getRegion } from '../data';
+import { getBackground, getEventCard, getItem, getOffice, getPerson, getRegion } from '../data';
 import { eventPrice } from './economy';
 import { GROUND_GAME } from './loot';
 import { clamp } from './opinion';
-import { effectiveSkills } from './people';
+import { effectiveSkills, ROLE_EFFECT } from './people';
 import type { Rng } from './rng';
 import type { ElectionNight, GameState, NightRegion, RegionId, RegionType } from './types';
 
@@ -30,6 +30,8 @@ export const NIGHT = {
   /** Total weighted swing from night actions can't exceed this. */
   maxSwing: 0.01,
   volunteerTokens: 2,
+  /** Late voters break your way (legendary card): on the uncounted vote, outside the swing cap. */
+  lateSurge: 0.015,
 };
 
 export const HOURS = ['8:00', '8:30', '9:00', '9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00'];
@@ -49,7 +51,7 @@ function weights(officeId: string): Record<RegionId, number> {
 /** The final shares in a region after night actions. */
 export function finalShares(night: ElectionNight, regionId: RegionId): number[] {
   const r = night.regions[regionId]!;
-  let you = r.trueShares[0]! + r.boost + night.statewideBoost;
+  let you = r.trueShares[0]! + r.boost + night.statewideBoost + (night.surge ?? 0);
   if (r.protected && r.trueShares[0]! < r.prior) you += Math.min(NIGHT.lawyerCap, (r.prior - r.trueShares[0]!) * NIGHT.lawyerRecovery);
   you = clamp(you, 0.01, 0.99);
   const othersTrue = 1 - r.trueShares[0]!;
@@ -336,6 +338,17 @@ export function applyNightItem(state: GameState, uid: number, regionId?: RegionI
       return sendLawyers(base, regionId!, true);
     case 'ad_reservation':
       return adBlitz(base, true);
+    case 'late_surge': {
+      const effect = NIGHT.lateSurge * (1 - nightView(base.night!).countedTotal);
+      return {
+        ...base,
+        night: {
+          ...base.night!,
+          surge: (base.night!.surge ?? 0) + effect,
+          ticker: [...base.night!.ticker, 'Late voters break your way!'],
+        },
+      };
+    }
   }
   throw new GameError('That item does nothing tonight.');
 }
@@ -347,5 +360,13 @@ export function finalNightShares(night: ElectionNight): Record<RegionId, number[
 
 /** Organizers bring volunteers: extra starting tokens. */
 export function startingTokens(state: GameState): number {
-  return GROUND_GAME.base + (getBackground(state.politician.backgroundId).id === 'organizer' ? GROUND_GAME.organizerBonus : 0);
+  const manager = Math.floor(managerStars(state) / ROLE_EFFECT.starsPerToken);
+  return GROUND_GAME.base + (getBackground(state.politician.backgroundId).id === 'organizer' ? GROUND_GAME.organizerBonus : 0) + manager;
+}
+
+/** The campaign manager's stars (the race may not exist yet when tokens are counted at launch). */
+function managerStars(state: GameState): number {
+  const uid = state.team.assigned.campaignManager;
+  const card = uid !== undefined ? state.team.cards.find((c) => c.uid === uid) : undefined;
+  return card ? getPerson(card.personId).stars.campaignManager : 0;
 }

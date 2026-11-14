@@ -1,26 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { getEventCard, getSkillCard } from '../data';
-import { botCharacter, careerFunds } from '../sim/bot';
+import { PACK_SIZE } from '../data';
+import { botCharacter } from '../sim/bot';
 import {
   applyAction,
   buildRunConfig,
-  buyError,
+  buyPackError,
+  cardRarity,
   createRun,
-  dealMarket,
-  eventPrice,
-  HAND_LIMIT,
-  MARKET_SIZE,
+  drawPack,
+  endTurnBlocker,
+  keepError,
+  packPrice,
+  POLICY_HAND_LIMIT,
+  policyError,
   previewEvent,
   projectedIncome,
+  Rng,
   skillCap,
-  skillPrice,
 } from './index';
 import { readyRun } from './testUtils';
-import type { GameState, MarketOffer } from './types';
-
-function withOffers(state: GameState, offers: MarketOffer[]): GameState {
-  return { ...state, market: { turnNo: state.snapshots.length, offers } };
-}
+import type { GameState } from './types';
 
 function resolved(): GameState {
   const s = readyRun();
@@ -66,60 +65,63 @@ describe('income', () => {
   });
 });
 
-describe('Market', () => {
-  it('deals 6 offers each turn, including skill cards, reproducibly', () => {
-    const s = readyRun();
-    expect(s.market!.offers).toHaveLength(MARKET_SIZE);
-    expect(s.market!.offers.some((o) => o.kind === 'skill')).toBe(true);
-    expect(readyRun().market).toEqual(s.market);
-    const next = applyAction(resolved(), { type: 'END_TURN' });
-    expect(next.market!.turnNo).toBe(1);
+describe('packs', () => {
+  it('a new run starts blank, with a free people pack to open', () => {
+    const s = createRun(buildRunConfig(botCharacter('ny-north'), 'pk'));
+    expect(s.career.race).toBeUndefined();
+    expect(s.funds).toBe(0);
+    expect(s.wealth).toBeGreaterThan(0);
+    expect(s.packs).toHaveLength(1);
+    expect(s.packs[0]!.kind).toBe('people');
+    expect(s.packs[0]!.cards).toHaveLength(PACK_SIZE);
+    const kept = applyAction(s, { type: 'KEEP_FROM_PACK', keep: [0, 1, 2] });
+    expect(kept.team.cards.length).toBe(s.team.cards.length + 3);
+    expect(kept.packs).toHaveLength(0);
   });
 
-  it('never sells debates or party-only cards to an independent', () => {
-    for (let i = 0; i < 30; i++) {
-      const s = dealMarket({ ...readyRun({ seed: `m-${i}` }), market: undefined });
-      for (const o of s.market!.offers) {
-        expect(o.cardId).not.toBe('debate');
-        if (o.kind === 'skill') expect(getSkillCard(o.cardId).requiresParty).toBeFalsy();
+  it('regular packs never hold a legendary; elite packs never hold a common', () => {
+    for (let i = 0; i < 60; i++) {
+      const s = { ...resolved(), rng: i, funds: 1e7 };
+      for (const kind of ['people', 'policy', 'campaign'] as const) {
+        const reg = drawPack(s, new Rng(i), kind, 'regular');
+        const elite = drawPack(s, new Rng(i), kind, 'elite');
+        expect(reg.map((c) => cardRarity(kind, c))).not.toContain('legendary');
+        expect(elite.map((c) => cardRarity(kind, c))).not.toContain('common');
       }
     }
   });
 
-  it('buying an event card adds it to the hand; playing it then costs only energy', () => {
-    const s = withOffers({ ...resolved(), funds: 100_000 }, [{ kind: 'event', cardId: 'local_tv_ad' }]);
-    const price = eventPrice(getEventCard('local_tv_ad'), s);
-    const bought = applyAction(s, { type: 'BUY_CARD', offerIndex: 0 });
-    expect(bought.funds).toBe(100_000 - price);
-    expect(bought.market!.offers).toHaveLength(0);
-    const card = bought.hand.find((c) => c.cardId === 'local_tv_ad')!;
-    const played = applyAction(bought, { type: 'PLAY_EVENT', cardUid: card.uid, regionId: 'ny-north', issue: 'guns' });
-    expect(played.funds).toBe(bought.funds);
+  it('buying costs campaign funds; you keep one event card or action from a pack', () => {
+    const s = { ...resolved(), funds: 100_000 };
+    expect(buyPackError({ ...s, funds: 1000 }, 'campaign', 'regular')).toMatch(/funds/);
+    const bought = applyAction(s, { type: 'BUY_PACK', kind: 'campaign', tier: 'regular' });
+    expect(bought.funds).toBe(100_000 - packPrice('campaign', 'regular'));
+    expect(keepError(bought, [0, 1])).toMatch(/one/);
+    expect(endTurnBlocker(bought)).toMatch(/pack/);
+    const kept = applyAction(bought, { type: 'KEEP_FROM_PACK', keep: [0] });
+    expect(kept.hand.length + kept.items.length).toBe(s.hand.length + s.items.length + 1);
   });
 
-  it('enforces funds and the hand limit', () => {
-    const offer: MarketOffer[] = [{ kind: 'event', cardId: 'arena_rally' }];
-    expect(buyError(withOffers({ ...resolved(), funds: 1000 }, offer), 0)).toMatch(/funds/);
-    const full = { ...resolved(), funds: 1e6, hand: Array.from({ length: HAND_LIMIT }, (_, i) => ({ uid: 100 + i, cardId: 'town_hall' })) };
-    expect(buyError(withOffers(full, offer), 0)).toMatch(/hand is full/);
+  it('political events: a hand of 5, playable for their effect', () => {
+    const s = { ...resolved(), policyHand: [{ uid: 900, cardId: 'donor_breakfast' }] };
+    const played = applyAction(s, { type: 'PLAY_POLICY', uid: 900 });
+    expect(played.funds).toBe(s.funds + 8000);
+    expect(played.energy).toBe(s.energy - 1);
+    expect(played.policyHand).toHaveLength(0);
+    // Office-only cards wait for an office.
+    expect(policyError({ ...s, policyHand: [{ uid: 901, cardId: 'popular_law' }] }, 901)).toMatch(/office/);
+    const full = { ...s, policyHand: Array.from({ length: POLICY_HAND_LIMIT }, (_, i) => ({ uid: 950 + i, cardId: 'op_ed' })) };
+    const withPack = applyAction({ ...full, funds: 1e6 }, { type: 'BUY_PACK', kind: 'policy', tier: 'regular' });
+    expect(keepError(withPack, [0])).toMatch(/full/);
   });
 
-  it('skill cards cost more at higher levels, raise the skill and respect the office cap', () => {
-    const s = withOffers({ ...resolved(), funds: 1e6 }, [{ kind: 'skill', cardId: 'speech_coach' }]);
-    const level = s.politician.skills.charisma;
-    expect(skillPrice(getSkillCard('speech_coach'), s)).toBe(5000 * level);
-    const after = applyAction(s, { type: 'BUY_CARD', offerIndex: 0 });
-    expect(after.politician.skills.charisma).toBe(level + 1);
+  it('training cards raise a skill up to the office cap', () => {
+    const s = { ...resolved(), policyHand: [{ uid: 900, cardId: 'speech_coach' }] };
+    const trained = applyAction(s, { type: 'PLAY_POLICY', uid: 900 });
+    expect(trained.politician.skills.charisma).toBe(s.politician.skills.charisma + 1);
     expect(skillCap(s)).toBe(6);
     const capped = { ...s, politician: { ...s.politician, skills: { ...s.politician.skills, charisma: 6 } } };
-    expect(buyError(capped, 0)).toMatch(/capped/);
-  });
-
-  it('courses can cost energy', () => {
-    const s = withOffers({ ...resolved(), funds: 1e6 }, [{ kind: 'skill', cardId: 'think_tank' }]);
-    const studied = applyAction(s, { type: 'BUY_CARD', offerIndex: 0 });
-    expect(studied.energy).toBe(s.energy - 2);
-    expect(studied.politician.skills.law).toBe(s.politician.skills.law + 1);
+    expect(policyError(capped, 900)).toMatch(/capped/);
   });
 });
 
@@ -137,27 +139,5 @@ describe('fundraising events', () => {
     const s = resolved();
     const after = applyAction(s, { type: 'PLAY_EVENT', cardUid: 'call_time', regionId: 'ny-north', issue: 'guns' });
     expect(previewEvent(after, 'door_knocking', 'ny-north', 'guns').fatigue).toBe(1);
-  });
-});
-
-describe('M4 acceptance: investing in Fundraising pays for rallies later', () => {
-  it('an investor ends with more Fundraising and reaches arena-rally money more often', () => {
-    const input = botCharacter('ny-north');
-    const rally = eventPrice(getEventCard('arena_rally'), createRun(buildRunConfig(input, 'p')));
-    let investorRally = 0;
-    let sensibleRally = 0;
-    let investorFr = 0;
-    let sensibleFr = 0;
-    const n = 15;
-    for (let i = 0; i < n; i++) {
-      const inv = careerFunds(input, 'investor', 20, `acc-${i}`);
-      const sen = careerFunds(input, 'sensible', 20, `acc-${i}`);
-      if (inv.peak >= rally) investorRally++;
-      if (sen.peak >= rally) sensibleRally++;
-      investorFr += inv.fundraising;
-      sensibleFr += sen.fundraising;
-    }
-    expect(investorFr).toBeGreaterThan(sensibleFr);
-    expect(investorRally).toBeGreaterThan(sensibleRally);
   });
 });

@@ -396,3 +396,63 @@ approval, + 5 per election won.
 
 The old M7 (stats and Hall of Runs) folds into the scenarios milestone as the run-results
 screen.
+
+## 11. Gameplay rework (M13, as built)
+
+This section supersedes the Market (§3 pricing), automatic filing and the 4-step platform.
+
+**Start.** A run starts blank on Jan 1 of the year before your hometown's mayoral election.
+You have personal **wealth** (log-uniform by background, ×1.025 per year over 25: organizer
+$15k–60k, veteran $40k–150k, public servant $60k–250k, doctor $250k–1.5M, lawyer $300k–2.5M,
+celebrity $1.5M–25M, executive $3M–60M with a 4% chance of a $1B+ fortune), an empty campaign
+war chest, and a free people pack (keep all three).
+
+**Campaign window.** A race can be launched from 7 turns before Election Day (Jan of the year
+before) to 4 turns before (Jan of the election year). Opponents campaign from the moment the
+window opens, so a late launch gives them a head start. Statewide races are locked until you
+have held office or average 35% recognition statewide; the President is always locked for now.
+
+**Launch.** Four choices: a campaign chief (any roster member; their campaign stars count),
+a self-donation from wealth into the war chest (above the office's norm, voters grumble: up to
+−12 favorability; norms: small-city mayor $100k–300k, NYC $1M, House $500k, statewide $5M), up
+to five topics, and optionally asking a party to take you. Launching deals a free campaign
+action pack and a free political events pack (keep one of three from each).
+
+**Topics.** Seven positions per issue: Strongly / Clearly / Leaning against, Neutral, Leaning /
+Clearly / Strongly for (−2, −4/3, −2/3, 0, +2/3, +4/3, +2 on the opinion axis). The picker sorts
+issues by importance to this race's voters and marks where voters and the parties stand.
+After your first campaign, each new one may drop one topic, add topics up to five, and move one
+existing topic by one step. A neutral position makes no promise.
+
+**Joining a party.** You ask; the party decides: 15% + 60% × platform fit, +30% if you hold
+office, +5% if you've won before, −20% to switch, +4% per party-liaison star (5–97%). A refusal
+means waiting until next year.
+
+**Packs.** Three cards each. People packs: keep any (roster of 10). Political events and
+campaign actions: keep one (hands of 5 and 8). Odds per card — regular 75/22/3/0 (common, rare,
+epic, legendary), golden 30/45/20/5, elite 0/35/45/20. Prices: people $8k / $30k / $100k,
+events and actions $6k / $25k / $90k, paid from the war chest.
+
+**People.** 30 people, each with 0–5 stars (half steps) in all four roles; a person's best role
+matches their rarity (common 1.5–2.5, rare 2.5–3.5, epic 3.5–4.5, legendary 4.5–5). Per star:
+campaign manager +6% campaign actions and +1 night token per 2 stars (while running); chief of
+staff −8% approval wear and +6% political events (in office); party liaison +6% standing gains,
+−6% losses, +4% join odds (always); legislative director +4% bill passage (in office).
+
+**Political events.** 20 cards played with energy: approval boosts in office (up to "Pass a
+very popular law", +20 approval), recognition, money, standing, integrity and training (+1 to a
+skill, up to the office cap). Skills now grow only through training cards.
+
+**Campaign actions.** The basic actions stay free (door-knocking, social post, call time); the
+rest come from packs, with rarities, plus new cards (Rotary club lunch, Union hall rally,
+College presentation and Viral video; topic cards persuade ×1.4 on their topics) and items
+(Scandal published, Celebrity endorsement, and Late voters break your way: +1.5 points on the
+uncounted vote, outside the night-action cap).
+
+**Stances and bills.** Campaigning, decision cards are public stances (favorability). In office
+they are bills: approval ×0.07 per unit of fit (was 0.04) plus a favorability effect, after the
+legislature's vote, shown as a signing ceremony.
+
+**Terms and the world.** Re-election is launched like any race. A term you don't defend ends
+at New Year. Every office has a holder; each New Year the races you sat out are simulated
+(partisan lean, incumbency) and recorded. The sitting holder runs against you 60% of the time.

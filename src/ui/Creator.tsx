@@ -20,7 +20,7 @@ import {
   SKILL_LABELS,
   skillPointsForAge,
   spendablePoints,
-  startingFundsFor,
+  wealthRange,
   TRAITS,
 } from '../engine';
 import type { CreationInput, Gender, SkillId } from '../engine';
@@ -307,8 +307,11 @@ export function Creator({ onCreate, onCancel }: Props) {
 
           <h2>Starting position</h2>
           <dl className="kv">
-            <dt>Funds</dt>
-            <dd>{money(startingFundsFor(backgroundId, age))}</dd>
+            <dt>Personal wealth</dt>
+            <dd>
+              {money(wealthRange(backgroundId, age).min)} – {money(wealthRange(backgroundId, age).max)}
+              {wealthRange(backgroundId, age).fortune ? ' (a few are billionaires)' : ''}
+            </dd>
             <dt>Energy per turn</dt>
             <dd>
               {Math.max(1, energyForAge(age) - (background.perks.energyPenalty?.amount ?? 0))}
@@ -331,11 +334,11 @@ export function Creator({ onCreate, onCancel }: Props) {
             </dd>
             <dt>Credible on</dt>
             <dd>{background.credibleIssues.map((i) => ISSUES_BY_ID[i].name).join(', ')}</dd>
-            <dt>First race</dt>
+            <dt>You start</dt>
             <dd>
               {firstRace
-                ? `${firstRace.name}, ${nextElectionYear(firstRace, DEFAULT_START_YEAR)} (as an independent)`
-                : 'No mayoralty in this area — pick a race once you start.'}
+                ? `Jan ${nextElectionYear(firstRace, DEFAULT_START_YEAR) - 1}, with no campaign yet. ${firstRace.name} votes in ${nextElectionYear(firstRace, DEFAULT_START_YEAR)}.`
+                : 'With no campaign yet: pick a race once you start.'}
             </dd>
           </dl>
 

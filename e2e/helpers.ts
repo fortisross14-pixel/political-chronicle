@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { applyAction, createScenarioRun, SCHEMA_VERSION } from '../src/engine';
 import type { GameState } from '../src/engine';
 import { emptyProfile } from '../src/engine/meta';
+import { launch, skipPacks } from '../src/engine/testUtils';
 import type { Profile } from '../src/engine/meta';
 
 export const SAVE_KEY = 'political-chronicle.currentRun';
@@ -35,17 +36,20 @@ export function veteranProfile(): Profile {
   return { ...p, artifacts: ['war_chest', 'lucky_tie'], abilities: ['rapid_response'] };
 }
 
+/** Hometown favorite with the Watertown campaign launched (packs set aside), ready to play. */
+export function launchedState(seed = 'e2e'): GameState {
+  const s = createScenarioRun('hometown_favorite', { name: 'Night Owl', artifacts: [], seed });
+  return launch(skipPacks(s), [
+    { issue: 'guns', stance: 2 },
+    { issue: 'taxes', stance: 2 },
+  ]);
+}
+
 /** Hometown favorite, played to the start of election night (the night is left open). */
 export function nightState(): GameState {
-  let s = createScenarioRun('hometown_favorite', { name: 'Night Owl', artifacts: [], seed: 'e2e-night' });
-  s = applyAction(s, {
-    type: 'SET_PLATFORM',
-    platform: [
-      { issue: 'guns', stance: 2 },
-      { issue: 'taxes', stance: 2 },
-    ],
-  });
-  for (let i = 0; i < 4 && !s.night; i++) {
+  let s = launchedState('e2e-night');
+  for (let i = 0; i < 10 && !s.night; i++) {
+    s = skipPacks(s);
     if (s.decisions && !s.decisions.resolved) s = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: [s.decisions.cardIds[0]!] });
     s = applyAction(s, { type: 'END_TURN' });
   }

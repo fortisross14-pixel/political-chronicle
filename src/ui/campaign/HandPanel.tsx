@@ -6,6 +6,7 @@ import { activePlatform, itemError, previewEvent } from '../../engine';
 import type { Action, EventCard, GameState, IssueId, RegionId } from '../../engine';
 import { Bolt, GameCard } from '../cards/GameCard';
 import { EventArt } from '../cards/CardArt';
+import { ItemCardView } from '../cards/CardViews';
 import { useCardDrag } from '../cards/useCardDrag';
 import { money } from '../format';
 import { cue } from '../fx/sound';
@@ -76,9 +77,9 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
   return (
     <section className="panel hand-panel">
       <div className="panel-head">
-        <h2>{state.career.race ? 'Campaign events' : 'Events in office'}</h2>
+        <h2>{state.career.race ? 'Campaign actions' : 'Out with the voters'}</h2>
         <span className="muted small">
-          Energy {state.energy} · {state.hand.length} card{state.hand.length === 1 ? '' : 's'} bought, buy more in the Market
+          Energy {state.energy} · {state.hand.length} card{state.hand.length === 1 ? '' : 's'} in hand
         </span>
       </div>
       <div className="hand-board">
@@ -199,17 +200,18 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
                 )}
               </span>
             )}
+          </div>
+        )}
+        {items.length > 0 && (
+          <div className="card-row specials">
             {items.map((item) => {
               const meta = getItem(item.itemId);
               const error = itemError(state, item.uid, meta.targetsRegion ? regionId : undefined);
               return (
-                <span key={item.uid} className="item-chip">
-                  <strong>{meta.name}</strong>
-                  <span className="muted">
-                    {' '}
-                    {meta.window === 'night' ? `— election night: ${meta.nightText}` : `— ${meta.campaignText}`}
-                  </span>
-                  {meta.window !== 'night' && (
+                <ItemCardView key={item.uid} id={item.itemId} small dim={meta.window === 'night'}>
+                  {meta.window === 'night' ? (
+                    <span className="small">Election night</span>
+                  ) : (
                     <button
                       disabled={!!error}
                       title={error}
@@ -218,7 +220,7 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
                       Use{meta.targetsRegion ? ` in ${getRegion(regionId).seatCity}` : ''}
                     </button>
                   )}
-                </span>
+                </ItemCardView>
               );
             })}
           </div>

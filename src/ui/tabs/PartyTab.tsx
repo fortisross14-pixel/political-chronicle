@@ -1,13 +1,13 @@
 import { getOffice, ISSUES, PARTIES, PARTY_IDS, STATES } from '../../data';
 import {
+  askError,
   effectivePlatform,
-  fileRaceError,
   homeStateId,
   invitations,
-  joinError,
+  joinChance,
   nominationStatus,
   partyAlignment,
-  raceOptions,
+  raceBoard,
 } from '../../engine';
 import type { Action, GameState, IssueId, PartyId } from '../../engine';
 import { stanceLabel } from '../campaign/labels';
@@ -35,41 +35,41 @@ export function PartyTab({ state, dispatch }: { state: GameState; dispatch: (a: 
 
   return (
     <div className="stack">
-      {party ? <Membership state={state} party={party} /> : <Independent state={state} />}
+      {party ? <Membership state={state} party={party} /> : <Independent />}
 
       {invites.length > 0 && (
         <section className="panel">
-          <h2>{party ? 'Switch parties' : 'Invitations'}</h2>
+          <h2>{party ? 'Switch parties' : 'Ask to join'}</h2>
           <p className="muted small">
             {party
-              ? 'Switching costs 10 integrity and you start near the bottom of the new party’s pecking order.'
-              : 'Both parties have noticed you. Your starting standing depends on how well your record fits their platform.'}
+              ? 'Switching costs 10 integrity and most of your standing.'
+              : 'They may say no. Elected officials are almost always welcome.'}
           </p>
           <div className="party-grid">
             {invites.map((inv) => {
               const p = PARTIES[inv.party];
-              const error = joinError(state, inv.party);
+              const error = askError(state, inv.party);
               return (
                 <article key={inv.party} className="panel party" style={{ borderTopColor: p.color }}>
                   <h3>{p.name}</h3>
-                  <p className="muted small">
-                    The {p.nickname} · mascot: {p.mascot}
-                  </p>
                   <dl className="kv small">
                     <dt>Fit with your record</dt>
                     <dd>{pct(inv.alignment)}</dd>
+                    <dt>Chance they say yes</dt>
+                    <dd>{pct(joinChance(state, inv.party))}</dd>
                     <dt>Starting standing</dt>
                     <dd>{inv.startingStanding}</dd>
                   </dl>
                   <button
+                    className={`party-ask ${inv.party.toLowerCase()}`}
                     disabled={!!error}
                     title={error}
                     onClick={() => {
                       if (!inv.switching || window.confirm(`Switch to the ${p.name}? This costs integrity.`))
-                        dispatch({ type: 'JOIN_PARTY', party: inv.party });
+                        dispatch({ type: 'ASK_TO_JOIN', party: inv.party });
                     }}
                   >
-                    {inv.switching ? 'Switch to' : 'Join'} the {p.nickname}
+                    {inv.switching ? 'Ask to switch to' : 'Ask'} the {p.nickname}
                   </button>
                 </article>
               );
@@ -79,20 +79,16 @@ export function PartyTab({ state, dispatch }: { state: GameState; dispatch: (a: 
       )}
 
       <PlatformComparison state={state} party={party} stateId={stateId} />
-      <Nominations state={state} dispatch={dispatch} />
+      <Nominations state={state} />
     </div>
   );
 }
 
-function Independent({ state }: { state: GameState }) {
+function Independent() {
   return (
     <section className="panel">
       <h2>You are an independent</h2>
-      <p className="muted small">
-        {state.elections.length
-          ? 'You can stay independent: you may still run for any office, but you get no party money and voters in partisan races discount you.'
-          : 'Parties will notice you once you’ve run for office.'}
-      </p>
+      <p className="muted small">No party money, and voters in partisan races discount you. You can ask a party to take you any time.</p>
     </section>
   );
 }
@@ -177,14 +173,13 @@ function PlatformComparison({ state, party, stateId }: { state: GameState; party
   );
 }
 
-function Nominations({ state, dispatch }: { state: GameState; dispatch: (a: Action) => void }) {
-  const options = raceOptions(state).filter((o) => getOffice(o.officeId).partisan);
+function Nominations({ state }: { state: GameState }) {
+  const slots = raceBoard(state).filter((o) => getOffice(o.officeId).partisan);
   return (
     <section className="panel">
       <h2>Nominations</h2>
       <p className="muted small">
-        Uncontested nomination: House needs standing 40, Senate and Governor 60. Up to 25 below, you can force a primary among party voters,
-        decided at the end of the election year’s first turn. Running for a different office puts your current seat on the line.
+        House needs standing 40, Senate and Governor 60. Up to 25 below means a primary. Launch races from your Desk.
       </p>
       <table className="table stack-sm nominations">
         <thead>
@@ -192,34 +187,16 @@ function Nominations({ state, dispatch }: { state: GameState; dispatch: (a: Acti
             <th>Office</th>
             <th>Election</th>
             <th>Status</th>
-            <th />
           </tr>
         </thead>
         <tbody>
-          {options.map((o) => {
-            const status = nominationStatus(state, o.officeId);
-            const error = fileRaceError(state, o.officeId);
-            const label =
-              status.kind === 'nominee'
-                ? 'Request nomination'
-                : status.kind === 'primary'
-                  ? 'Enter primary'
-                  : status.kind === 'independent'
-                    ? 'Run as independent'
-                    : 'Denied';
-            return (
-              <tr key={o.officeId}>
-                <td>{getOffice(o.officeId).name}</td>
-                <td>Nov {o.electionYear}</td>
-                <td className="small">{o.eligible ? status.text : o.reason}</td>
-                <td>
-                  <button disabled={!!error} title={error} onClick={() => dispatch({ type: 'FILE_RACE', officeId: o.officeId })}>
-                    {label}
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
+          {slots.map((o) => (
+            <tr key={o.officeId}>
+              <td>{getOffice(o.officeId).name}</td>
+              <td>Nov {o.window.electionYear}</td>
+              <td className="small">{o.status === 'locked' ? o.reason : nominationStatus(state, o.officeId).text}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </section>

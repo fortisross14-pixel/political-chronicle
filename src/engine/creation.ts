@@ -1,4 +1,5 @@
 import { GameError } from './errors';
+import { Rng, seedFromString } from './rng';
 import { getBackground, getRegion, REGIONS_BY_ID, US_STATE_NAMES } from '../data';
 import type { NewRunConfig } from './run';
 import type { Gender, Politician, RegionId, SkillId, Skills } from './types';
@@ -59,10 +60,22 @@ export function skillPointsForAge(age: number): number {
   return 10 + Math.floor((Math.max(MIN_AGE, age) - MIN_AGE) / 5);
 }
 
-/** Starting funds: background base, +2.5% per year over 25 (savings & contacts). */
-export function startingFundsFor(backgroundId: string, age: number): number {
-  const base = getBackground(backgroundId).baseFunds;
-  return Math.round((base * (1 + (Math.max(MIN_AGE, age) - MIN_AGE) * 0.025)) / 1000) * 1000;
+/** The range of personal wealth a background starts with at this age (+2.5% per year over 25). */
+export function wealthRange(backgroundId: string, age: number): { min: number; max: number; fortune: boolean } {
+  const w = getBackground(backgroundId).wealth;
+  const k = 1 + (Math.max(MIN_AGE, age) - MIN_AGE) * 0.025;
+  return { min: w.min * k, max: w.max * k, fortune: !!w.fortune };
+}
+
+/** Personal wealth: log-uniform in the background's range; a few business careers are fortunes. */
+export function wealthFor(backgroundId: string, age: number, seed: string): number {
+  const rng = new Rng(seedFromString(`${seed}:wealth`));
+  const w = getBackground(backgroundId).wealth;
+  const { min, max } = wealthRange(backgroundId, age);
+  const fortune = w.fortune && rng.chance(w.fortune);
+  const value = fortune ? max * (20 + rng.float() * 40) : min * (max / min) ** rng.float();
+  const step = value >= 1e6 ? 100_000 : 1_000;
+  return Math.round(value / step) * step;
 }
 
 /** A background's weakness can cap a skill below the general creation cap. */
@@ -144,7 +157,7 @@ export function buildPolitician(input: CreationInput): Politician {
 export function buildRunConfig(input: CreationInput, seed: string): NewRunConfig {
   const errors = creationErrors(input);
   if (errors.length) throw new GameError(`Invalid character: ${errors.join(' ')}`, 'invalid_character');
-  return { seed, politician: buildPolitician(input), startingFunds: startingFundsFor(input.backgroundId, input.age) };
+  return { seed, politician: buildPolitician(input), wealth: wealthFor(input.backgroundId, input.age, seed) };
 }
 
 /**

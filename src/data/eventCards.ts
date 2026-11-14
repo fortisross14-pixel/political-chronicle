@@ -48,6 +48,7 @@ export const EVENT_CARDS: EventCard[] = [
   // Consumable — bought or dealt, used once.
   {
     id: 'town_hall',
+    rarity: 'common',
     name: 'Town hall',
     basic: false,
     cost: 5000,
@@ -62,6 +63,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'radio_interview',
+    rarity: 'common',
     name: 'Local radio interview',
     basic: false,
     cost: 8000,
@@ -76,6 +78,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'local_tv_ad',
+    rarity: 'rare',
     name: 'Local TV ad buy',
     basic: false,
     cost: 40000,
@@ -90,6 +93,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'cable_interview',
+    rarity: 'rare',
     name: 'Cable news interview',
     basic: false,
     cost: 25000,
@@ -104,6 +108,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'social_campaign',
+    rarity: 'common',
     name: 'Social media campaign',
     basic: false,
     cost: 30000,
@@ -118,6 +123,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'podcast_tour',
+    rarity: 'rare',
     name: 'Podcast tour',
     basic: false,
     cost: 15000,
@@ -132,6 +138,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'arena_rally',
+    rarity: 'epic',
     name: 'Arena rally',
     basic: false,
     cost: 120000,
@@ -146,6 +153,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'fundraising_dinner',
+    rarity: 'rare',
     name: 'Fundraising dinner',
     basic: false,
     cost: 10000,
@@ -161,6 +169,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'party_unity',
+    rarity: 'rare',
     name: 'Party unity event',
     basic: false,
     cost: 20000,
@@ -177,6 +186,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'debate',
+    rarity: 'rare',
     name: 'Televised debate',
     basic: false,
     cost: 0,
@@ -189,27 +199,77 @@ export const EVENT_CARDS: EventCard[] = [
     gaffeRisk: true,
     description: 'Face your opponents live. High reward, real risk.',
   },
+  {
+    id: 'rotary_lunch',
+    rarity: 'common',
+    name: 'Rotary club lunch',
+    basic: false,
+    cost: 3000,
+    energy: 1,
+    medium: 'inPerson',
+    skills: ['charisma'],
+    reach: 0.04,
+    persuasion: 0.07,
+    spillover: 0,
+    gaffeRisk: false,
+    issueBonus: ['small_biz', 'taxes', 'industry'],
+    description: 'Shake every hand in the room. Lands best on business topics.',
+  },
+  {
+    id: 'union_rally',
+    rarity: 'rare',
+    name: 'Union hall rally',
+    basic: false,
+    cost: 12000,
+    energy: 2,
+    medium: 'inPerson',
+    skills: ['charisma', 'leadership'],
+    reach: 0.07,
+    persuasion: 0.12,
+    spillover: 0.1,
+    gaffeRisk: false,
+    issueBonus: ['labor', 'min_wage', 'industry'],
+    description: 'Hard hats and a loud crowd. Lands best on jobs and wages.',
+  },
+  {
+    id: 'college_tour',
+    rarity: 'epic',
+    name: 'College presentation',
+    basic: false,
+    cost: 30000,
+    energy: 2,
+    medium: 'inPerson',
+    skills: ['charisma'],
+    reach: 0.1,
+    persuasion: 0.16,
+    spillover: 0.15,
+    gaffeRisk: true,
+    issueBonus: ['education', 'climate', 'cannabis', 'housing', 'min_wage'],
+    description: 'A packed lecture hall and a livestream. Young voters share it everywhere.',
+  },
+  {
+    id: 'viral_video',
+    rarity: 'legendary',
+    name: 'Viral video',
+    basic: false,
+    cost: 80000,
+    energy: 2,
+    medium: 'social',
+    skills: ['charisma'],
+    reach: 0.3,
+    persuasion: 0.14,
+    spillover: 0.6,
+    gaffeRisk: false,
+    description: 'Ten million views by Tuesday. Everyone in the state has seen it.',
+  },
 ];
 
 export const EVENT_CARDS_BY_ID: Record<string, EventCard> = Object.fromEntries(EVENT_CARDS.map((c) => [c.id, c]));
 
 export const BASIC_CARD_IDS = EVENT_CARDS.filter((c) => c.basic).map((c) => c.id);
 
-/** Dealt free when filing for a race; everything else is bought in the Market. */
-export const STARTER_HAND = ['town_hall', 'radio_interview', 'debate'];
-
-/** Relative chance of each card appearing in the Market. Debates are dealt, never sold. */
-export const MARKET_WEIGHTS: Record<string, number> = {
-  town_hall: 3,
-  radio_interview: 3,
-  local_tv_ad: 2,
-  cable_interview: 2,
-  social_campaign: 2,
-  podcast_tour: 2,
-  fundraising_dinner: 2,
-  arena_rally: 1,
-  party_unity: 2,
-};
+/** Cards that can come out of a campaign-actions pack (everything but the basics). */
+export const PACK_EVENT_IDS = EVENT_CARDS.filter((c) => !c.basic).map((c) => c.id);
 
 /** Media markets differ in price: an ad in NYC costs far more than one in Watertown. */
 export const MARKET_COST_FACTOR: Record<RegionType, number> = {

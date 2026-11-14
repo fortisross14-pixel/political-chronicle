@@ -11,6 +11,16 @@ function downgrade(state: GameState, to: number): Record<string, unknown> {
   const s = structuredClone(state) as unknown as Record<string, unknown>;
   const career = s.career as Record<string, unknown>;
   const race = career.race as Record<string, unknown> | undefined;
+  if (to < 10) {
+    delete s.wealth;
+    delete s.policyHand;
+    delete s.packs;
+    delete s.world;
+    delete career.platform;
+    delete career.joinAsked;
+    if (race) for (const k of ['selfFunded', 'launchedWith']) delete race[k];
+    s.market = { turnNo: 0, offers: [{ kind: 'event', cardId: 'town_hall' }] };
+  }
   if (to < 9) {
     delete s.modifiers;
     delete s.startYear;
@@ -25,6 +35,7 @@ function downgrade(state: GameState, to: number): Record<string, unknown> {
     s.draft = { options: ['cm_vance'], reason: 'old draft' };
   }
   if (to < 7) {
+    delete s.market;
     delete s.team;
     delete s.chambers;
     delete s.draft;
@@ -61,6 +72,11 @@ describe('save migrations', () => {
       expect(s.career.race?.tokens).toBeGreaterThanOrEqual(2);
       expect((s as unknown as Record<string, unknown>).staff).toBeUndefined();
       expect((s as unknown as Record<string, unknown>).draft).toBeUndefined();
+      expect((s as unknown as Record<string, unknown>).market).toBeUndefined();
+      expect(s.wealth).toBeGreaterThanOrEqual(0);
+      expect(s.packs).toEqual([]);
+      expect(s.world.seats['mayor-watertown']).toBeDefined();
+      expect(s.career.platform?.length).toBeGreaterThan(0);
       // The upgraded save is a real, playable game.
       const later = passTurns(s, 3);
       expect(later.snapshots.length).toBe(s.snapshots.length + 3);

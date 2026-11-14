@@ -15,7 +15,7 @@ describe('save / load', () => {
 
   it('returns null when nothing is saved, after clearing, or for an old schema', () => {
     expect(loadGame()).toBeNull();
-    saveGame(createRun({ seed: 'x', politician: defaultPolitician(), startingFunds: 0 }));
+    saveGame(createRun({ seed: 'x', politician: defaultPolitician(), wealth: 0 }));
     clearSave();
     expect(loadGame()).toBeNull();
     localStorage.setItem(SAVE_KEY, JSON.stringify({ schemaVersion: 0, state: {} }));

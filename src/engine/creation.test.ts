@@ -23,9 +23,11 @@ import {
   SKILL_IDS,
   skillPointsForAge,
   spendablePoints,
-  startingFundsFor,
+  wealthFor,
+  wealthRange,
 } from '.';
 import type { CreationInput, GameState } from '.';
+import { launch, skipPacks } from './testUtils';
 
 function character(overrides: Partial<CreationInput> = {}): CreationInput {
   const backgroundId = overrides.backgroundId ?? 'public_servant';
@@ -42,7 +44,7 @@ function character(overrides: Partial<CreationInput> = {}): CreationInput {
   };
 }
 
-const run = (overrides: Partial<CreationInput> = {}, seed = 'c') => createRun(buildRunConfig(character(overrides), seed));
+const run = (overrides: Partial<CreationInput> = {}, seed = 'c') => skipPacks(createRun(buildRunConfig(character(overrides), seed)));
 
 describe('skills, points and funds', () => {
   it('has the 7 v2 skills', () => {
@@ -55,9 +57,15 @@ describe('skills, points and funds', () => {
     expect(skillPointsForAge(65)).toBe(18);
   });
 
-  it('older characters start with more money; executives self-fund', () => {
-    expect(startingFundsFor('organizer', 65)).toBeGreaterThan(startingFundsFor('organizer', 25));
-    expect(startingFundsFor('business', 25)).toBe(70_000);
+  it('wealth: older characters have more; executives and celebrities are far richer than organizers', () => {
+    expect(wealthRange('organizer', 65).max).toBeGreaterThan(wealthRange('organizer', 25).max);
+    expect(wealthFor('business', 40, 'w')).toBeGreaterThan(wealthRange('organizer', 65).max * 10);
+    expect(wealthFor('celebrity', 40, 'w')).toBeGreaterThanOrEqual(1_000_000);
+    expect(wealthFor('lawyer', 40, 'w')).toBe(wealthFor('lawyer', 40, 'w')); // seeded
+    let fortunes = 0;
+    for (let i = 0; i < 400; i++) if (wealthFor('business', 30, `f-${i}`) >= 1e9) fortunes++;
+    expect(fortunes).toBeGreaterThan(4);
+    expect(fortunes).toBeLessThan(40);
   });
 
   it('background fixed points are added on top of base 1', () => {
@@ -134,14 +142,15 @@ describe('native vs transplant', () => {
     expect(newcomerPenalty(transplantRun, 'ny-nyc')).toBeCloseTo(0.04);
     const later: GameState = { ...transplantRun, clock: { ...transplantRun.clock, monthsElapsed: 48 } };
     expect(newcomerPenalty(later)).toBeCloseTo(0.05);
-    const you = raceViews(transplantRun, transplantRun.career.race!, 'ny-north')[0]!;
-    expect(you.standing.favorability).toBeCloseTo(transplantRun.regions['ny-north']!.favorability - 0.12);
+    const running = launch(transplantRun, [{ issue: 'guns', stance: 2 }], undefined, 0);
+    const you = raceViews(running, running.career.race!, 'ny-north')[0]!;
+    expect(you.standing.favorability).toBeCloseTo(running.regions['ny-north']!.favorability - 0.12);
   });
 
   it('transplants raise more from outside donors; only natives get the hometown event bonus', () => {
     expect(projectedIncome(transplantRun).donors).toBeGreaterThan(projectedIncome({ ...nativeRun, regions: transplantRun.regions }).donors);
     const ready = (s: GameState) => {
-      const p = applyAction(s, { type: 'SET_PLATFORM', platform: [{ issue: 'guns', stance: 2 }] });
+      const p = launch(s, [{ issue: 'guns', stance: 2 }]);
       return applyAction(p, { type: 'RESOLVE_DECISIONS', apply: [p.decisions!.cardIds[0]!] });
     };
     const a = previewEvent(ready(nativeRun), 'door_knocking', 'ny-north', 'guns').effects[0]!.dRecognition;
@@ -173,7 +182,7 @@ describe('background perks', () => {
     expect(handSize(s)).toBe(3);
     const strategist = { ...s, politician: { ...s.politician, skills: { ...s.politician.skills, strategy: 7 } } };
     expect(handSize(strategist)).toBe(4);
-    const dealt = applyAction(strategist, { type: 'SET_PLATFORM', platform: [{ issue: 'guns', stance: 2 }] });
+    const dealt = launch(strategist, [{ issue: 'guns', stance: 2 }]);
     expect(dealt.decisions!.cardIds).toHaveLength(4);
     expect(decisionPool(dealt).length).toBeGreaterThan(4);
   });

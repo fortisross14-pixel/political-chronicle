@@ -224,12 +224,36 @@ mock-ups. Built:
 - Accessibility: WCAG 2.1 AA checks (axe) on every main screen at desktop and phone size in CI,
   reduced motion respected, every drag and swipe has a button alternative.
 
-## M13 — Balancing
+## M13 — Gameplay rework
+
+**Status: done.** See DESIGN_V2 §11 for the rules as built.
+
+- Start blank: no race, only personal wealth (by background: organizers thousands, executives
+  millions, a few billionaires) and a free pack of three people.
+- Launch a campaign from the race board (every office in the state, statewide races locked
+  until you've held office or are known statewide, President locked) inside its window: 7 to
+  4 turns before Election Day. The launch screen: campaign chief, self-donation (voters grumble
+  past a normal amount), up to 5 topics on 7-step sliders with voter and party marks, and asking
+  a party to take you. Launching deals two free packs (keep one card each).
+- Packs replace the Market: people, political events and campaign actions, each regular,
+  golden or elite. People have 0–5 stars in each of four roles; anyone can fill any role.
+  Roster of 10, political events hand of 5, campaign actions hand of 8.
+- Platforms carry over: each campaign may drop one topic, add up to five, and move one by a step.
+- Public stances while campaigning; bills in office hit approval much harder, with a signing
+  ceremony. Re-election is launched like any race; a term you don't defend ends.
+- The World tab: who holds every office, the election calendar, every result (yours and the
+  races you sat out, simulated each New Year).
+
+**Done when:** a new run starts blank and the whole loop (launch → campaign → govern → next
+race) plays through these systems, with saves migrated (v9 → v10).
+
+## M14 — Balancing
 
 - A balance pass on everything with the bot harness: every scenario inside its difficulty
-  band; backgrounds within ±8 points of each other per state; native vs transplant gap 10–12;
-  people, items and night actions inside their targets; the economy without runaways.
-- Tune the costs that feel off in play (card prices, people prices, Market weights).
+  band (Hometown favorite is too easy and Big city, small town too hard after M13);
+  backgrounds within ±8 points of each other per state; native vs transplant gap 10–12;
+  people, packs and night actions inside their targets; self-funding without runaways.
+- Tune pack prices and odds, role-star effects and the campaign window edge.
 - Difficulty settings for Sandbox.
 
 **Done when:** every target in DESIGN_V2 is met by the sim in CI.

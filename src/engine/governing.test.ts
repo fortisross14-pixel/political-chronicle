@@ -11,7 +11,7 @@ import {
   previewEvent,
   raceViews,
 } from './index';
-import { newRun } from './testUtils';
+import { newRun, passTurn } from './testUtils';
 import type { GameState } from './types';
 
 /** A freshly elected Watertown mayor (first seed whose sensible campaign wins). */
@@ -64,10 +64,11 @@ describe('governing', () => {
     expect(broken.promises.at(-1)).toMatchObject({ issue: 'guns', kept: false });
   });
 
-  it('previews approval, not favorability, in the jurisdiction', () => {
+  it('a law moves approval first, and how the jurisdiction feels about you', () => {
     const impact = decisionImpact(MAYOR, getDecisionCard('of_carry_city_buildings'));
     expect(impact.approval['ny-north']).toBeGreaterThan(0);
-    expect(impact.favorability['ny-north']).toBeUndefined();
+    expect(impact.favorability['ny-north']).toBeGreaterThan(0);
+    expect(impact.favorability['ny-north']!).toBeLessThan(impact.approval['ny-north']!);
     expect(impact.favorability['ny-nyc']).toBeLessThan(0); // heard statewide, judged by NYC
   });
 
@@ -98,13 +99,22 @@ describe('governing', () => {
 });
 
 describe('re-election', () => {
-  it('opens automatically at the start of the last year of the term, as a 4-turn year', () => {
+  it('you launch re-election yourself when the window opens; you keep governing while you run', () => {
     let s = MAYOR;
     for (let i = 0; i < 12 && !s.career.race; i++) s = playTurn(s, 'sensible');
     expect(s.career.race?.officeId).toBe('mayor-watertown');
-    expect(s.clock).toMatchObject({ year: 2031, turnsThisYear: 4 });
+    expect(s.career.race!.electionYear).toBe(2031);
+    expect(s.clock).toMatchObject({ year: 2030, turn: 1 }); // launched on 2030's first turn: 7 turns out, the earliest
     expect(s.career.race!.opponents.every((c) => !c.incumbent)).toBe(true);
-    expect(s.career.office).toBeDefined(); // you keep governing while you run
+    expect(s.career.office).toBeDefined();
+  });
+
+  it('a term you don’t defend ends after its last election', () => {
+    let s = MAYOR;
+    for (let i = 0; i < 14 && s.clock.year < 2032; i++) s = passTurn(s);
+    expect(s.career.office).toBeUndefined();
+    expect(s.log.some((l) => /term as Mayor of Watertown ended/.test(l.text))).toBe(true);
+    expect(s.world.results.some((r) => r.officeId === 'mayor-watertown' && r.year === 2031 && !r.playerRan)).toBe(true);
   });
 
   it('as the incumbent you are judged on approval', () => {

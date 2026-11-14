@@ -6,18 +6,22 @@ import {
   applyAction,
   decided,
   decisionError,
+  campaignWindow,
   endTurnBlocker,
   eventPrice,
-  fileRaceError,
+  grantPerson,
+  launchError,
   platformError,
   playEvent,
   poll,
   previewEvent,
   nominationStatus,
-  raceOptions,
+  raceBoard,
   regionIntention,
+  selfFundingPenalty,
+  stanceAt,
 } from './index';
-import { newRun, passTurn, passTurns, readyRun, WATERTOWN_PLATFORM } from './testUtils';
+import { launch, newRun, passTurn, passTurns, readyRun, WATERTOWN_PLATFORM } from './testUtils';
 import type { GameState } from './types';
 
 describe('opinion math', () => {
@@ -39,41 +43,89 @@ describe('opinion math', () => {
   });
 });
 
-describe('filing & platform', () => {
-  it('a new run is filed for the hometown race but blocked until the platform is set', () => {
+describe('launching a campaign', () => {
+  it('a run starts blank: nothing to do but launch, and turns can pass', () => {
     const s = newRun();
-    expect(endTurnBlocker(s)).toMatch(/platform/);
-    expect(() => applyAction(s, { type: 'END_TURN' })).toThrow();
+    expect(s.career.race).toBeUndefined();
+    expect(endTurnBlocker(s)).toBeUndefined();
+    expect(s.decisions).toBeUndefined();
   });
 
-  it('validates platforms', () => {
+  it('campaigns open 7 turns before Election Day and close at 4', () => {
+    const blank = newRun({ exactYear: false }); // Jan 2026, Watertown votes Nov 2027
+    expect(blank.clock.year).toBe(2026);
+    expect(campaignWindow(blank, 'mayor-watertown')).toMatchObject({ electionYear: 2027, turnsLeft: 7, open: true });
+    const late = newRun(); // Jan 2027
+    expect(campaignWindow(late, 'mayor-watertown')).toMatchObject({ turnsLeft: 4, open: true });
+    const tooLate = passTurn(late);
+    expect(campaignWindow(tooLate, 'mayor-watertown')).toMatchObject({ electionYear: 2031, open: false });
+    expect(raceBoard(tooLate).find((r) => r.officeId === 'mayor-watertown')!.status).toBe('later');
+  });
+
+  it('the race board locks statewide races until you hold an office or are known statewide', () => {
+    const board = raceBoard(newRun());
+    expect(board.find((r) => r.officeId === 'governor-ny')!.status).toBe('locked');
+    expect(board.find((r) => r.officeId === 'house-ny-north')!.status).not.toBe('locked');
+    expect(nominationStatus(newRun(), 'mayor-nyc').kind).toBe('nonpartisan');
+  });
+
+  it('validates platforms on the 7-step scale', () => {
     const s = newRun();
     expect(platformError(s, [])).toMatch(/at least one/);
-    expect(platformError(s, [...WATERTOWN_PLATFORM, { issue: 'labor', stance: 1 }])).toMatch(/at most 5/);
-    expect(
-      platformError(s, [
-        { issue: 'guns', stance: 1 },
-        { issue: 'guns', stance: 2 },
-      ]),
-    ).toMatch(/once/);
-    expect(platformError(s, [{ issue: 'guns', stance: 0 }])).toMatch(/side/);
+    expect(platformError(s, [...WATERTOWN_PLATFORM, { issue: 'labor', stance: stanceAt(1) }])).toMatch(/at most 5/);
+    expect(platformError(s, [{ issue: 'guns', stance: 1 }])).toMatch(/position/);
+    expect(platformError(s, [{ issue: 'guns', stance: 0 }])).toBeUndefined(); // neutral is a position
     expect(platformError(s, WATERTOWN_PLATFORM)).toBeUndefined();
   });
 
-  it('setting the platform builds the record and deals 3 decisions', () => {
-    const s = readyRun();
-    expect(s.record.guns).toBe(2);
-    expect(s.decisions?.cardIds).toHaveLength(3);
-    expect(platformError(s, WATERTOWN_PLATFORM)).toMatch(/locked/);
+  it('launching sets the platform, the manager, moves your money and deals two free packs', () => {
+    const s = grantPerson(newRun(), 'cm_vance');
+    const uid = s.team.cards.at(-1)!.uid;
+    const launched = applyAction(s, {
+      type: 'LAUNCH_CAMPAIGN',
+      officeId: 'mayor-watertown',
+      platform: WATERTOWN_PLATFORM,
+      donation: 20_000,
+      managerUid: uid,
+    });
+    expect(launched.career.race?.platform).toEqual(WATERTOWN_PLATFORM);
+    expect(launched.career.platform).toEqual(WATERTOWN_PLATFORM);
+    expect(launched.team.assigned.campaignManager).toBe(uid);
+    expect(launched.funds).toBe(s.funds + 20_000);
+    expect(launched.wealth).toBe(s.wealth - 20_000);
+    expect(launched.packs.map((p) => p.kind)).toEqual(['campaign', 'policy']);
+    expect(launched.record.guns).toBe(2);
+    expect(launched.decisions?.cardIds).toHaveLength(3);
+    expect(launchError(launched, { officeId: 'mayor-nyc', platform: WATERTOWN_PLATFORM, donation: 0 })).toBeDefined();
   });
 
-  it('an independent may file for any office in the state (partisan ones with a penalty)', () => {
-    const s = newRun();
-    const options = raceOptions(s);
-    expect(options.every((o) => o.eligible)).toBe(true);
-    expect(nominationStatus(s, 'governor-ny').kind).toBe('independent');
-    expect(nominationStatus(s, 'mayor-nyc').kind).toBe('nonpartisan');
-    expect(fileRaceError(s, 'mayor-nyc')).toMatch(/already running/);
+  it('self-funding past the norm costs favorability', () => {
+    const rich = newRun({ wealth: 5_000_000 });
+    const modest = launch(rich, WATERTOWN_PLATFORM, undefined, 50_000);
+    const lavish = launch(rich, WATERTOWN_PLATFORM, undefined, 2_000_000);
+    expect(selfFundingPenalty('mayor-watertown', 50_000)).toBe(0);
+    expect(lavish.regions['ny-north']!.favorability).toBeLessThan(modest.regions['ny-north']!.favorability - 0.05);
+  });
+
+  it('later platforms: drop one topic, add up to five, move one position by one step', () => {
+    const s = { ...newRun(), career: { ...newRun().career, platform: WATERTOWN_PLATFORM } };
+    const [guns, taxes, biz, climate, industry] = WATERTOWN_PLATFORM;
+    expect(platformError(s, [taxes!, biz!, climate!, industry!])).toBeUndefined(); // dropped one
+    expect(platformError(s, [taxes!, biz!, climate!])).toMatch(/drop only one/);
+    expect(platformError(s, [{ ...guns!, stance: stanceAt(2) }, taxes!, biz!, climate!, industry!])).toBeUndefined();
+    expect(platformError(s, [{ ...guns!, stance: stanceAt(1) }, taxes!, biz!, climate!, industry!])).toMatch(/one step/);
+    expect(platformError(s, [{ ...guns!, stance: stanceAt(2) }, { ...taxes!, stance: stanceAt(2) }, biz!, climate!, industry!])).toMatch(
+      /only one existing/,
+    );
+  });
+
+  it('opponents campaign through the window you let pass: launching early is an edge', () => {
+    const early = launch(newRun({ exactYear: false, seed: 'edge' }));
+    let late = newRun({ exactYear: false, seed: 'edge' });
+    late = passTurns(late, 3);
+    late = launch(late);
+    const known = (s: GameState) => s.career.race!.opponents[0]!.regions['ny-north']!.recognition;
+    expect(known(late)).toBeGreaterThan(known(early));
   });
 });
 
@@ -119,8 +171,8 @@ describe('event cards', () => {
   }
 
   it('a well-aligned town hall raises recognition and favorability and costs only energy', () => {
-    const s = resolved();
-    const townHall = s.hand.find((c) => c.cardId === 'town_hall')!;
+    const s = { ...resolved(), hand: [{ uid: 500, cardId: 'town_hall' }] };
+    const townHall = s.hand[0]!;
     const pv = previewEvent(s, townHall.uid, 'ny-north', 'guns');
     expect(pv.error).toBeUndefined();
     const { state: after } = playEvent(s, townHall.uid, 'ny-north', 'guns');
@@ -202,9 +254,7 @@ describe('Election Day', () => {
         lost = true;
         expect(s.career.office).toBeUndefined();
         expect(s.career.lossStreak).toBe(1);
-        expect(fileRaceError(s, 'mayor-buffalo')).toBeUndefined();
-        const filed = applyAction(s, { type: 'FILE_RACE', officeId: 'mayor-buffalo' });
-        expect(filed.career.race?.electionYear).toBe(2029);
+        expect(campaignWindow(s, 'mayor-buffalo').electionYear).toBe(2029);
       }
     }
     expect(won && lost).toBe(true);

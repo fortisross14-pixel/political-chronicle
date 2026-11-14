@@ -5,7 +5,7 @@ import { alignment, clamp, nudgeFavorability, nudgeRecognition, regionAlignment,
 import { GOVERNING, nudgeApproval } from './governing';
 import { adjustStanding } from './parties';
 import { award, GROUND_GAME } from './loot';
-import { effectiveSkills, hasPerk } from './people';
+import { effectiveSkills, hasPerk, ROLE_EFFECT, roleStars } from './people';
 import { hasAbility, native } from './traits';
 import { Rng } from './rng';
 import type { EventCard, GameState, IssueId, OfficeLevel, Pledge, RegionId, Stance } from './types';
@@ -17,6 +17,8 @@ export const CREDIBLE_ISSUE_BONUS = 1.15;
 export const DOUBTED_ISSUE_FACTOR = 0.85;
 export const FATIGUE = 0.7;
 export const FUNDRAISING_FATIGUE = 0.5;
+/** A card's own topics (e.g. a college presentation on education) persuade this much more. */
+export const ISSUE_BONUS = 1.4;
 
 export interface RegionEffect {
   regionId: RegionId;
@@ -111,8 +113,8 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
   };
 
   if (state.ended) preview.error = 'Your career is over.';
-  else if (state.career.race && !state.career.race.platform.length) preview.error = 'Choose your platform first.';
-  else if (!activePlatform(state).length) preview.error = 'You need a race or an office first.';
+  else if (state.packs.length) preview.error = 'Open your pack first.';
+  else if (!activePlatform(state).length) preview.error = 'Launch a campaign first.';
   else if (state.decisions && !state.decisions.resolved) preview.error = 'Resolve this turn’s decisions first.';
   else if (card.energy > state.energy) preview.error = 'Not enough energy this turn.';
   else if (stance === undefined && !card.fundraising) preview.error = 'Pick one of your platform topics.';
@@ -130,7 +132,9 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
   const hometown = regionId === state.politician.residentRegionId ? (native(state) ? HOMETOWN_EVENT_BONUS : TRANSPLANT_EVENT_BONUS) : 1;
   const perks = getBackground(state.politician.backgroundId).perks;
   const perk = (card.id === 'door_knocking' ? (perks.doorKnocking ?? 1) : 1) * (card.id === 'debate' ? (perks.debate ?? 1) : 1);
-  const mult = skillMult(skills, card.skills) * hometown * fatigue * perk;
+  const manager = state.career.race ? 1 + ROLE_EFFECT.campaignPerStar * roleStars(state, 'campaignManager') : 1;
+  const topical = card.issueBonus?.includes(issue) ? ISSUE_BONUS : 1;
+  const mult = skillMult(skills, card.skills) * hometown * fatigue * perk * manager;
   const cred = credibility(state, issue, stance);
   const targets: [RegionId, number][] = [[regionId, 1]];
   if (card.spillover > 0) {
@@ -143,7 +147,7 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
     const align = regionAlignment(id, issue, stance);
     const you = state.regions[id]!;
     const gain = card.reach * m;
-    const dF = card.persuasion * m * r.issueSalience[issue] * align * relevance(issue, level) * cred;
+    const dF = card.persuasion * topical * m * r.issueSalience[issue] * align * relevance(issue, level) * cred;
     preview.effects.push({
       regionId: id,
       share,

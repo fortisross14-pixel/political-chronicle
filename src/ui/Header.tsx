@@ -59,12 +59,18 @@ export function Header({ state, onMainMenu, onAbandon }: Props) {
               : undefined
           }
         >
-          <dt>Funds</dt>
+          <dt>Campaign</dt>
           <dd>
             <CountUp value={state.funds} format={money} />
             {state.lastIncome && (
               <span className="income small"> +{money(state.lastIncome.donors + state.lastIncome.salary + state.lastIncome.party)}</span>
             )}
+          </dd>
+        </div>
+        <div className="stat" title="Personal money: goes into a campaign only when you launch it">
+          <dt>Wealth</dt>
+          <dd>
+            <CountUp value={state.wealth} format={money} />
           </dd>
         </div>
         <div className="stat">

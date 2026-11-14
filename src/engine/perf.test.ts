@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { applyAction } from './index';
-import { newRun } from './testUtils';
+import { applyAction, raceBoard } from './index';
+import { newRun, skipPacks } from './testUtils';
 import type { GameState } from './types';
 
 /**
@@ -16,9 +16,12 @@ function longCareer(): { state: GameState; msPerTurn: number } {
   let turns = 0;
   for (; turns < BUDGET.turns && !s.ended; turns++) {
     if (s.pendingResult !== undefined) s = applyAction(s, { type: 'DISMISS_RESULT' });
-    if (!s.career.race && !s.career.office) s = applyAction(s, { type: 'FILE_RACE', officeId: 'mayor-watertown' });
-    if (s.career.race && !s.career.race.platform.length)
-      s = applyAction(s, { type: 'SET_PLATFORM', platform: [{ issue: 'guns', stance: 2 }] });
+    s = skipPacks(s);
+    const open = raceBoard(s).find((r) => r.officeId === 'mayor-watertown' && r.status === 'open');
+    if (!s.career.race && open)
+      s = skipPacks(
+        applyAction(s, { type: 'LAUNCH_CAMPAIGN', officeId: 'mayor-watertown', platform: [{ issue: 'guns', stance: 2 }], donation: 0 }),
+      );
     if (s.decisions && !s.decisions.resolved) s = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: [s.decisions.cardIds[0]!] });
     const t0 = performance.now();
     s = applyAction(s, { type: 'END_TURN' });

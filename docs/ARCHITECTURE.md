@@ -40,7 +40,7 @@ UI ◄──────── new state ─────── saved to localSto
   UI logs and reports as such.
 - **`reducer.ts`** routes each action to its module and runs the end-of-turn sequence:
   opponents move → milestones pay out → snapshot → (Election Day → election night) → calendar,
-  income, governing, re-election filing, new decisions and Market.
+  New Year (simulated races, ended terms), income, governing, new decisions.
 
 ## Engine modules
 
@@ -53,8 +53,13 @@ UI ◄──────── new state ─────── saved to localSto
 | `opinion.ts`                             | Alignment, vote intention, polls, the partisan baseline.                     |
 | `events.ts`                              | Event cards: preview and play.                                               |
 | `decisions.ts`                           | The 3 (or 4) decision cards per turn; promises; party standing from votes.   |
-| `economy.ts`                             | Income, the Market, prices, skill training.                                  |
-| `people.ts`                              | People cards, roles, boosts and perks (`effectiveSkills`).                   |
+| `economy.ts`                             | Income and prices.                                                           |
+| `launch.ts`                              | Campaign windows, the race board, launching, self-funding, asking a party.   |
+| `packs.ts`                               | Buying and opening packs; hands and discards.                                |
+| `policy.ts`                              | Political events.                                                            |
+| `world.ts`                               | Officeholders, simulated races, the calendar.                                |
+| `stance.ts`                              | The 7-step platform scale.                                                   |
+| `people.ts`                              | People cards, roles and role stars, perks.                                   |
 | `campaign.ts`                            | Filing, opponents, nominations, primaries, drawing and finalizing elections. |
 | `governing.ts`                           | Approval, wear, terms, re-election timing.                                   |
 | `parties.ts`                             | Platforms, alignment, standing, party money, invitations.                    |

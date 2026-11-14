@@ -23,6 +23,9 @@ export const ITEM_EFFECT = {
   dossierFavorability: -0.08,
   endorsementRecognition: 0.05,
   endorsementFavorability: 0.04,
+  scandalFavorability: -0.08,
+  celebrityRecognition: 0.06,
+  celebrityFavorability: 0.03,
 };
 
 /** Awards a milestone once per race. */
@@ -121,6 +124,40 @@ export function applyCampaignItem(state: GameState, uid: number, regionId?: Regi
       },
       log: [...state.log, { ...at, text: 'You rolled out a local endorsement.' }],
     };
+  }
+  if (card.itemId === 'oppo_scandal') {
+    const p = poll(state, race).decided;
+    const leader = p.slice(1).indexOf(Math.max(...p.slice(1)));
+    const opponents = race.opponents.map((c, i) =>
+      i !== leader
+        ? c
+        : {
+            ...c,
+            regions: Object.fromEntries(
+              Object.entries(c.regions).map(([id, r]) => [
+                id,
+                { ...r, favorability: nudgeFavorability(r.favorability, ITEM_EFFECT.scandalFavorability) },
+              ]),
+            ),
+          },
+    );
+    return {
+      ...state,
+      items,
+      career: { ...state.career, race: { ...race, opponents } },
+      log: [...state.log, { ...at, text: `The scandal about ${race.opponents[leader]!.name} is front-page news.` }],
+    };
+  }
+  if (card.itemId === 'celebrity_endorsement') {
+    const regions = { ...state.regions };
+    for (const id of getOffice(race.officeId).regionIds) {
+      const cur = regions[id]!;
+      regions[id] = {
+        recognition: nudgeRecognition(cur.recognition, ITEM_EFFECT.celebrityRecognition),
+        favorability: nudgeFavorability(cur.favorability, ITEM_EFFECT.celebrityFavorability),
+      };
+    }
+    return { ...state, items, regions, log: [...state.log, { ...at, text: 'A celebrity endorses you on every channel.' }] };
   }
   throw new GameError('That item does nothing during the campaign.');
 }

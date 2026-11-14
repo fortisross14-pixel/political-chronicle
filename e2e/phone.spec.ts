@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
-import { applyAction, createScenarioRun } from '../src/engine';
-import { seed } from './helpers';
+import { launchedState, seed } from './helpers';
 
 /** Drags from a point near the top of `from` (clear of the dock) to `to`, in small steps. */
 async function drag(page: Page, from: Locator, to: { x: number; y: number }) {
@@ -17,33 +16,27 @@ async function drag(page: Page, from: Locator, to: { x: number; y: number }) {
 }
 
 test('on a phone, decisions are swiped and cards are dragged onto a region', async ({ page }) => {
-  let s = createScenarioRun('hometown_favorite', { name: 'Thumb Player', artifacts: [], seed: 'phone' });
-  s = applyAction(s, {
-    type: 'SET_PLATFORM',
-    platform: [
-      { issue: 'guns', stance: 2 },
-      { issue: 'taxes', stance: 2 },
-    ],
-  });
+  const s = launchedState();
   await seed(page, { state: s });
   await page.goto('/');
   await page.getByRole('button', { name: /Continue/ }).click();
 
   // Swipe the top decision to the right: it is backed and the next card comes up.
   const top = page.locator('.swipe-card');
+  await top.scrollIntoViewIfNeeded();
   const box = (await top.boundingBox())!;
   await drag(page, top, { x: box.x + box.width / 2 + 220, y: box.y + 60 });
   await expect(page.locator('.dot.yes')).toHaveCount(1);
-  await page.getByRole('button', { name: /^Confirm 1 decision/ }).click();
+  await page.getByRole('button', { name: /^Confirm 1 stance/ }).click();
 
   // Drag Door-knocking onto the Buffalo chip.
   await page.getByRole('button', { name: /^Play cards/ }).click();
-  const energy = Number((await page.locator('.stat').nth(1).locator('.count').innerText()).trim());
+  const energy = Number((await page.locator('.stat', { hasText: 'Energy' }).locator('.count').innerText()).trim());
   const target = (await page.locator('.region-chip', { hasText: 'Buffalo' }).boundingBox())!;
   await drag(page, page.locator('.hand-fan .gcard', { hasText: 'Door-knocking' }), {
     x: target.x + target.width / 2,
     y: target.y + target.height / 2,
   });
-  await expect(page.locator('.stat').nth(1).locator('.count')).toHaveText(String(energy - 2));
+  await expect(page.locator('.stat', { hasText: 'Energy' }).locator('.count')).toHaveText(String(energy - 2));
   await expect(page.locator('.region-chip.active')).toContainText('Buffalo');
 });

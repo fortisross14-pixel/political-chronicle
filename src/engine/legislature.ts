@@ -1,7 +1,7 @@
 // Legislatures: bills you sign or back as Governor, House member or Senator must pass (DESIGN_V2 §4).
 import { getOffice, getRegion, STATES } from '../data';
 import { clamp } from './opinion';
-import { effectiveSkills, hasPerk } from './people';
+import { effectiveSkills, hasPerk, ROLE_EFFECT, roleStars } from './people';
 import type { Rng } from './rng';
 import type { ChamberControl, Chambers, DecisionCard, GameState, StateId } from './types';
 
@@ -55,7 +55,8 @@ export function passageChance(state: GameState, card: DecisionCard): number {
   const base =
     party === 'IND' ? PASSAGE.independent : own ? PASSAGE.ownControl : chamber.control === 'split' ? PASSAGE.split : PASSAGE.opposing;
   const persuasion = own ? 0 : PASSAGE.perDiplomacy * skills.diplomacy + (hasPerk(state, 'acrossTheAisle') ? PASSAGE.acrossTheAisle : 0);
-  return clamp(base + PASSAGE.perLaw * skills.law + persuasion, PASSAGE.min, PASSAGE.max);
+  const director = ROLE_EFFECT.passagePerStar * roleStars(state, 'legislativeDirector');
+  return clamp(base + PASSAGE.perLaw * skills.law + persuasion + director, PASSAGE.min, PASSAGE.max);
 }
 
 export function rollPassage(state: GameState, card: DecisionCard, rng: Rng): boolean {

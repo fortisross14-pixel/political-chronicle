@@ -33,8 +33,23 @@ export interface Issue {
   mayorRelevance: MayorRelevance;
 }
 
-/** A position on an issue axis, −2 .. +2. */
+/** A position on an issue axis, −2 .. +2. Player platforms use 7 steps of 2/3 (see stance.ts). */
 export type Stance = number;
+
+export type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
+
+export type PackKind = 'people' | 'policy' | 'campaign';
+export type PackTier = 'regular' | 'golden' | 'elite';
+
+/** A pack waiting to be opened: its cards are drawn, the player keeps one (or any, for people). */
+export interface OpenPack {
+  kind: PackKind;
+  tier: PackTier;
+  /** Person ids, political event ids, or campaign action ids ("item:" prefix for items). */
+  cards: string[];
+  /** Free packs: the starter people pack and the two dealt at launch. */
+  free?: boolean;
+}
 
 export type MediaChannel = 'tv' | 'cable' | 'social' | 'inPerson' | 'radio';
 
@@ -188,6 +203,10 @@ export interface Race {
   raisedThisTurn: number;
   /** Once-per-campaign effects already used (abilities, artifacts). */
   used?: string[];
+  /** Personal money put into this campaign. */
+  selfFunded?: number;
+  /** Turns left until Election Day when you launched (7 at the earliest, 4 at the latest). */
+  launchedWith?: number;
 }
 
 export type ItemWindow = 'campaign' | 'night' | 'both';
@@ -226,6 +245,8 @@ export interface ElectionNight {
   /** Statewide late-ad nudge (share points on the uncounted vote). */
   statewideBoost: number;
   adBought: boolean;
+  /** Late-surge points (legendary card), outside the night-action cap. */
+  surge?: number;
   calledFor?: number;
   finalPoll: number;
   /** Things that happened, for the ticker. */
@@ -269,6 +290,10 @@ export interface Career {
   lossStreak: number;
   /** Relationship with your party, 0..100 (members only). */
   partyStanding?: number;
+  /** Your platform from your last campaign: the next one can only change it a little. */
+  platform?: Pledge[];
+  /** Year you last asked each party to take you; one ask per party per year. */
+  joinAsked?: Partial<Record<PartyId, number>>;
 }
 
 // ---------- Cards ----------
@@ -276,6 +301,10 @@ export interface Career {
 export interface EventCard {
   id: string;
   name: string;
+  /** Pack rarity; basic cards have none. */
+  rarity?: Rarity;
+  /** Persuasion ×1.4 on these topics. */
+  issueBonus?: IssueId[];
   /** Basic cards are always available and never consumed. */
   basic: boolean;
   cost: number;
@@ -325,17 +354,6 @@ export interface DecisionHand {
   applied: string[];
   /** Applied bills that failed to pass the legislature. */
   failed?: string[];
-}
-
-export interface MarketOffer {
-  kind: 'event' | 'skill' | 'person';
-  /** Event or skill card id, or a person id. */
-  cardId: string;
-}
-
-export interface Market {
-  turnNo: number;
-  offers: MarketOffer[];
 }
 
 export type RoleId = 'campaignManager' | 'chiefOfStaff' | 'partyLiaison' | 'legislativeDirector';
@@ -409,6 +427,33 @@ export interface Snapshot {
   regions: Record<RegionId, RegionStanding>;
 }
 
+// ---------- The world: who holds what, and every result ----------
+
+export interface Seat {
+  holder: string;
+  affiliation: Affiliation;
+  /** Year the holder last won. */
+  since: number;
+  isPlayer?: boolean;
+}
+
+export interface WorldResult {
+  officeId: OfficeId;
+  year: number;
+  winner: string;
+  winnerAffiliation: Affiliation;
+  share: number;
+  runnerUp: string;
+  runnerUpAffiliation: Affiliation;
+  playerRan: boolean;
+  playerWon: boolean;
+}
+
+export interface World {
+  seats: Record<OfficeId, Seat>;
+  results: WorldResult[];
+}
+
 export interface LogEntry {
   year: number;
   turn: number;
@@ -446,22 +491,30 @@ export interface GameState {
   clock: Clock;
   politician: Politician;
   career: Career;
+  /** Campaign war chest: what packs, ads and night actions are paid from. */
   funds: number;
+  /** Personal money. Goes into a campaign only as a self-donation at launch. */
+  wealth: number;
   energy: number;
   integrity: number;
   regions: Record<RegionId, RegionStanding>;
   /** Your public record per issue (−2..+2), built from pledges and applied decisions. */
   record: Partial<Record<IssueId, Stance>>;
+  /** Campaign actions (event cards); items below are campaign actions too. */
   hand: CardInstance[];
-  /** Loot items (one-shot) from campaign milestones. */
+  /** Political events: up to 5, played for their effect. */
+  policyHand: CardInstance[];
+  /** Packs bought or granted and not opened yet; the first is the one on screen. */
+  packs: OpenPack[];
+  world: World;
+  /** Loot items (one-shot) from campaign milestones and campaign-action packs. */
   items: ItemCard[];
   nextItemUid: number;
   /** Election night in progress. */
   night?: ElectionNight;
   nextCardUid: number;
   decisions?: DecisionHand;
-  market?: Market;
-  /** People cards: the roster and who fills each role (DESIGN_V2 §3). Bought in the Market. */
+  /** People cards: the roster and who fills each role (DESIGN_V2 §3). From people packs. */
   team: Team;
   /** Who controls each legislature this cycle. */
   chambers: Chambers;
@@ -491,15 +544,17 @@ export interface GameState {
 
 export type Action =
   | { type: 'END_TURN' }
-  | { type: 'FILE_RACE'; officeId: OfficeId }
-  | { type: 'SET_PLATFORM'; platform: Pledge[] }
+  | { type: 'LAUNCH_CAMPAIGN'; officeId: OfficeId; platform: Pledge[]; donation: number; managerUid?: number }
   | { type: 'PLAY_EVENT'; cardUid: number | string; regionId: RegionId; issue: IssueId }
   | { type: 'RESOLVE_DECISIONS'; apply: string[] }
-  | { type: 'BUY_CARD'; offerIndex: number }
+  | { type: 'BUY_PACK'; kind: PackKind; tier: PackTier }
+  | { type: 'KEEP_FROM_PACK'; keep: number[] }
+  | { type: 'PLAY_POLICY'; uid: number; regionId?: RegionId }
+  | { type: 'DISCARD_CARD'; zone: 'policy' | 'campaign' | 'item'; uid: number }
   | { type: 'DISMISS_RESULT' }
   | { type: 'RETIRE' }
-  | { type: 'JOIN_PARTY'; party: PartyId }
-  | { type: 'ASSIGN_PERSON'; uid: number }
+  | { type: 'ASK_TO_JOIN'; party: PartyId; platform?: Pledge[] }
+  | { type: 'ASSIGN_PERSON'; uid: number; role: RoleId }
   | { type: 'UNASSIGN_ROLE'; role: RoleId }
   | { type: 'DISCARD_PERSON'; uid: number }
   | { type: 'USE_ITEM'; uid: number; regionId?: RegionId }

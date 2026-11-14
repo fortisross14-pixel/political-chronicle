@@ -1,8 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { applyAction, createScenarioRun } from '../src/engine';
-import { nightState, seed, veteranProfile } from './helpers';
+import { launchedState, nightState, seed, veteranProfile } from './helpers';
 
 /** WCAG 2.1 AA checks on a screen; returns a readable list of what failed. */
 async function audit(page: Page): Promise<string[]> {
@@ -17,24 +16,17 @@ async function audit(page: Page): Promise<string[]> {
 test.use({ reducedMotion: 'reduce' });
 
 test('menu, every Government section, profile, party and election night pass WCAG AA checks', async ({ page }) => {
-  let s = createScenarioRun('hometown_favorite', { name: 'Alex Reyes', artifacts: [], seed: 'a11y' });
-  s = applyAction(s, {
-    type: 'SET_PLATFORM',
-    platform: [
-      { issue: 'guns', stance: 2 },
-      { issue: 'taxes', stance: 2 },
-    ],
-  });
+  const s = launchedState();
   await seed(page, { state: s, profile: veteranProfile() });
   await page.goto('/');
   expect(await audit(page)).toEqual([]);
   await page.getByRole('button', { name: /Continue/ }).click();
   expect(await audit(page)).toEqual([]);
-  for (const n of ['Play cards', 'Market', 'Team', 'Map']) {
+  for (const n of ['Play cards', 'Packs', 'Team', 'Map']) {
     await page.getByRole('button', { name: new RegExp(`^${n}`) }).click();
     expect(await audit(page), n).toEqual([]);
   }
-  for (const n of ['My profile', 'My party']) {
+  for (const n of ['My profile', 'My party', 'World']) {
     await page.getByRole('tab', { name: n }).click();
     expect(await audit(page), n).toEqual([]);
   }
@@ -53,4 +45,23 @@ test('Sandbox creator passes WCAG AA checks', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /^Sandbox/ }).click();
   expect(await audit(page)).toEqual([]);
+});
+
+test('the starter pack, the launch screen and the topic sliders pass WCAG AA checks', async ({ page }) => {
+  await seed(page, {});
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Scenarios/ }).click();
+  await page.getByRole('button', { name: /Hometown favorite/ }).click();
+  await page.getByPlaceholder(/Sam Ortega/).fill('Casey Moran');
+  await page.getByRole('button', { name: 'Start scenario' }).click();
+  await expect(page.locator('.pack-overlay')).toBeVisible();
+  expect(await audit(page), 'pack').toEqual([]);
+  await page.getByRole('button', { name: /^Keep 3 cards/ }).click();
+  await page
+    .locator('.race-slot.open', { hasText: 'Mayor of Watertown' })
+    .getByRole('button', { name: /^Launch/ })
+    .click();
+  expect(await audit(page), 'launch').toEqual([]);
+  await page.getByRole('button', { name: /Campaign topics/ }).click();
+  expect(await audit(page), 'topics').toEqual([]);
 });

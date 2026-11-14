@@ -1,31 +1,11 @@
-// Money: income, upkeep, the Market and skill growth (DESIGN §6.2, §9).
-import { reject } from './errors';
-import {
-  EVENT_CARDS,
-  getEventCard,
-  getOffice,
-  getPerson,
-  getRegion,
-  getSkillCard,
-  MARKET_COST_FACTOR,
-  MARKET_WEIGHTS,
-  PERSON_PRICE,
-  SKILL_CARDS,
-} from '../data';
-import type { SkillCard } from '../data';
-import { turnNo } from './events';
+// Money: income and prices (DESIGN §6.2, §9). Cards come from packs (packs.ts).
+import { getOffice, getRegion, MARKET_COST_FACTOR } from '../data';
 import { poll } from './opinion';
-import { adjustStanding, partyFunds } from './parties';
-import { acquirePerson, effectiveSkills, rollPerson, rosterFull, ROSTER_LIMIT } from './people';
+import { partyFunds } from './parties';
+import { effectiveSkills } from './people';
 import { native, TRAITS } from './traits';
-import { Rng } from './rng';
 import { monthsFactor } from './time';
-import type { EventCard, GameState, IncomeBreakdown, MarketOffer, OfficeLevel, RegionId } from './types';
-
-export const HAND_LIMIT = 8;
-export const MARKET_SIZE = 6;
-export const MARKET_SKILL_OFFERS = 2;
-export const MARKET_PERSON_OFFERS = 1;
+import type { EventCard, GameState, IncomeBreakdown, OfficeLevel, RegionId } from './types';
 
 export const INCOME = {
   donorBase: 1000,
@@ -70,15 +50,6 @@ export function eventPrice(card: EventCard, state: GameState): number {
   return Math.round((card.cost * priceFactor(state)) / 500) * 500;
 }
 
-export function skillPrice(card: SkillCard, state: GameState): number {
-  return card.pricePerLevel * state.politician.skills[card.skill];
-}
-
-export function offerPrice(offer: MarketOffer, state: GameState): number {
-  if (offer.kind === 'person') return PERSON_PRICE[getPerson(offer.cardId).rarity];
-  return offer.kind === 'event' ? eventPrice(getEventCard(offer.cardId), state) : skillPrice(getSkillCard(offer.cardId), state);
-}
-
 // ---------- Income ----------
 
 /** Parties spend where races are close: 1 for a toss-up, down to 0.3 for a blowout; 0.6 between races. */
@@ -112,95 +83,4 @@ export function collectIncome(state: GameState): GameState {
   if (state.ended) return state;
   const income = projectedIncome(state);
   return { ...state, funds: state.funds + income.donors + income.salary + income.party, lastIncome: income };
-}
-
-// ---------- Market ----------
-
-function availableSkillCards(state: GameState): SkillCard[] {
-  const cap = skillCap(state);
-  return SKILL_CARDS.filter((c) => (!c.requiresParty || state.career.affiliation !== 'IND') && state.politician.skills[c.skill] < cap);
-}
-
-function weightedPick(rng: Rng, weights: [string, number][]): string {
-  let roll = rng.float() * weights.reduce((s, [, w]) => s + w, 0);
-  for (const [id, w] of weights) {
-    roll -= w;
-    if (roll <= 0) return id;
-  }
-  return weights.at(-1)![0];
-}
-
-/** Deals this turn's 6 offers if not dealt yet. */
-export function dealMarket(state: GameState): GameState {
-  const now = turnNo(state);
-  if (state.ended || state.market?.turnNo === now) return state;
-  const rng = new Rng(state.rng);
-  const skills = rng.shuffle(availableSkillCards(state)).slice(0, MARKET_SKILL_OFFERS);
-  const offers: MarketOffer[] = skills.map((c) => ({ kind: 'skill', cardId: c.id }));
-  for (let i = 0; i < MARKET_PERSON_OFFERS; i++) {
-    const personId = rollPerson(
-      state,
-      rng,
-      offers.filter((o) => o.kind === 'person').map((o) => o.cardId),
-    );
-    if (personId) offers.push({ kind: 'person', cardId: personId });
-  }
-  const eventWeights = EVENT_CARDS.filter((c) => MARKET_WEIGHTS[c.id] && (!c.requiresParty || state.career.affiliation !== 'IND')).map(
-    (c) => [c.id, MARKET_WEIGHTS[c.id]!] as [string, number],
-  );
-  while (offers.length < MARKET_SIZE) offers.push({ kind: 'event', cardId: weightedPick(rng, eventWeights) });
-  return { ...state, rng: rng.state, market: { turnNo: now, offers: rng.shuffle(offers) } };
-}
-
-export function buyError(state: GameState, offerIndex: number): string | undefined {
-  if (state.ended) return 'Your career is over.';
-  const offer = state.market?.offers[offerIndex];
-  if (!offer) return 'That offer is gone.';
-  if (offerPrice(offer, state) > state.funds) return 'Not enough funds.';
-  if (offer.kind === 'person') {
-    if (rosterFull(state)) return `Your team is full (${ROSTER_LIMIT}). Discard someone first.`;
-  } else if (offer.kind === 'event') {
-    if (state.hand.length >= HAND_LIMIT) return `Your hand is full (${HAND_LIMIT} cards). Play some first.`;
-  } else {
-    const card = getSkillCard(offer.cardId);
-    if (state.politician.skills[card.skill] >= skillCap(state)) return `Skill capped at ${skillCap(state)} at your current office.`;
-    if (card.energy > state.energy) return 'Not enough energy this turn.';
-    if (card.requiresParty && state.career.affiliation === 'IND') return 'Party members only.';
-  }
-  return undefined;
-}
-
-export function buyOffer(state: GameState, offerIndex: number): GameState {
-  const error = buyError(state, offerIndex);
-  reject(error);
-  const offer = state.market!.offers[offerIndex]!;
-  const price = offerPrice(offer, state);
-  const offers = state.market!.offers.filter((_, i) => i !== offerIndex);
-  const base = { ...state, funds: state.funds - price, market: { ...state.market!, offers } };
-  const entry = (text: string) => [...state.log, { year: state.clock.year, turn: state.clock.turn, text }];
-
-  if (offer.kind === 'person') {
-    const person = getPerson(offer.cardId);
-    return {
-      ...acquirePerson(base, person.id),
-      log: entry(`Brought ${person.name} onto the team for $${price.toLocaleString('en-US')}.`),
-    };
-  }
-  if (offer.kind === 'event') {
-    return {
-      ...base,
-      hand: [...state.hand, { uid: state.nextCardUid, cardId: offer.cardId }],
-      nextCardUid: state.nextCardUid + 1,
-      log: entry(`Bought ${getEventCard(offer.cardId).name} for $${price.toLocaleString('en-US')}.`),
-    };
-  }
-  const card = getSkillCard(offer.cardId);
-  const skills = { ...state.politician.skills, [card.skill]: state.politician.skills[card.skill] + 1 };
-  const withStanding = card.standing ? adjustStanding(base, card.standing) : base;
-  return {
-    ...withStanding,
-    energy: state.energy - card.energy,
-    politician: { ...state.politician, skills },
-    log: entry(`${card.name}: ${card.skill} is now ${skills[card.skill]}.`),
-  };
 }

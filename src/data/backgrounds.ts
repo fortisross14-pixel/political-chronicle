@@ -28,8 +28,8 @@ export interface Background {
   skillBonus: Partial<Record<SkillId, number>>;
   /** Weaknesses: these skills can't be raised above this value at creation. */
   creationCaps?: Partial<Record<SkillId, number>>;
-  /** Starting funds at age 25; older politicians have more savings and contacts. */
-  baseFunds: number;
+  /** Personal wealth at age 25 (log-uniform between min and max); older politicians have more. */
+  wealth: { min: number; max: number; /** Chance of a fortune 20–60× the max. */ fortune?: number };
   /** Issues where this background makes you more credible. */
   credibleIssues: IssueId[];
   /** Issues where voters doubt you (×0.85 credibility). */
@@ -52,7 +52,7 @@ export const BACKGROUNDS: Background[] = [
     blurb: 'Discipline, a story people respect, and calm in a crisis.',
     skillBonus: { leadership: 2, administration: 1 },
     creationCaps: { diplomacy: 2 },
-    baseFunds: 15_000,
+    wealth: { min: 40_000, max: 150_000 },
     credibleIssues: ['guns', 'immigration', 'policing'],
     favoredStates: ['TX', 'GA', 'NC', 'AZ', 'WY'],
     disfavoredStates: ['MA', 'VT'],
@@ -66,7 +66,7 @@ export const BACKGROUNDS: Background[] = [
     name: 'Public servant',
     blurb: 'Years inside government. You know how things get done — and everyone knows you.',
     skillBonus: { administration: 2, strategy: 2 },
-    baseFunds: 20_000,
+    wealth: { min: 60_000, max: 250_000 },
     credibleIssues: ['transit', 'education'],
     favoredStates: ['NY', 'IL', 'MA'],
     perks: { partyStandingFloor: 40 },
@@ -79,7 +79,7 @@ export const BACKGROUNDS: Background[] = [
     blurb: 'Everybody knows your face. Nobody knows your policies.',
     skillBonus: { charisma: 4, strategy: 1 },
     creationCaps: { administration: 2, economics: 2, law: 2 },
-    baseFunds: 60_000,
+    wealth: { min: 1_500_000, max: 25_000_000 },
     credibleIssues: ['lgbtq', 'climate'],
     favoredStates: ['CA', 'NY', 'FL'],
     disfavoredStates: ['WY', 'ND'],
@@ -94,7 +94,7 @@ export const BACKGROUNDS: Background[] = [
     blurb: 'Sharp in a debate and well connected, but voters have heard lawyers before.',
     skillBonus: { law: 3, diplomacy: 1 },
     creationCaps: { charisma: 2 },
-    baseFunds: 40_000,
+    wealth: { min: 300_000, max: 2_500_000 },
     credibleIssues: ['policing', 'immigration', 'abortion'],
     favoredStates: ['MA', 'IL', 'NY'],
     perks: { debate: 1.25 },
@@ -106,7 +106,7 @@ export const BACKGROUNDS: Background[] = [
     name: 'Business executive',
     blurb: 'You’ve run payrolls and boardrooms. You can write your own first check.',
     skillBonus: { economics: 3, administration: 1 },
-    baseFunds: 70_000,
+    wealth: { min: 3_000_000, max: 60_000_000, fortune: 0.04 },
     credibleIssues: ['small_biz', 'taxes', 'industry'],
     doubtedIssues: ['labor', 'min_wage'],
     favoredStates: ['NY', 'TX', 'FL'],
@@ -120,7 +120,7 @@ export const BACKGROUNDS: Background[] = [
     blurb: 'You built coalitions block by block. You can fill a hall on short notice.',
     skillBonus: { leadership: 1, charisma: 1, diplomacy: 1 },
     creationCaps: { economics: 2 },
-    baseFunds: 8_000,
+    wealth: { min: 15_000, max: 60_000 },
     credibleIssues: ['labor', 'housing', 'min_wage'],
     favoredStates: ['IL', 'MI', 'PA', 'OH'],
     disfavoredStates: ['WY'],
@@ -133,7 +133,7 @@ export const BACKGROUNDS: Background[] = [
     name: 'Doctor / scientist',
     blurb: 'Trusted, careful and credible — and still finishing your shifts.',
     skillBonus: { law: 1, administration: 1, economics: 1 },
-    baseFunds: 50_000,
+    wealth: { min: 250_000, max: 1_500_000 },
     credibleIssues: ['healthcare', 'climate', 'abortion'],
     favoredStates: ['MA', 'CO', 'WA'],
     perks: { startingIntegrity: 75, energyPenalty: { amount: 1, months: 48 } },

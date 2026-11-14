@@ -14,7 +14,8 @@ validator with typed errors, save migrations (old saves upgrade instead of disap
 coverage floors, a performance budget, Playwright UI smoke tests, a fixed-seed balance
 baseline and a bundle budget, all in CI on every push. **M12 (visual revamp) done**: the
 Prime Time broadcast look, collectible 3D cards, drag-to-play and swipe decisions, sound and
-vibration, and an installable offline app. Next: M13 balancing.
+vibration, and an installable offline app. **M13 (gameplay rework) done**: a blank start, launching campaigns, card packs, people with
+role stars, political events, 7-step platforms and the World tab. Next: M14 balancing.
 
 ## Development
 

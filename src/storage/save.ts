@@ -41,6 +41,9 @@ const REQUIRED_KEYS: (keyof GameState)[] = [
   'team',
   'chambers',
   'items',
+  'wealth',
+  'packs',
+  'world',
   'modifiers',
   'snapshots',
 ];

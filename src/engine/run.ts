@@ -1,16 +1,16 @@
 import { getBackground, getOffice, getRegion, OFFICES } from '../data';
-import { fileRace } from './campaign';
-import { dealMarket } from './economy';
 import { averageApproval } from './governing';
+import { grantPack } from './packs';
 import { poll } from './opinion';
 import { Rng, seedFromString } from './rng';
 import { rollChambers } from './legislature';
 import { emptyTeam, grantPerson } from './people';
 import { initialRegions } from './traits';
 import { nextElectionYear, turnsInYear } from './time';
+import { initWorld } from './world';
 import type { Career, GameState, Politician, RegionId, RunModifiers, Skills, Snapshot } from './types';
 
-export const SCHEMA_VERSION = 9;
+export const SCHEMA_VERSION = 10;
 export const MAX_AGE_ENDS_RUN = 85;
 export const DEFAULT_START_YEAR = 2027;
 
@@ -19,13 +19,14 @@ export const STARTING_INTEGRITY = 60;
 export interface NewRunConfig {
   seed: string;
   politician: Politician;
-  startingFunds: number;
-  /** Earliest calendar year the run may start. The run starts in the first race's election year. */
+  /** Personal wealth (see `wealthFor`). The campaign war chest starts empty. */
+  wealth: number;
+  /** Earliest election the run is built around: it starts the year before (campaigns open 7 turns out). */
   earliestYear?: number;
-  /** First race to file for. Defaults to the hometown's mayoralty, if there is one. */
+  /** The race the start is timed for. Defaults to the hometown's mayoralty. */
   raceOfficeId?: string;
-  /** Start without filing for any race (scenario setups that begin in office). */
-  noRace?: boolean;
+  /** Start exactly in `earliestYear` (scenarios that begin in office). */
+  exactYear?: boolean;
   /** Artifacts equipped for the run (DESIGN_V2 §8.3). */
   artifacts?: string[];
   modifiers?: Partial<RunModifiers>;
@@ -46,7 +47,7 @@ export function applyArtifacts(state: GameState, artifacts: string[]): GameState
         break;
       }
       case 'rolodex':
-        if (!s.team.cards.some((c) => c.personId === 'cm_kowalczyk')) s = grantPerson(s, 'cm_kowalczyk');
+        if (!s.team.cards.some((c) => c.personId === 'cm_kowalczyk')) s = grantPerson(s, 'cm_kowalczyk', 'campaignManager');
         break;
       case 'union_hall_key':
         s = { ...s, modifiers: { ...s.modifiers, extraTokens: s.modifiers.extraTokens + 1 } };
@@ -99,11 +100,12 @@ export function createRun(config: NewRunConfig): GameState {
   const { politician } = config;
   getRegion(politician.residentRegionId); // validates birthplace
   const earliest = config.earliestYear ?? DEFAULT_START_YEAR;
-  const raceOfficeId = config.noRace ? undefined : (config.raceOfficeId ?? hometownMayoralty(politician.residentRegionId));
-  // Start in the first race's election year, so the career opens with a campaign.
-  const startYear = raceOfficeId ? nextElectionYear(getOffice(raceOfficeId), earliest) : earliest;
+  const raceOfficeId = config.raceOfficeId ?? hometownMayoralty(politician.residentRegionId);
+  // You start blank, the year before your first natural race: its campaign window opens on turn one.
+  const startYear = config.exactYear ? earliest : raceOfficeId ? nextElectionYear(getOffice(raceOfficeId), earliest) - 1 : earliest;
 
   const career: Career = { affiliation: 'IND', lossStreak: 0 };
+  const rng = new Rng(seedFromString(`${config.seed}:world`));
   const base: GameState = {
     schemaVersion: SCHEMA_VERSION,
     runId: `run-${config.seed}`,
@@ -111,12 +113,16 @@ export function createRun(config: NewRunConfig): GameState {
     clock: { year: startYear, turn: 0, turnsThisYear: turnsInYear(career, startYear), monthsElapsed: 0 },
     politician: { ...politician, skills: { ...politician.skills } },
     career,
-    funds: config.startingFunds,
+    funds: 0,
+    wealth: config.wealth,
     energy: Math.max(1, energyForAge(politician.startAge) - (getBackground(politician.backgroundId).perks.energyPenalty?.amount ?? 0)),
     integrity: getBackground(politician.backgroundId).perks.startingIntegrity ?? STARTING_INTEGRITY,
     regions: initialRegions(politician),
     record: {},
     hand: [],
+    policyHand: [],
+    packs: [],
+    world: initWorld(rng, startYear),
     items: [],
     nextItemUid: 1,
     nextCardUid: 1,
@@ -136,7 +142,8 @@ export function createRun(config: NewRunConfig): GameState {
   // Public servants bring someone from their old job.
   const staffed = politician.backgroundId === 'public_servant' ? grantPerson(base, 'cs_pham') : base;
   const equipped = applyArtifacts(staffed, config.artifacts ?? []);
-  return dealMarket(raceOfficeId ? fileRace(equipped, raceOfficeId) : equipped);
+  // Your first people: a free pack, keep all three.
+  return grantPack(equipped, 'people', 'regular', true);
 }
 
 export function takeSnapshot(state: GameState): Snapshot {

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getOffice } from '../data';
 import {
   ageOf,
+  createRun,
   defaultPolitician,
   energyForAge,
   isOfficeElectionYear,
@@ -54,13 +55,15 @@ describe('election cycles', () => {
 });
 
 describe('createRun', () => {
-  it('starts as an independent filed for the hometown mayoralty in its election year', () => {
-    const s = newRun();
+  it('starts blank as an independent, the year before the hometown election, with only personal money', () => {
+    const s = createRun({ seed: 'blank', politician: defaultPolitician(), wealth: 50_000 });
     expect(s.career.affiliation).toBe('IND');
-    expect(s.career.race).toMatchObject({ officeId: 'mayor-watertown', electionYear: 2027, platform: [] });
-    expect(s.career.race?.opponents.length).toBeGreaterThan(0);
-    expect(s.hand.length).toBeGreaterThan(0);
-    expect(s.clock).toEqual({ year: 2027, turn: 0, turnsThisYear: 4, monthsElapsed: 0 });
+    expect(s.career.race).toBeUndefined();
+    expect(s.clock).toEqual({ year: 2026, turn: 0, turnsThisYear: 3, monthsElapsed: 0 });
+    expect(s.funds).toBe(0);
+    expect(s.wealth).toBe(50_000);
+    expect(s.hand).toHaveLength(0);
+    expect(Object.keys(s.world.seats)).toContain('mayor-watertown');
   });
 
   it('gives the hometown a recognition and favorability boost', () => {
@@ -72,10 +75,9 @@ describe('createRun', () => {
     expect(s.regions['ny-nyc']!.favorability).toBeCloseTo(0.08);
   });
 
-  it('a NYC-born politician starts in the 2029 NYC mayoral year', () => {
-    const s = newRun({ politician: { ...defaultPolitician(), residentRegionId: 'ny-nyc' } });
-    expect(s.career.race?.officeId).toBe('mayor-nyc');
-    expect(s.clock.year).toBe(2029);
+  it('a New Yorker starts in 2028, a year before the 2029 NYC mayoral race', () => {
+    const s = createRun({ seed: 'nyc', politician: { ...defaultPolitician(), residentRegionId: 'ny-nyc' }, wealth: 0 });
+    expect(s.clock.year).toBe(2028);
   });
 
   it('is reproducible from its seed', () => {

@@ -53,9 +53,15 @@ export const ICONS = {
       <rect x="10" y="4" width="10" height="15" rx="2" transform="rotate(8 15 12)" />
     </Icon>
   ),
-  market: (
+  packs: (
     <Icon>
       <path d="M4 9l1-5h14l1 5M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0A2.7 2.7 0 0 0 20 9M5 12v8h14v-8" />
+    </Icon>
+  ),
+  world: (
+    <Icon>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
     </Icon>
   ),
   team: (

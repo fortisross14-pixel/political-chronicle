@@ -1,6 +1,16 @@
 // Save migrations: each step upgrades a raw save from version N to N + 1. Saves are plain JSON,
 // so steps work on loosely typed objects and only touch what changed in that version.
-import { DEFAULT_MODIFIERS, rollChambers, Rng, seedFromString, SCHEMA_VERSION } from '../engine';
+import {
+  DEFAULT_MODIFIERS,
+  initWorld,
+  positionOf,
+  rollChambers,
+  Rng,
+  seedFromString,
+  SCHEMA_VERSION,
+  stanceAt,
+  wealthRange,
+} from '../engine';
 
 type Raw = Record<string, unknown> & { [key: string]: unknown };
 
@@ -37,6 +47,43 @@ const STEPS: Record<number, (s: Raw) => Raw> = {
     const snapshots = s.snapshots as { year: number }[];
     const clock = s.clock as { year: number };
     return { ...s, modifiers: { ...DEFAULT_MODIFIERS }, startYear: snapshots[0]?.year ?? clock.year, artifacts: [] };
+  },
+  // v9 → v10 (gameplay rework): personal wealth, packs instead of the Market, political events,
+  // the world, a 7-step platform scale. An auto-filed re-election without a platform is
+  // withdrawn: you launch it yourself now.
+  9: (s) => {
+    const { market: _market, ...rest } = s;
+    type P = { issue: string; stance: number };
+    const onScale = (list: P[] | undefined) => list?.map((p) => ({ ...p, stance: stanceAt(positionOf(p.stance)) }));
+    const career = s.career as Raw & { race?: Raw & { platform: P[] }; office?: Raw & { platform: P[]; officeId: string } };
+    const { race, office, ...careerRest } = career;
+    const keptRace = race && race.platform.length ? { ...race, platform: onScale(race.platform) } : undefined;
+    const keptOffice = office ? { ...office, platform: onScale(office.platform) } : undefined;
+    const platform = keptRace?.platform ?? keptOffice?.platform;
+    const politician = s.politician as { backgroundId: string; startAge: number; name: string };
+    const range = wealthRange(politician.backgroundId, politician.startAge);
+    const clock = s.clock as { year: number };
+    const world = initWorld(new Rng(seedFromString(`${String(s.runId)}:world`)), clock.year);
+    if (office)
+      world.seats[office.officeId] = {
+        holder: politician.name,
+        affiliation: career.affiliation as 'DU' | 'RP' | 'IND',
+        since: clock.year,
+        isPlayer: true,
+      };
+    return {
+      ...rest,
+      wealth: Math.round(Math.sqrt(range.min * range.max) / 1000) * 1000,
+      policyHand: [],
+      packs: [],
+      world,
+      career: {
+        ...careerRest,
+        ...(keptRace ? { race: keptRace } : {}),
+        ...(keptOffice ? { office: keptOffice } : {}),
+        ...(platform ? { platform } : {}),
+      },
+    };
   },
 };
 

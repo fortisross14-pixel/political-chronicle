@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import type { CSSProperties, PointerEvent, ReactNode } from 'react';
 
 export type CardTone =
-  'tv' | 'cable' | 'social' | 'inPerson' | 'radio' | 'skill' | 'bill' | 'item' | 'common' | 'rare' | 'epic' | 'legendary';
+  'tv' | 'cable' | 'social' | 'inPerson' | 'radio' | 'skill' | 'bill' | 'stance' | 'item' | 'common' | 'rare' | 'epic' | 'legendary';
 
 interface Props {
   tone: CardTone;

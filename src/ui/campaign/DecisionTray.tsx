@@ -15,7 +15,7 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
   const [chosen, setChosen] = useState<string[]>([]);
   const precise = state.politician.skills.strategy >= PRECISE_PREVIEW_POLICY;
   const inOffice = !!state.career.office;
-  const title = inOffice ? 'Bills on your desk' : 'Decisions this turn';
+  const title = inOffice ? 'Bills on your desk' : 'Take a stand';
   const stack = useMediaQuery('(max-width: 700px)');
   const [at, setAt] = useState(0);
   const decide = (id: string, yes: boolean) => {
@@ -24,14 +24,35 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
   };
 
   if (hand.resolved) {
+    if (!inOffice)
+      return (
+        <section className="panel">
+          <h2>{title}</h2>
+          <p className="muted small">
+            You publicly backed {hand.applied.map((id) => `“${getDecisionCard(id).title}”`).join(', ')}. New questions next turn.
+          </p>
+        </section>
+      );
+    // In office: the signing ceremony. Every bill gets its stamp.
     return (
-      <section className="panel">
-        <h2>{title}</h2>
-        <p className="muted small">
-          You {inOffice ? 'signed' : 'backed'} {hand.applied.map((id) => `“${getDecisionCard(id).title}”`).join(', ')}.
-          {hand.failed?.length ? ` Failed to pass: ${hand.failed.map((id) => `“${getDecisionCard(id).title}”`).join(', ')}.` : ''} New cards
-          next turn.
-        </p>
+      <section className="panel ceremony">
+        <div className="panel-head">
+          <h2>Signing ceremony</h2>
+          <span className="muted small">New bills next turn</span>
+        </div>
+        <ul className="ceremony-list">
+          {hand.applied.map((id, i) => {
+            const failed = hand.failed?.includes(id);
+            return (
+              <li key={id} className={failed ? 'failed' : 'passed'} style={{ animationDelay: `${i * 0.25}s` }}>
+                <span className="ceremony-title">{getDecisionCard(id).title}</span>
+                <span className="ceremony-stamp">
+                  {failed ? `Failed in ${yourChamber(state)?.name ?? 'the legislature'}` : 'Signed into law'}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
       </section>
     );
   }
@@ -54,9 +75,9 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
         className={on ? 'decision-card on' : 'decision-card'}
         tone="bill"
         title={card.title}
-        typeLine={[inOffice ? 'Bill' : 'Decision', ...card.tags.map((t) => ISSUES_BY_ID[t.issue].name)].join(', ')}
+        typeLine={[inOffice ? 'Bill' : 'Public stance', ...card.tags.map((t) => ISSUES_BY_ID[t.issue].name)].join(', ')}
         art={card.tags[0] ? <IssueArt issue={card.tags[0].issue} /> : <ItemArt id="endorsement" />}
-        rarity={card.partyPriority ? 'Whip vote' : inOffice ? 'Bill' : 'Decision'}
+        rarity={card.partyPriority ? 'Whip vote' : inOffice ? 'Bill' : 'Stance'}
         foil={!!card.partyPriority}
         selected={on}
       >
@@ -124,7 +145,7 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
             else setChosen(on ? chosen.filter((c) => c !== id) : [...chosen, id]);
           }}
         >
-          {on ? (inOffice ? 'Signing ✓' : 'Backing ✓') : inOffice ? 'Sign this' : 'Back this'}
+          {on ? (inOffice ? 'Signing ✓' : 'Backing ✓') : inOffice ? 'Sign into law' : 'Back this'}
         </button>
       </GameCard>
     );
@@ -135,7 +156,7 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
       <div className="panel-head">
         <h2>{title}</h2>
         <span className="muted small">
-          {inOffice ? `Sign 1–${DECISIONS_PER_TURN}; the rest are shelved.` : `Back 1–${DECISIONS_PER_TURN}; the rest are declined.`}
+          {inOffice ? `Sign 1–${DECISIONS_PER_TURN}. Laws move approval.` : `Back 1–${DECISIONS_PER_TURN}. Words move opinion.`}
         </span>
       </div>
       {stack ? (
@@ -158,7 +179,9 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
       )}
       <div className="row">
         <button className="primary" disabled={!!error} onClick={() => dispatch({ type: 'RESOLVE_DECISIONS', apply: chosen })}>
-          Confirm {chosen.length || ''} decision{chosen.length === 1 ? '' : 's'}
+          {inOffice
+            ? `Confirm: sign ${chosen.length || ''} into law`
+            : `Confirm ${chosen.length || ''} stance${chosen.length === 1 ? '' : 's'}`}
         </button>
         {!precise && <span className="muted small">Raise Strategy to {PRECISE_PREVIEW_POLICY} to see exact effects.</span>}
       </div>

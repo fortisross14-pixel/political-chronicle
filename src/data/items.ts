@@ -1,8 +1,9 @@
-import type { ItemWindow } from '../engine/types';
+import type { ItemWindow, Rarity } from '../engine/types';
 
 export interface Item {
   id: string;
   name: string;
+  rarity: Rarity;
   window: ItemWindow;
   /** Whether using it needs a target region. */
   targetsRegion: boolean;
@@ -12,9 +13,17 @@ export interface Item {
 
 /** One-shot loot from campaign milestones (DESIGN_V2 §5.1). Unused items expire with the window. */
 export const ITEMS: Item[] = [
-  { id: 'volunteer_list', name: 'Volunteer list', window: 'night', targetsRegion: false, nightText: '+2 ground-game tokens' },
+  {
+    id: 'volunteer_list',
+    name: 'Volunteer list',
+    rarity: 'common',
+    window: 'night',
+    targetsRegion: false,
+    nightText: '+2 ground-game tokens',
+  },
   {
     id: 'oppo_dossier',
+    rarity: 'rare',
     name: 'Opposition research dossier',
     window: 'campaign',
     targetsRegion: true,
@@ -22,6 +31,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: 'endorsement',
+    rarity: 'rare',
     name: 'Local endorsement',
     window: 'both',
     targetsRegion: true,
@@ -30,6 +40,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: 'ad_reservation',
+    rarity: 'rare',
     name: 'Last-minute ad reservation',
     window: 'night',
     targetsRegion: false,
@@ -37,10 +48,35 @@ export const ITEMS: Item[] = [
   },
   {
     id: 'poll_watchers',
+    rarity: 'common',
     name: 'Poll-watcher network',
     window: 'night',
     targetsRegion: true,
     nightText: 'Free lawyers at the count in one region',
+  },
+  {
+    id: 'oppo_scandal',
+    rarity: 'epic',
+    name: 'Scandal published',
+    window: 'campaign',
+    targetsRegion: false,
+    campaignText: 'Your leading opponent loses favorability everywhere',
+  },
+  {
+    id: 'celebrity_endorsement',
+    rarity: 'epic',
+    name: 'Celebrity endorsement',
+    window: 'campaign',
+    targetsRegion: false,
+    campaignText: '+recognition and favorability across the race',
+  },
+  {
+    id: 'late_surge',
+    rarity: 'legendary',
+    name: 'Late voters break your way',
+    window: 'night',
+    targetsRegion: false,
+    nightText: '+1.5 points on every uncounted vote, beyond your ground-game limit',
   },
 ];
 

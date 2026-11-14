@@ -1,9 +1,12 @@
 import { GameError, reject } from './errors';
-import { getItem } from '../data';
-import { drawElection, fileRace, finalizeElection, isPrimaryTurn, opponentsAct, resolvePrimary, setPlatform } from './campaign';
+import { getItem, getOffice } from '../data';
+import { drawElection, finalizeElection, isPrimaryTurn, opponentsAct, resolvePrimary } from './campaign';
 import { checkTurnMilestones, applyCampaignItem } from './loot';
 import { adBlitz, advanceNight, finalNightShares, mobilize, sendLawyers, startNight, applyNightItem } from './night';
-import { joinParty } from './parties';
+import { askToJoin, launchCampaign } from './launch';
+import { buyPack, discardCard, keepFromPack } from './packs';
+import { playPolicy } from './policy';
+import { simulateYear } from './world';
 import { poll } from './opinion';
 import { evaluateScenario } from './scenarios';
 import { endTurnBlocker, validateAction } from './validate';
@@ -12,9 +15,9 @@ import { rollChambers } from './legislature';
 import { assignPerson, discardPerson, hasPerk, unassignRole } from './people';
 import { backgroundEnergyPenalty } from './traits';
 import { dealDecisions, resolveDecisions } from './decisions';
-import { buyOffer, collectIncome, dealMarket } from './economy';
+import { collectIncome } from './economy';
 import { playEvent } from './events';
-import { governTick, isReelectionYear } from './governing';
+import { governTick } from './governing';
 import { Rng } from './rng';
 import { ageOf, energyForAge, MAX_AGE_ENDS_RUN, takeSnapshot } from './run';
 import { isElectionTurn, monthsPerTurn, turnsInYear } from './time';
@@ -33,16 +36,20 @@ function reduce(state: GameState, action: Action): GameState {
   switch (action.type) {
     case 'END_TURN':
       return endTurn(state);
-    case 'FILE_RACE':
-      return fileRace(state, action.officeId);
-    case 'SET_PLATFORM':
-      return setPlatform(state, action.platform);
+    case 'LAUNCH_CAMPAIGN':
+      return launchCampaign(state, action);
     case 'PLAY_EVENT':
       return playEvent(state, action.cardUid, action.regionId, action.issue).state;
     case 'RESOLVE_DECISIONS':
       return resolveDecisions(state, action.apply);
-    case 'BUY_CARD':
-      return buyOffer(state, action.offerIndex);
+    case 'BUY_PACK':
+      return buyPack(state, action.kind, action.tier);
+    case 'KEEP_FROM_PACK':
+      return keepFromPack(state, action.keep);
+    case 'PLAY_POLICY':
+      return playPolicy(state, action.uid, action.regionId);
+    case 'DISCARD_CARD':
+      return discardCard(state, action.zone, action.uid);
     case 'DISMISS_RESULT':
       return { ...state, pendingResult: undefined };
     case 'USE_ITEM':
@@ -57,10 +64,10 @@ function reduce(state: GameState, action: Action): GameState {
       return adBlitz(state);
     case 'NIGHT_FINISH':
       return finishNight(state);
-    case 'JOIN_PARTY':
-      return joinParty(state, action.party);
+    case 'ASK_TO_JOIN':
+      return askToJoin(state, action.party, action.platform);
     case 'ASSIGN_PERSON':
-      return assignPerson(state, action.uid);
+      return assignPerson(state, action.uid, action.role);
     case 'UNASSIGN_ROLE':
       return unassignRole(state, action.role);
     case 'DISCARD_PERSON':
@@ -121,6 +128,7 @@ function advanceCalendar(state: GameState, rng: Rng): GameState {
   s = { ...s, energy: Math.max(1, energyForAge(age) - backgroundEnergyPenalty(s)) };
   // A new two-year cycle: legislatures change hands.
   if (turn === 0 && year % 2 === 0 && s.chambers.rolledYear !== year) s = { ...s, chambers: rollChambers(rng, year) };
+  if (turn === 0) s = endOfYear(s, rng, year - 1);
   if (!s.ended && s.careerYears && turn === 0 && year >= s.startYear + s.careerYears) {
     s = {
       ...s,
@@ -136,11 +144,9 @@ function advanceCalendar(state: GameState, rng: Rng): GameState {
     };
   }
   s = { ...s, rng: rng.state };
-  if (s.ended) return { ...s, decisions: undefined, market: undefined };
+  if (s.ended) return { ...s, decisions: undefined };
   s = governTick(collectIncome(s));
-  // The last year of a term opens the re-election campaign (or retire instead).
-  if (s.career.office && !s.career.race && s.clock.turn === 0 && isReelectionYear(s)) s = fileRace(s, s.career.office.officeId);
-  if (hasPerk(s, 'roadWarrior')) s = { ...s, energy: s.energy + 1 };
+  if (hasPerk(s, 'roadWarrior') && s.career.race) s = { ...s, energy: s.energy + 1 };
   // Comeback kid (ability): trailing by 5+ going into the final turn.
   const race = s.career.race;
   if (race?.platform.length && hasAbility(s, 'comeback_kid') && isElectionTurn(s.clock, s.career)) {
@@ -154,5 +160,31 @@ function advanceCalendar(state: GameState, rng: Rng): GameState {
       };
     }
   }
-  return dealMarket(dealDecisions(s));
+  return dealDecisions(s);
+}
+
+/** New Year: last year's other races are decided, and a term you didn't defend ends. */
+function endOfYear(state: GameState, rng: Rng, year: number): GameState {
+  let s = simulateYear(state, rng, year);
+  const office = s.career.office;
+  if (
+    office &&
+    office.termEndsYear <= year &&
+    !s.elections.some((e) => e.kind === 'general' && e.officeId === office.officeId && e.year === office.termEndsYear)
+  ) {
+    const { office: _done, ...rest } = s.career;
+    s = {
+      ...s,
+      career: rest,
+      log: [
+        ...s.log,
+        {
+          year: year + 1,
+          turn: 0,
+          text: `Your term as ${getOffice(office.officeId).name} ended. ${s.world.seats[office.officeId]?.holder ?? 'Someone new'} takes over.`,
+        },
+      ],
+    };
+  }
+  return s;
 }
