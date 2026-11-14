@@ -1,11 +1,13 @@
 // The trinkets you brought, with a button for each one that can fire right now.
 import { ART_IDS } from '../../data/artManifest';
 import { Painted } from '../cards/CardArt';
-import { getOffice, getRegion, getTrinket, TRINKET_WINDOW_LABEL } from '../../data';
+import { getOffice, getTrinket, TRINKET_WINDOW_LABEL } from '../../data';
 import type { TrinketWindow } from '../../data';
 import { policyJurisdiction, trinketError, trinketUsesLeft } from '../../engine';
 import type { Action, GameState, RegionId } from '../../engine';
+import { useState } from 'react';
 import { cue } from '../fx/sound';
+import { areaName } from '../format';
 
 interface Props {
   state: GameState;
@@ -19,6 +21,32 @@ function regionsFor(state: GameState, window: TrinketWindow): RegionId[] {
   if (window === 'governing') return policyJurisdiction(state);
   const officeId = state.night?.officeId ?? state.career.race?.officeId;
   return officeId ? getOffice(officeId).regionIds : [];
+}
+
+function AreaPicker({
+  regions,
+  disabled,
+  onUse,
+}: {
+  regions: RegionId[];
+  disabled: (r: RegionId) => boolean;
+  onUse: (r: RegionId) => void;
+}) {
+  const [at, setAt] = useState(regions[0]!);
+  return (
+    <>
+      <select aria-label="Where" value={at} onChange={(e) => setAt(e.target.value)}>
+        {regions.map((r) => (
+          <option key={r} value={r}>
+            {areaName(r)}
+          </option>
+        ))}
+      </select>
+      <button className="primary" disabled={disabled(at)} onClick={() => onUse(at)}>
+        Use
+      </button>
+    </>
+  );
 }
 
 export function TrinketBar({ state, dispatch, windows, title = 'Your trinkets' }: Props) {
@@ -58,10 +86,12 @@ export function TrinketBar({ state, dispatch, windows, title = 'Your trinkets' }
               <strong>{t.name}</strong>
               <span className="small muted">{t.text}</span>
               <span className="trinket-actions">
-                {t.targetsRegion ? (
+                {t.targetsRegion && regions.length > 3 ? (
+                  <AreaPicker regions={regions} disabled={(r) => !!trinketError(state, t.id, r)} onUse={(r) => use(t.id, r)} />
+                ) : t.targetsRegion ? (
                   regions.map((r) => (
                     <button key={r} disabled={!!trinketError(state, t.id, r)} onClick={() => use(t.id, r)}>
-                      {regions.length > 1 ? getRegion(r).seatCity : 'Use'}
+                      {regions.length > 1 ? areaName(r) : 'Use'}
                     </button>
                   ))
                 ) : (

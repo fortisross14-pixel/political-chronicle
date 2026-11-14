@@ -5,7 +5,7 @@ const spec = JSON.parse(readFileSync('art/grids.json', 'utf8'));
 const out = [
   '# Art grids',
   '',
-  'Paste each prompt into an image generator (one image per prompt), save the result as',
+  'Paste each prompt into an image generator (one image per prompt), save the result (.png, .webp or .jpg) as',
   '`art/grids/<id>.png`, then run `npm run art` to slice it into `public/art/`.',
   'Each grid is 6 columns × 4 rows, read left to right, top to bottom.',
   '',

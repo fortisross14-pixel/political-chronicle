@@ -1,7 +1,7 @@
 # Art grids
 
-Paste each prompt into an image generator (one image per prompt), save the result as
-`art/grids/<id>.png`, then run `npm run art` to slice it into `public/art/`.
+Paste each prompt into an image generator (one image per prompt), save the result (.png, .webp or .jpg) as
+`art/grids/<id>.webp`, then run `npm run art` to slice it into `public/art/`.
 Each grid is 6 columns × 4 rows, read left to right, top to bottom.
 
 ## Grid 1: campaign actions — save as `art/grids/actions.png`

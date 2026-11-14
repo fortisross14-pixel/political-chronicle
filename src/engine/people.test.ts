@@ -135,7 +135,16 @@ describe('legislature', () => {
     const staffed = grantPerson(governor('DU', 'RP'), 'ld_baptiste', 'legislativeDirector');
     expect(passageChance(staffed, card)).toBeGreaterThan(other + 0.15); // 3★ director and across-the-aisle
     expect(passageChance(governor('DU', 'RP'), getDecisionCard('gv_snowstorm'))).toBe(1); // crises always go through
-    expect(decisionImpact(mayor(), getDecisionCard('of_brt')).passage).toBe(1);
+    // Mayors answer to a city council: less partisan, but a bill can still die there.
+    const m = mayor();
+    const bill = getDecisionCard('of_brt');
+    const hostile = { ...m, chambers: { ...m.chambers, councils: { 'mayor-watertown': 'RP' as const } } };
+    const friendly = { ...m, chambers: { ...m.chambers, councils: { 'mayor-watertown': 'split' as const } } };
+    expect(decisionImpact(m, bill).passage).toBeLessThan(1);
+    expect(passageChance(hostile, bill)).toBeLessThanOrEqual(passageChance(friendly, bill));
+    expect(passageChance({ ...hostile, career: { ...hostile.career, office: { ...hostile.career.office!, forceVote: true } } }, bill)).toBe(
+      1,
+    );
   });
 
   it('a failed bill changes nothing on the record', () => {

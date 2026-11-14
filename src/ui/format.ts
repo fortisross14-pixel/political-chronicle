@@ -1,3 +1,4 @@
+import { getRegion } from '../data';
 export function pct(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
@@ -18,4 +19,10 @@ export function leanLabel(lean: number): string {
   const n = Math.round(Math.abs(lean) * 100);
   if (n < 5) return 'Even';
   return `${lean < 0 ? 'Blue' : 'Red'} +${n}`;
+}
+
+/** What to call an area on screen: "Mill Street" for a neighborhood, "Buffalo" for a district. */
+export function areaName(id: string): string {
+  const r = getRegion(id);
+  return r.parent ? r.name.split(/ & | and /)[0]! : r.seatCity;
 }

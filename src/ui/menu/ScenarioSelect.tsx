@@ -17,6 +17,9 @@ import type { Profile, SkillId } from '../../engine';
 import { money } from '../format';
 import { Loadout } from './Loadout';
 import { Info, Pips } from '../Info';
+import { GameCard } from '../cards/GameCard';
+import { Painted, PortraitArt } from '../cards/CardArt';
+import { playerPortrait } from '../portraits';
 
 interface Props {
   profile: Profile;
@@ -36,6 +39,17 @@ export function Stars({ n, of = 3 }: { n: number; of?: number }) {
 function rewardText(r: Reward): string {
   return (r.trinkets ?? []).map((a) => getTrinket(a).name).join(', ') || '—';
 }
+
+/** The painted scene on each mission's card. */
+const MISSION_ART: Record<string, string> = {
+  hometown_favorite: 'door_knocking',
+  keep_your_word: 'town_hall',
+  pick_a_side: 'party_unity',
+  big_city_small_town: 'arena_rally',
+  the_underdog: 'union_rally',
+  blue_in_the_north: 'debate',
+  small_town_to_the_top: 'hero_menu',
+};
 
 export function ScenarioSelect({ profile, onStart, onBack }: Props) {
   const [selected, setSelected] = useState<Scenario | null>(null);
@@ -60,74 +74,57 @@ export function ScenarioSelect({ profile, onStart, onBack }: Props) {
     const tries = profile.scenarios[selected.id]?.attempts ?? 0;
     return (
       <div className="menu-page">
-        <button onClick={() => setSelected(null)}>‹ All missions</button>
-        <h1>{selected.title}</h1>
-        <p className="tagline">{selected.tagline}</p>
-        <div className="creator-grid">
-          <section className="cs-step stack">
-            <p>{selected.description}</p>
-            <h3>Your character</h3>
-            <dl className="kv dossier">
-              <dt>Background</dt>
-              <dd>
-                <strong>{bg.name}</strong> · <span className="muted">{bg.blurb}</span>
-              </dd>
-              <dt>Age</dt>
-              <dd>
-                {ch.age}, {ch.gender === 'female' ? 'woman' : ch.gender === 'male' ? 'man' : 'nonbinary'}
-              </dd>
-              <dt>From</dt>
-              <dd>
-                Born in {US_STATE_NAMES[ch.homeState]}, lives in {region.seatCity} ({region.name}) ·{' '}
-                <span className={native ? 'pos' : 'neg'}>
-                  {native ? 'a native: voters trust you' : 'a transplant: voters need convincing'}
-                </span>
-              </dd>
-              <dt>Money</dt>
-              <dd>
-                {money(wealth.min)}–{money(wealth.max)} of your own
-                {selected.setup.funds ? `, plus ${money(selected.setup.funds)} raised` : ''}
-              </dd>
-              {selected.setup.party && (
-                <>
-                  <dt>Party</dt>
-                  <dd>
-                    {PARTIES[selected.setup.party.id].name}, standing {selected.setup.party.standing}
-                  </dd>
-                </>
-              )}
-              {selected.setup.office && (
-                <>
-                  <dt>In office</dt>
-                  <dd>
-                    {getOffice(selected.setup.office.officeId).name}, approval {Math.round(selected.setup.office.approval * 100)}%
-                  </dd>
-                </>
-              )}
-              <dt>Objective</dt>
-              <dd>{selected.objective.text}</dd>
-              <dt>Teaches</dt>
-              <dd>{selected.teaches}</dd>
-              {tries > 0 && (
-                <>
-                  <dt>Tries</dt>
-                  <dd>{tries}</dd>
-                </>
-              )}
-            </dl>
-            <h3>Stars</h3>
-            <ul className="star-goals">
+        <header className="mission-banner">
+          <span className="mission-banner-art" aria-hidden="true">
+            <Painted id={MISSION_ART[selected.id] ?? 'hero_menu'} />
+          </span>
+          <button className="cs-back" onClick={() => setSelected(null)} aria-label="All missions">
+            ‹
+          </button>
+          <div className="mission-banner-text">
+            <span className="live">{selected.track === 'beginner' ? 'Beginner' : 'Advanced'}</span>
+            <h1>{selected.title}</h1>
+            <p>{selected.objective.text}</p>
+          </div>
+        </header>
+        <div className="mission-grid">
+          <aside className="mission-dossier">
+            <GameCard
+              tone={selected.track === 'beginner' ? 'rare' : 'epic'}
+              title={name.trim() || 'You'}
+              typeLine={`${bg.name} · ${ch.age}`}
+              art={<PortraitArt id={playerPortrait({ gender: ch.gender, startAge: ch.age })} name={name || 'You'} role="campaignManager" />}
+              rarity={native ? 'Native' : 'Transplant'}
+            >
+              <span className="cs-home">
+                {region.seatCity}, {US_STATE_NAMES[region.state] ?? region.state}
+              </span>
+              <span className="dossier-chips">
+                <span className={`dossier-chip ${native ? 'pos' : 'neg'}`}>{native ? 'Native' : `From ${ch.homeState}`}</span>
+                <span className="dossier-chip">{money(wealth.min)}+</span>
+                {selected.setup.party && <span className="dossier-chip">{PARTIES[selected.setup.party.id].nickname}</span>}
+                {selected.setup.office && (
+                  <span className="dossier-chip gold">
+                    {getOffice(selected.setup.office.officeId).name.replace('Mayor of ', 'Mayor · ').replace('U.S. House — ', 'House · ')}{' '}
+                    {Math.round(selected.setup.office.approval * 100)}%
+                  </span>
+                )}
+              </span>
+            </GameCard>
+            <Info label="this mission" align="left">
+              {selected.description} {bg.name}: {bg.blurb} Teaches: {selected.teaches}.
+            </Info>
+            <ul className="mission-stars">
               {selected.stars.map((g, i) => (
                 <li key={g.id} className={earned.includes(g.id) ? 'done' : undefined}>
-                  <span>{earned.includes(g.id) ? '★' : '☆'}</span> {g.text}
-                  <span className="muted small">
-                    {' '}
-                    · reward at {i + 1}★: {rewardText(selected.rewards[i]!)}
-                  </span>
+                  <span className="star-mark">{earned.includes(g.id) ? '★' : '☆'}</span>
+                  <span>{g.text}</span>
+                  <span className="muted small">{rewardText(selected.rewards[i]!)}</span>
                 </li>
               ))}
             </ul>
-          </section>
+            {tries > 0 && <span className="muted small">Try {tries + 1}</span>}
+          </aside>
           <section className="cs-step stack">
             <label className="field">
               <span>Your name</span>
@@ -209,8 +206,8 @@ export function ScenarioSelect({ profile, onStart, onBack }: Props) {
                     disabled={!open}
                     onClick={() => setSelected(s)}
                   >
-                    <span className="muted small">
-                      {label} · {s.order}
+                    <span className="mission-art" aria-hidden="true">
+                      <Painted id={MISSION_ART[s.id] ?? 'hero_menu'} />
                     </span>
                     <strong>{s.title}</strong>
                     <span className="small">{s.tagline}</span>

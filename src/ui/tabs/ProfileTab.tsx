@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { getBackground, getOffice, getRegion, ISSUES, ISSUES_BY_ID, STATES, US_STATE_NAMES } from '../../data';
+import { getBackground, getOffice, getRegion, ISSUES, ISSUES_BY_ID, US_STATE_NAMES } from '../../data';
 import { stanceLabel } from '../campaign/labels';
 import { CareerCharts } from '../charts/CareerCharts';
 import { pct } from '../format';
 import { PortraitArt } from '../cards/CardArt';
 import { GameCard } from '../cards/GameCard';
+import { Info, Pips } from '../Info';
+import { playerPortrait } from '../portraits';
 import {
   ageOf,
   effectiveSkills,
@@ -52,58 +54,70 @@ export function ProfileTab({ state }: { state: GameState }) {
             tone="legendary"
             title={p.name}
             typeLine={`${getBackground(p.backgroundId).name}, ${Math.floor(age)}`}
-            art={<PortraitArt name={p.name} role="chiefOfStaff" />}
+            art={<PortraitArt id={playerPortrait(p)} name={p.name} role="chiefOfStaff" />}
             rarity={state.career.office ? 'In office' : state.career.race ? 'Candidate' : 'Citizen'}
             foil
           >
-            <span className="chips">
+            <span className="cs-mini-skills">
               {SKILL_IDS.map((id) => (
-                <span key={id} className="chip">
-                  {SKILL_CODES[id]} {effective[id]}
+                <span key={id} className="cs-mini">
+                  <b>{SKILL_CODES[id]}</b>
+                  <Pips value={effective[id]} max={10} label={SKILL_LABELS[id]} />
                 </span>
               ))}
             </span>
-            <span>{getBackground(p.backgroundId).perkText}</span>
           </GameCard>
           <div className="profile-facts">
-            <h2>{p.name}</h2>
-            <dl className="kv">
-              <dt>Age</dt>
-              <dd>{age.toFixed(1)}</dd>
-              <dt>Gender</dt>
-              <dd>{p.gender === 'nonbinary' ? 'Non-binary' : p.gender === 'female' ? 'Female' : 'Male'}</dd>
-              <dt>Born in</dt>
-              <dd>{US_STATE_NAMES[p.homeState]}</dd>
-              <dt>Lives in</dt>
-              <dd>
-                {getRegion(p.residentRegionId).seatCity}, {STATES[getRegion(p.residentRegionId).state]!.name} ·{' '}
-                {native(state) ? 'native' : `transplant (newcomer doubt −${Math.round(newcomerPenalty(state) * 100)})`}
-              </dd>
-              <dt>Background</dt>
-              <dd>{getBackground(p.backgroundId).name}</dd>
-              <dt>Perk</dt>
-              <dd>{getBackground(p.backgroundId).perkText}</dd>
-              <dt>Weakness</dt>
-              <dd>{getBackground(p.backgroundId).weaknessText}</dd>
-              <dt>Credible on</dt>
-              <dd>
-                {getBackground(p.backgroundId)
-                  .credibleIssues.map((i) => ISSUES_BY_ID[i].name)
-                  .join(', ')}
-              </dd>
-              <dt>Energy per turn</dt>
-              <dd>{energyForAge(age)}</dd>
-            </dl>
-            <h3>Activity</h3>
-            <ul className="log">
-              {[...state.log].reverse().map((entry, i) => (
-                <li key={i}>
-                  <span className="muted">
-                    {entry.year} T{entry.turn + 1}
-                  </span>{' '}
-                  {entry.text}
-                </li>
-              ))}
+            <div className="stat-tiles">
+              <span className="stat-tile">
+                <small>Home</small>
+                {getRegion(p.residentRegionId).seatCity}
+                <em>{native(state) ? 'Native' : `Transplant −${Math.round(newcomerPenalty(state) * 100)}`}</em>
+              </span>
+              <span className="stat-tile">
+                <small>Born</small>
+                {US_STATE_NAMES[p.homeState]}
+                <em>
+                  {p.gender === 'nonbinary' ? 'Non-binary' : p.gender === 'female' ? 'Woman' : 'Man'}, {Math.floor(age)}
+                </em>
+              </span>
+              <span className="stat-tile">
+                <small>Energy</small>
+                {energyForAge(age)}
+                <em>per turn</em>
+              </span>
+              <span className="stat-tile">
+                <small>Integrity</small>
+                {state.integrity}
+                <em>of 100</em>
+              </span>
+              <span className="stat-tile">
+                <small>Background</small>
+                {getBackground(p.backgroundId).name}
+                <em>
+                  <Info label="your background" align="right">
+                    Perk: {getBackground(p.backgroundId).perkText} Weakness: {getBackground(p.backgroundId).weaknessText} Credible on{' '}
+                    {getBackground(p.backgroundId)
+                      .credibleIssues.map((i) => ISSUES_BY_ID[i].name)
+                      .join(', ')}
+                    .
+                  </Info>
+                </em>
+              </span>
+            </div>
+            <h3>Latest</h3>
+            <ul className="feed">
+              {[...state.log]
+                .reverse()
+                .slice(0, 10)
+                .map((entry, i) => (
+                  <li key={i}>
+                    <span className="feed-when">
+                      {entry.year}·{entry.turn + 1}
+                    </span>
+                    <span>{entry.text}</span>
+                  </li>
+                ))}
             </ul>
           </div>
         </section>
@@ -111,30 +125,21 @@ export function ProfileTab({ state }: { state: GameState }) {
 
       {sub === 'skills' && (
         <section className="panel">
-          <h2>Skills</h2>
-          <ul className="skills">
+          <ul className="cs-skills">
             {SKILL_IDS.map((id) => (
               <li key={id}>
-                <span title={SKILL_HINTS[id]}>
-                  <span className="code">{SKILL_CODES[id]}</span> {SKILL_LABELS[id]}
+                <span className="cs-skill-name">
+                  {SKILL_LABELS[id]}
+                  <Info label={SKILL_LABELS[id]} align="left">
+                    {SKILL_HINTS[id]}
+                  </Info>
                 </span>
-                <meter min={0} max={10} value={p.skills[id]} />
-                <span className="num">{p.skills[id]}/10</span>
+                <Pips value={effective[id]} max={10} cap={skillCap(state)} label={SKILL_LABELS[id]} />
+                <span className="num">{effective[id]}</span>
               </li>
             ))}
           </ul>
-          <p className="muted small">
-            Skill cards in the Market raise a skill by 1. At your current level you can train up to {skillCap(state)} (House: 8,
-            Senate/Governor: 10).
-          </p>
-          {SKILL_IDS.some((id) => effective[id] !== p.skills[id]) && (
-            <p className="small">
-              With your team:{' '}
-              {SKILL_IDS.filter((id) => effective[id] !== p.skills[id])
-                .map((id) => `${SKILL_CODES[id]} ${effective[id]}`)
-                .join(' · ')}
-            </p>
-          )}
+          <p className="muted small">Skill cards in packs raise a skill by 1, up to {skillCap(state)} at your level.</p>
         </section>
       )}
 

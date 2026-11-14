@@ -2,6 +2,7 @@ import { getRegion, ISSUES_BY_ID, OFFICES, populationShare } from '../../data';
 import type { GameState, IssueId, MediaChannel, RegionId } from '../../engine';
 import { describeDemo } from '../../engine';
 import { leanLabel, pct, signed } from '../format';
+import { Info } from '../Info';
 
 const MEDIA_LABELS: Record<MediaChannel, string> = {
   tv: 'Local TV',
@@ -21,12 +22,17 @@ function opinionLabel(issue: IssueId, opinion: number): string {
 export function RegionPanel({ state, regionId }: { state: GameState; regionId: RegionId }) {
   const region = getRegion(regionId);
   const you = state.regions[regionId]!;
-  const issues = (Object.entries(region.issueSalience) as [IssueId, number][]).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const issues = (Object.entries(region.issueSalience) as [IssueId, number][]).sort((a, b) => b[1] - a[1]).slice(0, 3);
   const offices = OFFICES.filter((o) => o.regionIds.length === 1 && o.regionIds[0] === regionId);
 
   return (
     <aside className="region-panel" aria-live="polite">
-      <h3>{region.name}</h3>
+      <h3>
+        {region.name}{' '}
+        <Info label={region.name} align="right">
+          {region.blurb}
+        </Info>
+      </h3>
       <p className="muted small">
         {region.parent ? region.seatCity : region.seatCity} ·{' '}
         {region.population >= 1e6 ? `${(region.population / 1e6).toFixed(1)}M` : `${Math.round(region.population / 1000)}k`} people
@@ -42,7 +48,6 @@ export function RegionPanel({ state, regionId }: { state: GameState; regionId: R
             </span>
           ))}
       </div>
-      <p className="small">{region.blurb}</p>
 
       <dl className="kv">
         <dt>Partisan lean</dt>
@@ -68,16 +73,16 @@ export function RegionPanel({ state, regionId }: { state: GameState; regionId: R
         ))}
       </ul>
 
-      <h4>Media mix</h4>
-      <ul className="media-list">
-        {(Object.entries(region.media) as [MediaChannel, number][]).map(([channel, value]) => (
-          <li key={channel}>
-            <span>{MEDIA_LABELS[channel]}</span>
-            <meter min={0.5} max={1.5} value={value} aria-label={`${MEDIA_LABELS[channel]} effectiveness`} />
-            <span className="num">×{value.toFixed(1)}</span>
-          </li>
-        ))}
-      </ul>
+      <h4>Best media here</h4>
+      <div className="demo-chips">
+        {(Object.entries(region.media) as [MediaChannel, number][])
+          .sort((a, b) => b[1] - a[1])
+          .map(([channel, value]) => (
+            <span key={channel} className={`demo-chip${value >= 1.15 ? ' strong' : value <= 0.85 ? ' weak' : ''}`}>
+              {MEDIA_LABELS[channel]} ×{value.toFixed(1)}
+            </span>
+          ))}
+      </div>
     </aside>
   );
 }

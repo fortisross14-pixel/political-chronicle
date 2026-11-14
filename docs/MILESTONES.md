@@ -347,6 +347,24 @@ seat: win Syracuse), Big city 80 / 100.
 
 ---
 
+## M18 — Painted art, city councils, visual pass ✅ done
+
+- **120 painted images** sliced from the five grids: every campaign action, political event,
+  item, trinket, skill, background and person, 12 opponent faces, 6 player faces and two hero
+  scenes. Opponents get a stable face from their name; the player's face follows gender and age.
+- **City councils.** Mayors' bills now go to a council (Blue, Red or split, rolled each cycle from
+  the city's lean). Councils are less partisan than legislatures (independent 70%, own 90%, split
+  75%, opposing 55%) and a bill the city loves is harder to vote down. Force the vote overrides them.
+- **Visual pass, less text everywhere:** painted menu banner and mission cards; mission setup as a
+  banner and a character card; packs wear painted wrappers; roles show faces; profile as stat tiles
+  and a feed; party cards with meters; the world as a wall of officeholders and a calendar by year;
+  faces on the poll and on the election-night scoreboard; election-night areas as compact tiles;
+  decision cards as chips (stance, approval, “loved in · hated in”, odds to pass). Explanations
+  moved behind ⓘ buttons.
+- Exit polls no longer call the race before the count starts.
+
+---
+
 ## After v2 (expansion)
 
 1. **More states:** California, Texas and smaller states (4–6 districts for Iowa-sized states),

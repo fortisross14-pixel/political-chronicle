@@ -1,4 +1,4 @@
-"""Slices art/grids/<id>.png (6 x 4 cells) into public/art/<cell id>.webp and rewrites
+"""Slices art/grids/<id>.png (or .webp / .jpg) (6 x 4 cells) into public/art/<cell id>.webp and rewrites
 src/data/artManifest.ts with the ids that now have art.
 
 Generators rarely draw a perfect grid, so the gutters are found, not assumed: near each expected
@@ -14,7 +14,7 @@ from PIL import Image, ImageStat
 ROOT = Path(__file__).resolve().parents[2]
 COLS, ROWS = 6, 4
 OUT = ROOT / "public" / "art"
-SIZE = 384
+SIZE = 320
 GUTTER = (11, 20, 48)
 
 
@@ -69,8 +69,9 @@ def square(cell):
 
 
 def slice_grid(grid):
-    src = ROOT / "art" / "grids" / f"{grid['id']}.png"
-    if not src.exists():
+    candidates = [ROOT / "art" / "grids" / f"{grid['id']}.{ext}" for ext in ("png", "webp", "jpg")]
+    src = next((c for c in candidates if c.exists()), None)
+    if src is None:
         return 0
     img = Image.open(src).convert("RGB")
     xs, ys = boundaries(img, "x", COLS), boundaries(img, "y", ROWS)
@@ -78,7 +79,7 @@ def slice_grid(grid):
     for i, (cell_id, _) in enumerate(grid["cells"]):
         r, c = divmod(i, COLS)
         cell = img.crop((xs[c] + 1, ys[r] + 1, xs[c + 1], ys[r + 1]))
-        square(trim(cell)).save(OUT / f"{cell_id}.webp", "WEBP", quality=82, method=6)
+        square(trim(cell)).save(OUT / f"{cell_id}.webp", "WEBP", quality=78, method=6)
     print(f"{grid['id']}: {len(grid['cells'])} cells -> public/art/")
     return len(grid["cells"])
 

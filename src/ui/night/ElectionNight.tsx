@@ -18,6 +18,9 @@ import { CountUp } from '../fx/CountUp';
 import { inkOn, sideColor } from '../map/colors';
 import { StateMap } from '../map/StateMap';
 import { TrinketBar } from '../campaign/TrinketBar';
+import { PortraitArt } from '../cards/CardArt';
+import { Info } from '../Info';
+import { opponentPortrait, playerPortrait } from '../portraits';
 
 /** Semicircle needle: 0 (left, you lose) → 1 (right, you win). */
 function Needle({ p }: { p: number }) {
@@ -116,6 +119,9 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
           </div>
           {names.map((name, i) => (
             <div key={name} className={i === leader ? 'score-row leading' : 'score-row'}>
+              <span className="score-face" style={{ borderColor: colors[i] }}>
+                <PortraitArt id={i === 0 ? playerPortrait(state.politician) : opponentPortrait(name)} name={name} role="campaignManager" />
+              </span>
               <span className="score-chip" style={{ background: colors[i], color: inkOn(colors[i]!) }}>
                 {sides[i] === 'IND' ? 'IND' : sides[i]}
               </span>
@@ -154,11 +160,13 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
             <button onClick={() => setBanner(null)}>OK</button>
           </div>
         )}
-        <div className="night-grid">
-          <div className="needle-box">
-            <span className="muted small">Decision desk: chance you win</span>
-            <Needle p={view.winProbability} />
-          </div>
+        <div className={`night-grid${exit ? ' exit' : ''}`}>
+          {!exit && (
+            <div className="needle-box">
+              <span className="muted small">Decision desk: chance you win</span>
+              <Needle p={view.winProbability} />
+            </div>
+          )}
           <div className="stack">
             <div className="row night-controls">
               {!done && !exit && (
@@ -194,45 +202,58 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
             <div className="tokens">
               <span className="big-number">{night.tokens}</span> <span className="muted small">ground-game tokens</span>
             </div>
-            <ul className="night-regions">
+            <ul className="night-areas">
               {office.regionIds.map((id) => {
                 const r = night.regions[id]!;
                 const c = counted(r, night.step);
                 const rep = reportedShares(night, id);
                 const mErr = mobilizeError(state, id);
                 const lErr = lawyersError(state, id);
+                const call =
+                  r.calledFor !== undefined ? (r.calledFor === 0 ? 'you' : 'them') : c >= 0.3 ? 'close' : c > 0 ? 'counting' : 'open';
                 return (
-                  <li key={id} className={id === selected ? 'selected' : undefined} onClick={() => setSelected(id)}>
-                    <div className="night-region-head">
-                      <strong>{getRegion(id).name}</strong>
-                      {r.calledFor !== undefined ? (
-                        <span className={r.calledFor === 0 ? 'fit good' : 'fit bad'}>
-                          {r.calledFor === 0 ? 'Called: you' : 'Called: them'}
-                        </span>
-                      ) : c >= 0.3 ? (
-                        <span className="fit mixed">Too close to call</span>
-                      ) : c > 0 ? (
-                        <span className="muted small">Counting…</span>
-                      ) : (
-                        <span className="muted small">Polls open</span>
-                      )}
-                    </div>
-                    <div className="count-bar" role="img" aria-label={`${pct(c)} counted`}>
-                      <span style={{ width: `${c * 100}%` }} />
-                    </div>
-                    <span className="small muted">
-                      {pct(c)} in{rep ? ` · you ${pct(rep[0]!)} vs ${pct(Math.max(...rep.slice(1)))}` : ''}
-                      {r.protected ? ' · lawyers on site' : ''}
+                  <li key={id} className={`night-area ${call}${id === selected ? ' selected' : ''}`} onClick={() => setSelected(id)}>
+                    <span className="na-name">{getRegion(id).name}</span>
+                    <span className="na-badge">
+                      {call === 'you'
+                        ? 'YOU'
+                        : call === 'them'
+                          ? 'THEM'
+                          : call === 'close'
+                            ? 'TOSS-UP'
+                            : call === 'counting'
+                              ? 'COUNTING'
+                              : 'WAITING'}
                     </span>
+                    <span className="count-bar" role="img" aria-label={`${pct(c)} counted`}>
+                      <span style={{ width: `${c * 100}%` }} />
+                    </span>
+                    <span className="na-share num">{rep ? `${pct(rep[0]!)} – ${pct(Math.max(...rep.slice(1)))}` : pct(c)}</span>
                     {!done && (
-                      <div className="row">
-                        <button disabled={!!mErr} title={mErr} onClick={() => dispatch({ type: 'NIGHT_MOBILIZE', regionId: id })}>
-                          Mobilize {mErr ? '' : `(+${(mobilizeEffect(state, id) * 100).toFixed(1)} pts)`}
+                      <span className="na-actions">
+                        <button
+                          aria-label={`+Vote in ${getRegion(id).name}`}
+                          disabled={!!mErr}
+                          title={mErr ?? `+${(mobilizeEffect(state, id) * 100).toFixed(1)} pts on the uncounted vote`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch({ type: 'NIGHT_MOBILIZE', regionId: id });
+                          }}
+                        >
+                          +Vote
                         </button>
-                        <button disabled={!!lErr} title={lErr} onClick={() => dispatch({ type: 'NIGHT_LAWYERS', regionId: id })}>
-                          Lawyers
+                        <button
+                          aria-label={`Lawyers to ${getRegion(id).name}`}
+                          disabled={!!lErr}
+                          title={lErr ?? 'Protect the count here'}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch({ type: 'NIGHT_LAWYERS', regionId: id });
+                          }}
+                        >
+                          ⚖
                         </button>
-                      </div>
+                      </span>
                     )}
                   </li>
                 );
@@ -258,9 +279,10 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
                 })}
               </div>
             )}
-            <p className="muted small">
-              Actions only move votes that haven’t been counted yet. Act early with less information, or wait and have fewer places left.
-            </p>
+            <Info label="night actions" align="left">
+              +Vote spends a ground-game token to mobilize where votes are still uncounted; ⚖ sends lawyers to protect a close count. Act
+              early with less information, or wait and have fewer places left.
+            </Info>
           </div>
         </div>
       </section>

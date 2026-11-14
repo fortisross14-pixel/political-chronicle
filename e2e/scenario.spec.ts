@@ -61,7 +61,7 @@ test('election night streams results, takes actions and ends on the result', asy
   await page.getByRole('button', { name: 'Next ›' }).click();
   const tokens = Number(await page.locator('.tokens .big-number').innerText());
   await page
-    .getByRole('button', { name: /^Mobilize/ })
+    .getByRole('button', { name: /^\+Vote/ })
     .first()
     .click();
   await expect(page.locator('.tokens .big-number')).toHaveText(String(tokens - 1));

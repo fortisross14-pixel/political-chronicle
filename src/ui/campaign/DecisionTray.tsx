@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react';
 import type { PointerEvent, ReactNode } from 'react';
-import { getDecisionCard, getRegion, ISSUES_BY_ID, PARTIES } from '../../data';
-import { decisionError, decisionImpact, DECISIONS_PER_TURN, yourChamber } from '../../engine';
+import { getDecisionCard, getOffice, getRegion, ISSUES_BY_ID, PARTIES } from '../../data';
+import { decisionError, decisionImpact, DECISIONS_PER_TURN, jurisdictionOffice, yourChamber } from '../../engine';
 import type { Action, GameState } from '../../engine';
 import { IssueArt, ItemArt } from '../cards/CardArt';
 import { GameCard } from '../cards/GameCard';
+import { EffectChips } from '../cards/CardViews';
+import type { Chip } from '../cards/effects';
 import { money } from '../format';
 import { cue } from '../fx/sound';
 import { useMediaQuery } from '../fx/useMediaQuery';
@@ -15,6 +17,8 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
   const [chosen, setChosen] = useState<string[]>([]);
   const precise = state.politician.skills.strategy >= PRECISE_PREVIEW_POLICY;
   const inOffice = !!state.career.office;
+  const jid = jurisdictionOffice(state);
+  const jurisdiction = jid ? getOffice(jid).regionIds : [];
   const title = inOffice ? 'Bills on your desk' : 'Take a stand';
   const stack = useMediaQuery('(max-width: 700px)');
   const [at, setAt] = useState(0);
@@ -62,12 +66,41 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
     const card = getDecisionCard(id);
     const impact = decisionImpact(state, card);
     const on = chosen.includes(id);
-    // Approval first (in office), then how the rest of the state hears it.
-    const regions: [string, number, string][] = [
-      ...Object.entries(impact.approval).map(([r, v]) => [r, v, 'approval'] as [string, number, string]),
-      ...Object.entries(impact.favorability)
-        .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
-        .map(([r, v]) => [r, v, ''] as [string, number, string]),
+    // One number for the jurisdiction, the best and worst places, and the costs.
+    const home = Object.entries(inOffice ? impact.approval : impact.favorability).filter(([r]) => jurisdiction.includes(r));
+    const weight = (r: string) => getRegion(r).population * getRegion(r).turnout;
+    const total = home.reduce((sum, [r]) => sum + weight(r), 0);
+    const avg = total ? home.reduce((sum, [r, v]) => sum + v * weight(r), 0) / total : 0;
+    const sorted = [...home].sort((x, y) => y[1] - x[1]);
+    const name = (r: string) => (getRegion(r).parent ? getRegion(r).name.split(/ & | and /)[0] : getRegion(r).seatCity);
+    const spread =
+      sorted.length > 1 && sorted[0]![1] > 0 && sorted.at(-1)![1] < 0
+        ? `Loved in ${name(sorted[0]![0])} · hated in ${name(sorted.at(-1)![0])}`
+        : '';
+    const summary: Chip[] = [
+      { text: `${inOffice ? 'Approval' : 'Liked'} ${effectLabel(avg, precise)}`, tone: avg >= 0 ? 'pos' : 'neg' },
+      ...(impact.integrity
+        ? [
+            {
+              text: `Integrity ${impact.integrity > 0 ? '+' : ''}${impact.integrity}`,
+              tone: impact.integrity > 0 ? ('pos' as const) : ('neg' as const),
+            },
+          ]
+        : []),
+      ...(impact.standing
+        ? [
+            {
+              text: `Party ${impact.standing > 0 ? '+' : ''}${impact.standing.toFixed(1)}`,
+              tone: impact.standing > 0 ? ('pos' as const) : ('neg' as const),
+            },
+          ]
+        : []),
+      ...(impact.funds ? [{ text: money(impact.funds), tone: impact.funds > 0 ? ('gold' as const) : ('neg' as const) }] : []),
+      ...(impact.passage < 1
+        ? [{ text: `${Math.round(impact.passage * 100)}% to pass`, tone: impact.passage >= 0.7 ? ('pos' as const) : ('neg' as const) }]
+        : []),
+      ...(impact.promisesKept.length ? [{ text: 'Keeps a promise', tone: 'pos' as const }] : []),
+      ...(impact.promisesBroken.length ? [{ text: 'Breaks a promise', tone: 'neg' as const }] : []),
     ];
     return (
       <GameCard
@@ -84,58 +117,16 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
         {card.partyPriority && (
           <span className={`whip ${card.partyPriority.toLowerCase()}`}>{PARTIES[card.partyPriority].nickname} whip vote</span>
         )}
-        {impact.rejectStanding < 0 && (
-          <p className="muted small">Your party expects you to sign this ({impact.rejectStanding} standing if you don’t).</p>
-        )}
-        <p className="small">{card.text}</p>
-        <ul className="tags small">
-          {card.tags.map((t) => (
-            <li key={t.issue}>
-              {ISSUES_BY_ID[t.issue].name}: {stanceLabel(t.issue, t.stance)}
-            </li>
-          ))}
-        </ul>
-        <dl className="kv small">
-          {regions.slice(0, 4).map(([r, v, kind]) => (
-            <div key={r} className="kv-row">
-              <dt>
-                {getRegion(r).seatCity}
-                {kind && ' approval'}
-              </dt>
-              <dd className={v >= 0 ? 'pos' : 'neg'}>{effectLabel(v, precise)}</dd>
-            </div>
-          ))}
-          {impact.integrity !== 0 && (
-            <div className="kv-row">
-              <dt>Integrity</dt>
-              <dd className={impact.integrity > 0 ? 'pos' : 'neg'}>{impact.integrity > 0 ? `+${impact.integrity}` : impact.integrity}</dd>
-            </div>
-          )}
-          {impact.standing !== 0 && (
-            <div className="kv-row">
-              <dt>Party standing</dt>
-              <dd className={impact.standing > 0 ? 'pos' : 'neg'}>
-                {impact.standing > 0 ? `+${impact.standing.toFixed(1)}` : impact.standing.toFixed(1)}
-              </dd>
-            </div>
-          )}
-          {impact.funds !== 0 && (
-            <div className="kv-row">
-              <dt>Funds</dt>
-              <dd className={impact.funds > 0 ? 'pos' : 'neg'}>{money(impact.funds)}</dd>
-            </div>
-          )}
-        </dl>
-        {impact.passage < 1 && (
-          <p className={`small ${impact.passage >= 0.7 ? 'pos' : impact.passage >= 0.45 ? '' : 'neg'}`}>
-            {Math.round(impact.passage * 100)}% chance to pass {yourChamber(state)?.name}
-          </p>
-        )}
-        {impact.promisesKept.length > 0 && <p className="fit good small">Keeps a campaign promise</p>}
-        {impact.promisesBroken.length > 0 && <p className="fit bad small">Breaks a campaign promise</p>}
-        {card.rejectCost && (
-          <p className="muted small">{inOffice ? 'Shelving this will cost approval.' : 'Declining costs you some goodwill.'}</p>
-        )}
+        <p className="small decision-text">{card.text}</p>
+        <EffectChips
+          chips={[
+            ...card.tags.map((t) => ({ text: `${ISSUES_BY_ID[t.issue].name}: ${stanceLabel(t.issue, t.stance)}` })),
+            ...summary.map((x) => x),
+          ]}
+        />
+        {spread && <span className="decision-spread small">{spread}</span>}
+        {impact.rejectStanding < 0 && <span className="small neg">Shelving it: {impact.rejectStanding} standing</span>}
+        {card.rejectCost && <span className="small muted">{inOffice ? 'Shelving it costs approval' : 'Declining costs goodwill'}</span>}
         <button
           className={on ? 'primary stamp' : 'stamp'}
           aria-pressed={on}

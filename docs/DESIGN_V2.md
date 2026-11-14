@@ -542,3 +542,12 @@ that is out of reach and win the tied, populous ones.
 **Tracker.** Every turn the map can show who leads each area (red, blue, gold for you as an
 independent, grey where undecided voters are the biggest bloc) or how it shifted since last turn;
 tap an area for each candidate's share and change. On election night the areas report one by one.
+
+## 15. City councils (M18, as built)
+
+A mayor's bills go to the city council. Its control (Blue, Red or split) is rolled every cycle
+from the city's population-weighted lean, like the state legislature. Councils are less partisan:
+an independent mayor passes 70% of bills before skills, 90% with a friendly council, 75% with a
+split one, 55% against an opposing one. A bill the city loves is harder to vote down (+15% per unit
+of fit). Force the vote passes the next bill regardless — the way to pass a law voters love that
+the council won't.

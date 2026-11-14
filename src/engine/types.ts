@@ -395,6 +395,8 @@ export interface Chambers {
   /** State legislatures, by state. */
   state: Record<StateId, ChamberControl>;
   congress: ChamberControl;
+  /** City councils, by mayoralty (DESIGN_V2 §15). Older saves have none until the next roll. */
+  councils?: Record<OfficeId, ChamberControl>;
   rolledYear: number;
 }
 

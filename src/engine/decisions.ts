@@ -79,7 +79,7 @@ export function dealDecisions(state: GameState): GameState {
   };
 }
 
-function jurisdictionOffice(state: GameState): string | undefined {
+export function jurisdictionOffice(state: GameState): string | undefined {
   return state.career.office?.officeId ?? state.career.race?.officeId;
 }
 

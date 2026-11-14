@@ -1,8 +1,10 @@
-import { getOffice, getRegion, ISSUES_BY_ID } from '../../data';
+import { getOffice, ISSUES_BY_ID } from '../../data';
 import { PARTIES } from '../../data';
 import { INTEL, opponentIntel, poll, primaryShare } from '../../engine';
 import type { GameState } from '../../engine';
-import { pct } from '../format';
+import { areaName, pct } from '../format';
+import { PortraitArt } from '../cards/CardArt';
+import { opponentPortrait, playerPortrait } from '../portraits';
 import { candidateTag, stanceLabel } from './labels';
 
 export function CampaignPanel({ state }: { state: GameState }) {
@@ -37,6 +39,9 @@ export function CampaignPanel({ state }: { state: GameState }) {
       <div className="poll">
         {names.map((name, i) => (
           <div key={name} className={i === 0 ? 'poll-row you' : 'poll-row'}>
+            <span className="poll-face" aria-hidden="true">
+              <PortraitArt id={i === 0 ? playerPortrait(state.politician) : opponentPortrait(name)} name={name} role="campaignManager" />
+            </span>
             <span className="poll-name">
               {name}
               {i > 0 && <span className="muted small"> · {candidateTag(race.opponents[i - 1]!)}</span>}
@@ -48,8 +53,8 @@ export function CampaignPanel({ state }: { state: GameState }) {
           </div>
         ))}
         <p className="muted small">
-          Share of decided voters. Undecided: {pct(p.total.at(-1)!)}.
-          {history.length > 1 && ` Your trend: ${history.map((h) => pct(h.poll!)).join(' → ')} → ${pct(p.decided[0]!)}`}
+          Undecided {pct(p.total.at(-1)!)}
+          {history.length > 1 && ` · trend ${history.map((h) => pct(h.poll!)).join(' → ')} → ${pct(p.decided[0]!)}`}
         </p>
       </div>
       <div className="intel small">
@@ -66,7 +71,7 @@ export function CampaignPanel({ state }: { state: GameState }) {
                 {intel.nextMove && (
                   <span className="muted">
                     {' '}
-                    · likely next: {ISSUES_BY_ID[intel.nextMove.issue].name} in {getRegion(intel.nextMove.regionId).seatCity}
+                    · likely next: {ISSUES_BY_ID[intel.nextMove.issue].name} in {areaName(intel.nextMove.regionId)}
                   </span>
                 )}
               </div>

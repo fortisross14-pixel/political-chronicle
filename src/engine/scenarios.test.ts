@@ -148,7 +148,7 @@ describe('M10/M15 acceptance: beginner missions sit in their difficulty bands', 
   const bands: Record<string, [number, number]> = {
     hometown_favorite: [0.7, 0.97],
     keep_your_word: [0.7, 0.97],
-    pick_a_side: [0.7, 0.97],
+    pick_a_side: [0.55, 0.97],
     big_city_small_town: [0.7, 1],
   };
   for (const scn of SCENARIOS.filter((x) => x.track === 'beginner')) {

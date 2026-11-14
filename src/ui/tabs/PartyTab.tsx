@@ -11,7 +11,21 @@ import {
 } from '../../engine';
 import type { Action, GameState, IssueId, PartyId } from '../../engine';
 import { stanceLabel } from '../campaign/labels';
+import type { CSSProperties } from 'react';
 import { money, pct } from '../format';
+import { Info } from '../Info';
+
+function Meter({ label, value }: { label: string; value: number }) {
+  return (
+    <span className="meter-row">
+      <span>{label}</span>
+      <span className="meter-bar" role="img" aria-label={`${label} ${pct(value)}`}>
+        <span style={{ width: `${Math.round(value * 100)}%` }} />
+      </span>
+      <b>{pct(value)}</b>
+    </span>
+  );
+}
 
 function Axis({ marks }: { marks: { value: number; className: string; label: string }[] }) {
   return (
@@ -39,27 +53,25 @@ export function PartyTab({ state, dispatch }: { state: GameState; dispatch: (a: 
 
       {invites.length > 0 && (
         <section className="panel">
-          <h2>{party ? 'Switch parties' : 'Ask to join'}</h2>
-          <p className="muted small">
-            {party
-              ? 'Switching costs 10 integrity and most of your standing.'
-              : 'They may say no. Elected officials are almost always welcome.'}
-          </p>
+          <div className="panel-head">
+            <h2>{party ? 'Switch parties' : 'Ask to join'}</h2>
+            <Info label="joining a party" align="right">
+              {party
+                ? 'Switching costs 10 integrity and most of your standing.'
+                : 'They may say no. Elected officials are almost always welcome.'}
+            </Info>
+          </div>
           <div className="party-grid">
             {invites.map((inv) => {
               const p = PARTIES[inv.party];
               const error = askError(state, inv.party);
               return (
-                <article key={inv.party} className="panel party" style={{ borderTopColor: p.color }}>
+                <article key={inv.party} className="party-card" style={{ '--party': p.color } as CSSProperties}>
+                  <span className="party-emblem">{p.nickname}</span>
                   <h3>{p.name}</h3>
-                  <dl className="kv small">
-                    <dt>Fit with your record</dt>
-                    <dd>{pct(inv.alignment)}</dd>
-                    <dt>Chance they say yes</dt>
-                    <dd>{pct(joinChance(state, inv.party))}</dd>
-                    <dt>Starting standing</dt>
-                    <dd>{inv.startingStanding}</dd>
-                  </dl>
+                  <Meter label="Fit" value={inv.alignment} />
+                  <Meter label="Says yes" value={joinChance(state, inv.party)} />
+                  <span className="muted small">Starts at standing {inv.startingStanding}</span>
                   <button
                     className={`party-ask ${inv.party.toLowerCase()}`}
                     disabled={!!error}
@@ -87,8 +99,12 @@ export function PartyTab({ state, dispatch }: { state: GameState; dispatch: (a: 
 function Independent() {
   return (
     <section className="panel">
-      <h2>You are an independent</h2>
-      <p className="muted small">No party money, and voters in partisan races discount you. You can ask a party to take you any time.</p>
+      <div className="panel-head">
+        <h2>Independent</h2>
+        <Info label="independents" align="right">
+          No party money, and voters in partisan races discount you. You can ask a party to take you any time.
+        </Info>
+      </div>
     </section>
   );
 }
@@ -99,10 +115,13 @@ function Membership({ state, party }: { state: GameState; party: PartyId }) {
   const alignment = partyAlignment(state, party);
   return (
     <section className="panel party" style={{ borderTopColor: p.color }}>
-      <h2>{p.name}</h2>
-      <p className="muted small">
-        The {p.nickname} · mascot: {p.mascot}
-      </p>
+      <div className="panel-head">
+        <h2>{p.name}</h2>
+        <Info label="party standing" align="right">
+          Standing rises when you sign or back what the party wants (whip votes count triple), headline party events and win races; it falls
+          when you vote against them. Party money grows with standing × fit², and flows to close races.
+        </Info>
+      </div>
       <div className="party-stats">
         <div>
           <span className="big-number">{standing}</span>
@@ -118,10 +137,6 @@ function Membership({ state, party }: { state: GameState; party: PartyId }) {
           <span className="muted small"> party money this turn</span>
         </div>
       </div>
-      <p className="muted small">
-        Standing rises when you sign or back what the party wants (whip votes count triple), headline party events and win races; it falls
-        when you vote against them. Party money grows with standing × fit², and flows to close races.
-      </p>
     </section>
   );
 }
@@ -132,11 +147,12 @@ function PlatformComparison({ state, party, stateId }: { state: GameState; party
   const chapterName = STATES[stateId]!.name;
   return (
     <section className="panel">
-      <h2>Your record vs. the platform{party ? '' : 's'}</h2>
-      <p className="muted small">
-        Each party’s effective platform here is 70% national and 30% {chapterName} chapter — the local party tolerates more deviation than
-        the national one.
-      </p>
+      <div className="panel-head">
+        <h2>Your record vs. the platform{party ? '' : 's'}</h2>
+        <Info label="platforms" align="right">
+          Each party’s platform here is 70% national and 30% {chapterName} chapter: the local party tolerates more deviation.
+        </Info>
+      </div>
       <div className="legend small">
         <span>
           <span className="record-dot you static" /> You
@@ -177,28 +193,24 @@ function Nominations({ state }: { state: GameState }) {
   const slots = raceBoard(state).filter((o) => getOffice(o.officeId).partisan);
   return (
     <section className="panel">
-      <h2>Nominations</h2>
-      <p className="muted small">
-        House needs standing 40, Senate and Governor 60. Up to 25 below means a primary. Launch races from your Desk.
-      </p>
-      <table className="table stack-sm nominations">
-        <thead>
-          <tr>
-            <th>Office</th>
-            <th>Election</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {slots.map((o) => (
-            <tr key={o.officeId}>
-              <td>{getOffice(o.officeId).name}</td>
-              <td>Nov {o.window.electionYear}</td>
-              <td className="small">{o.status === 'locked' ? o.reason : nominationStatus(state, o.officeId).text}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="panel-head">
+        <h2>Nominations</h2>
+        <Info label="nominations" align="right">
+          House needs standing 40, Senate and Governor 60. Up to 25 below means a primary. Launch races from your Desk.
+        </Info>
+      </div>
+      <ul className="nom-tiles">
+        {slots.map((o) => {
+          const st = o.status === 'locked' ? undefined : nominationStatus(state, o.officeId);
+          return (
+            <li key={o.officeId} className={`nom-tile ${st?.kind ?? 'locked'}`}>
+              <strong>{getOffice(o.officeId).name.replace('U.S. ', '')}</strong>
+              <span className="muted small">Nov {o.window.electionYear}</span>
+              <span className="nom-status">{o.status === 'locked' ? o.reason : st!.text}</span>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }

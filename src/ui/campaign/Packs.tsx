@@ -16,11 +16,19 @@ import type { Action, GameState, PackKind, PackTier } from '../../engine';
 import { PackCardView } from '../cards/CardViews';
 import { money } from '../format';
 import { cue } from '../fx/sound';
+import { Painted } from '../cards/CardArt';
 import { ICONS } from '../icons';
 
 const KINDS: PackKind[] = ['campaign', 'policy', 'people'];
 const TIERS: PackTier[] = ['regular', 'golden', 'elite'];
 const KIND_ICON = { people: ICONS.team, policy: ICONS.desk, campaign: ICONS.cards } as const;
+
+/** The painted card on each pack's wrapper, by tier. */
+const PACK_ART: Record<PackKind, string[]> = {
+  campaign: ['town_hall', 'arena_rally', 'national_tv_interview'],
+  policy: ['ribbon_cutting', 'infrastructure_law', 'popular_law'],
+  people: ['cm_kowalczyk', 'cm_vance', 'cm_king'],
+};
 
 function bestOdds(tier: PackTier): string {
   const o = PACK_ODDS[tier];
@@ -59,6 +67,9 @@ export function PackShop({ state, dispatch }: { state: GameState; dispatch: (a: 
                       dispatch({ type: 'BUY_PACK', kind, tier });
                     }}
                   >
+                    <span className="pack-art" aria-hidden="true">
+                      <Painted id={PACK_ART[kind][TIERS.indexOf(tier)]!} />
+                    </span>
                     <span className="pack-icon">{KIND_ICON[kind]}</span>
                     <span className="pack-tier">{PACK_TIER_LABEL[tier]}</span>
                     <span className="pack-price">{money(packPrice(kind, tier))}</span>

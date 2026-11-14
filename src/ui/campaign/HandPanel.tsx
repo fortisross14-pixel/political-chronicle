@@ -8,7 +8,7 @@ import { Bolt, GameCard } from '../cards/GameCard';
 import { EventArt } from '../cards/CardArt';
 import { ItemCardView } from '../cards/CardViews';
 import { useCardDrag } from '../cards/useCardDrag';
-import { money } from '../format';
+import { money, areaName } from '../format';
 import { cue } from '../fx/sound';
 import { StateMap } from '../map/StateMap';
 import { effectLabel, PRECISE_PREVIEW_POLICY, stanceLabel } from './labels';
@@ -52,6 +52,8 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
   const precise = state.politician.skills.strategy >= PRECISE_PREVIEW_POLICY;
   const target = preview.effects.find((e) => e.regionId === regionId);
   const spill = preview.effects.filter((e) => e.regionId !== regionId);
+  const spillAvg = spill.length ? spill.reduce((a, e) => a + e.dFavorability, 0) / spill.length : 0;
+  const spillBest = [...spill].sort((a, b) => b.dFavorability - a.dFavorability)[0];
   const areaOffice = race?.officeId ?? state.career.office?.officeId;
   const stateRegions = areaOffice ? getOffice(areaOffice).regionIds : STATES[getRegion(regionId).state]!.regionIds;
   const [notice, setNotice] = useState<string | null>(null);
@@ -96,7 +98,7 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
               aria-pressed={id === regionId}
               onClick={() => onRegionChange(id)}
             >
-              <strong>{getRegion(id).parent ? getRegion(id).name : getRegion(id).seatCity}</strong>
+              <strong>{getRegion(id).parent ? getRegion(id).name : areaName(id)}</strong>
               <span>{getRegion(id).parent ? describeDemo(getRegion(id).demo) : getRegion(id).name}</span>
             </button>
           ))}
@@ -134,7 +136,7 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
               small
               tone={dragged.card.rarity ?? 'common'}
               title={dragged.card.name}
-              typeLine={drag.over ? `Play in ${getRegion(drag.over).seatCity}` : 'Drop on a region'}
+              typeLine={drag.over ? `Play in ${areaName(drag.over)}` : 'Drop on a region'}
               art={<EventArt id={dragged.card.id} medium={dragged.card.medium} />}
               energy={dragged.card.energy}
             />
@@ -170,18 +172,15 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
           ) : target ? (
             <>
               <span>
-                {getRegion(regionId).seatCity}: recognition <b className="pos">{effectLabel(target.dRecognition, precise)}</b>, favorability{' '}
+                {areaName(regionId)}: recognition <b className="pos">{effectLabel(target.dRecognition, precise)}</b>, favorability{' '}
                 <b className={target.dFavorability >= 0 ? 'pos' : 'neg'}>{effectLabel(target.dFavorability, precise)}</b>
                 {preview.fatigue < 1 && <span className="muted"> · repeated topic here (×{preview.fatigue.toFixed(2)})</span>}
               </span>
               {spill.length > 0 && (
                 <span>
-                  Heard elsewhere:{' '}
-                  {spill.map((e) => (
-                    <span key={e.regionId} className={e.dFavorability >= 0 ? 'pos' : 'neg'}>
-                      {getRegion(e.regionId).seatCity} {effectLabel(e.dFavorability, precise)}{' '}
-                    </span>
-                  ))}
+                  {spill.length} other area{spill.length === 1 ? '' : 's'}:{' '}
+                  <b className={spillAvg >= 0 ? 'pos' : 'neg'}>{effectLabel(spillAvg, precise)}</b> on average
+                  {spillBest ? ` · most in ${areaName(spillBest.regionId)}` : ''}
                 </span>
               )}
               {preview.gaffeChance > 0 && (
@@ -218,7 +217,7 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
                       title={error}
                       onClick={() => dispatch({ type: 'USE_ITEM', uid: item.uid, regionId: meta.targetsRegion ? regionId : undefined })}
                     >
-                      Use{meta.targetsRegion ? ` in ${getRegion(regionId).seatCity}` : ''}
+                      Use{meta.targetsRegion ? ` in ${areaName(regionId)}` : ''}
                     </button>
                   )}
                 </ItemCardView>
@@ -228,7 +227,7 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
         )}
         <div className="row">
           <button className="primary" disabled={!!preview.error} onClick={() => play(entry, regionId)}>
-            Play {entry.card.name} in {getRegion(regionId).seatCity} <Bolt />
+            Play {entry.card.name} in {areaName(regionId)} <Bolt />
             {preview.energy}
           </button>
           {preview.error && <span className="muted small">{preview.error}</span>}

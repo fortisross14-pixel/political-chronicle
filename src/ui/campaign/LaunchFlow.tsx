@@ -28,6 +28,7 @@ import type { Action, GameState, IssueId, OfficeId, PartyId, Pledge } from '../.
 import { PersonCard, Stars } from '../cards/CardViews';
 import { PortraitArt } from '../cards/CardArt';
 import { Info } from '../Info';
+import { opponentPortrait, playerPortrait } from '../portraits';
 import { money, pct } from '../format';
 import { cue } from '../fx/sound';
 
@@ -405,8 +406,7 @@ const SIDE_LABEL = { red: 'Leans red', blue: 'Leans blue', neutral: 'Neutral' } 
 function FieldPreview({ state, officeId }: { state: GameState; officeId: OfficeId }) {
   const window = campaignWindow(state, officeId);
   const field = useMemo(() => raceField(state, officeId, window.electionYear), [state, officeId, window.electionYear]);
-  const g = state.politician.gender;
-  const you = `you_${g === 'female' ? 'f' : g === 'male' ? 'm' : 'n'}${state.politician.startAge >= 45 ? 2 : 1}`;
+  const you = playerPortrait(state.politician);
   return (
     <section className="versus" aria-label="Who else is running">
       <div className="vs-card you">
@@ -439,13 +439,6 @@ function FieldPreview({ state, officeId }: { state: GameState; officeId: OfficeI
       </div>
     </section>
   );
-}
-
-/** A stable painted face for an opponent (art/grids.json: opp_1…opp_12). */
-export function opponentPortrait(name: string): string {
-  let h = 0;
-  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  return `opp_${(h % 12) + 1}`;
 }
 
 function PartyTile({

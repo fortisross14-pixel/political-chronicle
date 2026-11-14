@@ -203,7 +203,8 @@ function updateCalls(state: GameState): GameState {
     }
   }
   let next: ElectionNight = { ...night, regions, ticker };
-  if (next.calledFor === undefined) {
+  // Nobody calls the race off the exit polls: the count decides.
+  if (next.calledFor === undefined && next.phase !== 'exit') {
     const view = nightView(next);
     const sd =
       Math.sqrt(Object.entries(regions).reduce((s, [id, r]) => s + (w[id]! * (1 - counted(r, next.step)) * NIGHT.regionSd) ** 2, 0)) +
