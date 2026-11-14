@@ -7,7 +7,6 @@ import {
   hometownMayoralty,
   invitations,
   joinError,
-  pickError,
   raceOptions,
   buyError,
   offerPrice,
@@ -97,6 +96,8 @@ function cardValue(state: GameState, cardId: string, style: BotStyle): number {
   return best;
 }
 
+const RARITY_RANK = { common: 0, rare: 1, epic: 2, legendary: 3 } as const;
+
 /** Shopping: the investor buys Fundraising first; everyone buys the best value-for-money events. */
 function shop(state: GameState, style: BotStyle): GameState {
   let s = state;
@@ -111,11 +112,25 @@ function shop(state: GameState, style: BotStyle): GameState {
         if (style === 'investor' && o.cardId === 'donor_gala') pick = { index, value: Infinity };
         return;
       }
+      if (o.kind === 'person') {
+        // Hire if the role is empty or this person outranks the holder, and it's not most of the bank.
+        const person = getPerson(o.cardId);
+        const holder = s.team.assigned[person.role];
+        const current = holder !== undefined ? getPerson(s.team.cards.find((c) => c.uid === holder)!.personId) : undefined;
+        const better = !current || RARITY_RANK[person.rarity] > RARITY_RANK[current.rarity];
+        if (better && price <= s.funds * 0.4) pick = { index, value: Infinity };
+        return;
+      }
       const value = cardValue(s, o.cardId, style) / (price + 3000);
       if (value > 1e-7 && (!pick || value > pick.value)) pick = { index, value };
     });
     if (!pick) break;
+    const bought = s.market!.offers[pick.index]!;
     s = applyAction(s, { type: 'BUY_CARD', offerIndex: pick.index });
+    if (bought.kind === 'person') {
+      // Bought people go to reserve if the role is taken; the bot only buys upgrades, so swap them in.
+      s = applyAction(s, { type: 'ASSIGN_PERSON', uid: s.team.cards.at(-1)!.uid });
+    }
   }
   return s;
 }
@@ -173,22 +188,6 @@ function climb(state: GameState): GameState {
   return next ? applyAction(s, { type: 'FILE_RACE', officeId: next.id }) : s;
 }
 
-const RARITY_RANK = { common: 0, rare: 1, epic: 2, legendary: 3 } as const;
-
-/** Take the rarest person on offer; swap them in if they beat whoever holds the role. 'idle' ignores drafts. */
-function takeDraft(state: GameState, style: BotStyle): GameState {
-  if (!state.draft) return state;
-  if (style === 'idle' || pickError(state, 0)) return applyAction(state, { type: 'SKIP_DRAFT' });
-  const best = state.draft.options
-    .map((id, index) => ({ index, person: getPerson(id) }))
-    .sort((a, b) => RARITY_RANK[b.person.rarity] - RARITY_RANK[a.person.rarity])[0]!;
-  let s = applyAction(state, { type: 'PICK_PERSON', index: best.index });
-  const card = s.team.cards.at(-1)!;
-  const holder = s.team.assigned[best.person.role];
-  const current = holder !== undefined ? getPerson(s.team.cards.find((c) => c.uid === holder)!.personId) : undefined;
-  if (current && RARITY_RANK[best.person.rarity] > RARITY_RANK[current.rarity]) s = applyAction(s, { type: 'ASSIGN_PERSON', uid: card.uid });
-  return s;
-}
 
 /** One full turn: dismiss results, file/platform if needed, decide, shop, campaign, end turn. */
 export function playTurn(state: GameState, style: BotStyle): GameState {
@@ -203,7 +202,6 @@ export function playTurn(state: GameState, style: BotStyle): GameState {
     if (!fileRaceError(s, officeId)) s = applyAction(s, { type: 'FILE_RACE', officeId });
   }
   if (s.career.race && !s.career.race.platform.length) s = applyAction(s, { type: 'SET_PLATFORM', platform: botPlatform(s, style) });
-  s = takeDraft(s, style);
   if (s.decisions && !s.decisions.resolved) s = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: decide(s, style) });
   s = shop(s, style);
   if (style !== 'idle') s = playEvents(s, style);

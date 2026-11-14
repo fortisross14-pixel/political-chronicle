@@ -1,7 +1,7 @@
 import { fileRace, isPrimaryTurn, opponentsAct, resolveElection, resolvePrimary, setPlatform } from './campaign';
 import { joinParty } from './parties';
 import { rollChambers } from './legislature';
-import { assignPerson, discardPerson, hasPerk, pickPerson, unassignRole } from './people';
+import { assignPerson, discardPerson, hasPerk, unassignRole } from './people';
 import { backgroundEnergyPenalty } from './traits';
 import { dealDecisions, resolveDecisions } from './decisions';
 import { buyOffer, collectIncome, dealMarket } from './economy';
@@ -43,10 +43,6 @@ export function applyAction(state: GameState, action: Action): GameState {
       return { ...state, pendingResult: undefined };
     case 'JOIN_PARTY':
       return joinParty(state, action.party);
-    case 'PICK_PERSON':
-      return pickPerson(state, action.index);
-    case 'SKIP_DRAFT':
-      return { ...state, draft: undefined };
     case 'ASSIGN_PERSON':
       return assignPerson(state, action.uid);
     case 'UNASSIGN_ROLE':

@@ -7,7 +7,7 @@ import { ElectionResult } from '../campaign/ElectionResult';
 import { HandPanel } from '../campaign/HandPanel';
 import { MarketPanel } from '../campaign/MarketPanel';
 import { OfficePanel } from '../campaign/OfficePanel';
-import { DraftPanel, TeamPanel } from '../campaign/TeamPanel';
+import { TeamPanel } from '../campaign/TeamPanel';
 import { PlatformBuilder } from '../campaign/PlatformBuilder';
 import { RacePicker } from '../campaign/RacePicker';
 import { RegionPanel } from '../map/RegionPanel';
@@ -97,7 +97,6 @@ export function GovernmentTab({ state, dispatch }: Props) {
 
   return (
     <div className="stack">
-      {state.draft && <DraftPanel state={state} dispatch={dispatch} />}
       {race && !race.platform.length && <PlatformBuilder key={`${race.officeId}-${race.electionYear}`} state={state} dispatch={dispatch} />}
       {campaigning && <CampaignPanel state={state} />}
       {inOffice && <OfficePanel state={state} dispatch={dispatch} />}

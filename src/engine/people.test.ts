@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getDecisionCard, PEOPLE } from '../data';
+import { getDecisionCard, PEOPLE, PERSON_PRICE } from '../data';
 import { botCharacter, playCampaign, reelectionRate } from '../sim/bot';
 import {
   applyAction,
@@ -8,7 +8,8 @@ import {
   effectiveSkills,
   grantPerson,
   passageChance,
-  pickError,
+  buyError,
+  offerPrice,
   roleActive,
   rollChambers,
   ROSTER_LIMIT,
@@ -17,10 +18,6 @@ import {
 } from './index';
 import { newRun, readyRun } from './testUtils';
 import type { GameState } from './types';
-
-function withDraft(state: GameState, options: string[]): GameState {
-  return { ...state, draft: { options, reason: 'test' } };
-}
 
 function mayor(): GameState {
   for (let i = 0; i < 40; i++) {
@@ -38,41 +35,48 @@ function governor(party: 'DU' | 'RP', control: 'DU' | 'RP' | 'split', law = 3, d
     politician: { ...s.politician, skills: { ...s.politician.skills, law, diplomacy } },
     career: { ...s.career, affiliation: party, partyStanding: 60, office: { ...s.career.office!, officeId: 'governor-ny', approval: { 'ny-north': 0.6 } } },
     chambers: { ...s.chambers, state: { NY: control } },
+    team: { cards: [], assigned: {}, nextUid: 1 },
   };
 }
 
-describe('drafts', () => {
-  it('filing for a race offers a pick of 3 different people', () => {
+describe('hiring people in the Market', () => {
+  const empty = (s: GameState): GameState => ({ ...s, team: { cards: [], assigned: {}, nextUid: 1 } });
+  const offer = (s: GameState, personId: string): GameState => ({ ...s, funds: 1e6, market: { turnNo: s.snapshots.length, offers: [{ kind: 'person', cardId: personId }] } });
+
+  it('the Market offers a person you don’t already have, every turn', () => {
     const s = newRun();
-    expect(s.draft?.options).toHaveLength(3);
-    expect(new Set(s.draft!.options).size).toBe(3);
+    const people = s.market!.offers.filter((o) => o.kind === 'person');
+    expect(people).toHaveLength(1);
+    expect(s.team.cards.map((c) => c.personId)).not.toContain(people[0]!.cardId);
   });
 
-  it('taking a person fills an empty role; a second one for the same role goes to reserve', () => {
-    let s = withDraft({ ...newRun(), team: { cards: [], assigned: {}, nextUid: 1 } }, ['cm_vance', 'cs_pham', 'ld_cho']);
-    s = applyAction(s, { type: 'PICK_PERSON', index: 0 });
-    expect(s.draft).toBeUndefined();
-    expect(s.team.assigned.campaignManager).toBe(s.team.cards[0]!.uid);
-    s = applyAction(withDraft(s, ['cm_ortiz']), { type: 'PICK_PERSON', index: 0 });
+  it('a person costs a one-time price by rarity, and fills an empty role', () => {
+    const s = offer(empty(newRun()), 'cm_vance');
+    expect(offerPrice(s.market!.offers[0]!, s)).toBe(PERSON_PRICE.rare);
+    const hired = applyAction(s, { type: 'BUY_CARD', offerIndex: 0 });
+    expect(hired.funds).toBe(1e6 - PERSON_PRICE.rare);
+    expect(hired.team.assigned.campaignManager).toBe(hired.team.cards[0]!.uid);
+    // No salary: next turn's income has no deduction for them.
+    expect(Object.keys(hired.lastIncome ?? {})).not.toContain('upkeep');
+  });
+
+  it('a second person for a taken role goes to reserve; swapping keeps both', () => {
+    let s = applyAction(offer(empty(newRun()), 'cm_vance'), { type: 'BUY_CARD', offerIndex: 0 });
+    s = applyAction(offer(s, 'cm_ortiz'), { type: 'BUY_CARD', offerIndex: 0 });
     expect(s.team.cards).toHaveLength(2);
     expect(s.team.assigned.campaignManager).toBe(s.team.cards[0]!.uid);
-    // Swap in the reserve card; the old one goes to reserve, not away.
     s = applyAction(s, { type: 'ASSIGN_PERSON', uid: s.team.cards[1]!.uid });
     expect(s.team.assigned.campaignManager).toBe(s.team.cards[1]!.uid);
     expect(s.team.cards).toHaveLength(2);
   });
 
   it('discarding is permanent; the roster holds 6', () => {
-    let s: GameState = { ...newRun(), team: { cards: [], assigned: {}, nextUid: 1 } };
+    let s = empty(newRun());
     for (const p of PEOPLE.slice(0, ROSTER_LIMIT)) s = grantPerson(s, p.id, false);
-    expect(pickError(withDraft(s, ['ld_novak']), 0)).toMatch(/full/);
+    expect(buyError(offer(s, 'ld_novak'), 0)).toMatch(/full/);
     const gone = applyAction(s, { type: 'DISCARD_PERSON', uid: s.team.cards[0]!.uid });
     expect(gone.team.cards).toHaveLength(ROSTER_LIMIT - 1);
     expect(gone.team.cards.some((c) => c.personId === s.team.cards[0]!.personId)).toBe(false);
-  });
-
-  it('winning an election offers a new pick', () => {
-    expect(mayor().draft?.reason).toMatch(/Winners/);
   });
 
   it('public servants start with a chief of staff from their old job', () => {

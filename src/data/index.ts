@@ -6,7 +6,7 @@ export { PARTIES, PARTY_IDS } from './parties';
 export { BACKGROUNDS, BACKGROUNDS_BY_ID, getBackground } from './backgrounds';
 export type { Background, BackgroundPerks } from './backgrounds';
 export { US_STATES, US_STATE_NAMES } from './usStates';
-export { PEOPLE, PEOPLE_BY_ID, getPerson, ROLE_LABELS, ROLE_HINTS, PERK_TEXT, RARITY_WEIGHT } from './people';
+export { PEOPLE, PEOPLE_BY_ID, getPerson, ROLE_LABELS, ROLE_HINTS, PERK_TEXT, RARITY_WEIGHT, PERSON_PRICE } from './people';
 export type { Person, PersonPerk, Rarity, Role } from './people';
 export { EVENT_CARDS, EVENT_CARDS_BY_ID, BASIC_CARD_IDS, STARTER_HAND, MARKET_COST_FACTOR, MARKET_WEIGHTS, getEventCard } from './eventCards';
 export { SKILL_CARDS, SKILL_CARDS_BY_ID, getSkillCard } from './skillCards';

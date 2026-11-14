@@ -1,11 +1,10 @@
-// People cards: free cards you assign to a role, keep in reserve, or discard (DESIGN_V2 §3).
+// People cards: bought once in the Market, then assigned to a role, kept in reserve, or discarded (DESIGN_V2 §3).
 import { getOffice, getPerson, PEOPLE, RARITY_WEIGHT } from '../data';
 import type { PersonPerk } from '../data';
 import type { Rng } from './rng';
 import type { GameState, RoleId, Skills } from './types';
 
 export const ROSTER_LIMIT = 6;
-export const DRAFT_SIZE = 3;
 export const SKILL_HARD_CAP = 10;
 export const ROLES: RoleId[] = ['campaignManager', 'chiefOfStaff', 'partyLiaison', 'legislativeDirector'];
 
@@ -48,42 +47,28 @@ export function hasPerk(state: GameState, perk: PersonPerk): boolean {
   return activePeople(state).some((p) => p.perk === perk);
 }
 
-// ---------- Draft ----------
+// ---------- Getting people ----------
 
-/** Offer a pick of 3 people you don't already have, weighted by rarity. Replaces any pending draft. */
-export function dealDraft(state: GameState, rng: Rng, reason: string): GameState {
-  const owned = new Set(state.team.cards.map((c) => c.personId));
-  let pool = PEOPLE.filter((p) => !owned.has(p.id));
-  const options: string[] = [];
-  while (options.length < DRAFT_SIZE && pool.length) {
-    let roll = rng.float() * pool.reduce((s, p) => s + RARITY_WEIGHT[p.rarity], 0);
-    const pick = pool.find((p) => (roll -= RARITY_WEIGHT[p.rarity]) <= 0) ?? pool.at(-1)!;
-    options.push(pick.id);
-    pool = pool.filter((p) => p.id !== pick.id);
-  }
-  return options.length ? { ...state, draft: { options, reason } } : state;
+/** A person you don't hold yet, weighted by rarity, or undefined if you hold everyone. */
+export function rollPerson(state: GameState, rng: Rng, exclude: string[] = []): string | undefined {
+  const owned = new Set([...state.team.cards.map((c) => c.personId), ...exclude]);
+  const pool = PEOPLE.filter((p) => !owned.has(p.id));
+  if (!pool.length) return undefined;
+  let roll = rng.float() * pool.reduce((s, p) => s + RARITY_WEIGHT[p.rarity], 0);
+  return (pool.find((p) => (roll -= RARITY_WEIGHT[p.rarity]) <= 0) ?? pool.at(-1)!).id;
 }
 
-export function pickError(state: GameState, index: number): string | undefined {
-  if (!state.draft?.options[index]) return 'Nothing to pick.';
-  if (state.team.cards.length >= ROSTER_LIMIT) return `Your team is full (${ROSTER_LIMIT}). Discard someone first.`;
-  return undefined;
+export function rosterFull(state: GameState): boolean {
+  return state.team.cards.length >= ROSTER_LIMIT;
 }
 
-/** Take a person; they fill their role right away if it's empty, otherwise go to reserve. */
-export function pickPerson(state: GameState, index: number): GameState {
-  const error = pickError(state, index);
-  if (error) throw new Error(error);
-  const person = getPerson(state.draft!.options[index]!);
+/** Adds someone to the team; they fill their role right away if it's empty, otherwise go to reserve. */
+export function acquirePerson(state: GameState, personId: string): GameState {
+  const person = getPerson(personId);
   const uid = state.team.nextUid;
   const assigned = { ...state.team.assigned };
   if (assigned[person.role] === undefined) assigned[person.role] = uid;
-  return {
-    ...state,
-    draft: undefined,
-    team: { cards: [...state.team.cards, { uid, personId: person.id }], assigned, nextUid: uid + 1 },
-    log: [...state.log, { year: state.clock.year, turn: state.clock.turn, text: `${person.name} joined your team.` }],
-  };
+  return { ...state, team: { cards: [...state.team.cards, { uid, personId }], assigned, nextUid: uid + 1 } };
 }
 
 export function assignPerson(state: GameState, uid: number): GameState {

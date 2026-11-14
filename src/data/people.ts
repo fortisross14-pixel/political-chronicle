@@ -51,6 +51,9 @@ export const PERK_TEXT: Record<PersonPerk, string> = {
 
 export const RARITY_WEIGHT: Record<Rarity, number> = { common: 10, rare: 5, epic: 2, legendary: 0.6 };
 
+/** One-time price in the Market. No salaries: once bought, they're yours until you discard them. */
+export const PERSON_PRICE: Record<Rarity, number> = { common: 6000, rare: 15000, epic: 35000, legendary: 70000 };
+
 export const PEOPLE: Person[] = [
   // Campaign managers
   { id: 'cm_kowalczyk', name: 'Terry Kowalczyk', role: 'campaignManager', rarity: 'common', boosts: { charisma: 1 }, bio: 'Ran three county races. Knows every diner owner.' },

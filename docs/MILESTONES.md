@@ -139,8 +139,8 @@ perk shows up in the sim.
 
 ## M8 — People cards & the legislature ✅ done
 
-- People are free cards: a pick-1-of-3 draft when you file and when you win; assign, keep in
-  reserve, or discard (permanent); roster max 6.
+- People cards bought once in the Market (one person offer per turn, priced by rarity, no
+  salary); assign, keep in reserve, or discard (permanent); roster max 6.
 - Slots: campaign manager, chief of staff, party liaison, legislative director.
 - Bill passage for Governor and federal offices: chamber control per cycle, LAW, DIP, director.
 - ADM, ECO and LEA effects in office (wear, execution, budget cards and the Governor's budget

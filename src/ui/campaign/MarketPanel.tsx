@@ -1,4 +1,5 @@
-import { getEventCard, getSkillCard } from '../../data';
+import { getEventCard, getPerson, getSkillCard } from '../../data';
+import { PersonCard } from './TeamPanel';
 import { buyError, HAND_LIMIT, offerPrice, skillCap, SKILL_LABELS } from '../../engine';
 import type { Action, GameState } from '../../engine';
 import { money } from '../format';
@@ -36,6 +37,15 @@ export function MarketPanel({ state, dispatch }: { state: GameState; dispatch: (
                     Buy {money(price)}
                   </button>
                 </article>
+              );
+            }
+            if (o.kind === 'person') {
+              return (
+                <PersonCard key={i} person={getPerson(o.cardId)}>
+                  <button disabled={!!error} title={error} onClick={() => dispatch({ type: 'BUY_CARD', offerIndex: i })}>
+                    Hire {money(price)}
+                  </button>
+                </PersonCard>
               );
             }
             const c = getSkillCard(o.cardId);

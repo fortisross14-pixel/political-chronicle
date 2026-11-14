@@ -282,7 +282,8 @@ export interface DecisionHand {
 }
 
 export interface MarketOffer {
-  kind: 'event' | 'skill';
+  kind: 'event' | 'skill' | 'person';
+  /** Event or skill card id, or a person id. */
   cardId: string;
 }
 
@@ -303,12 +304,6 @@ export interface Team {
   cards: TeamCard[];
   assigned: Partial<Record<RoleId, number>>;
   nextUid: number;
-}
-
-export interface PeopleDraft {
-  /** Pick one of these person ids (or skip). */
-  options: string[];
-  reason: string;
 }
 
 export type ChamberControl = PartyId | 'split';
@@ -400,9 +395,8 @@ export interface GameState {
   nextCardUid: number;
   decisions?: DecisionHand;
   market?: Market;
-  /** People cards: the roster, who fills each role, and any pending pick (DESIGN_V2 §3). */
+  /** People cards: the roster and who fills each role (DESIGN_V2 §3). Bought in the Market. */
   team: Team;
-  draft?: PeopleDraft;
   /** Who controls each legislature this cycle. */
   chambers: Chambers;
   /** Funds received/paid at the start of the current turn. */
@@ -430,8 +424,6 @@ export type Action =
   | { type: 'DISMISS_RESULT' }
   | { type: 'RETIRE' }
   | { type: 'JOIN_PARTY'; party: PartyId }
-  | { type: 'PICK_PERSON'; index: number }
-  | { type: 'SKIP_DRAFT' }
   | { type: 'ASSIGN_PERSON'; uid: number }
   | { type: 'UNASSIGN_ROLE'; role: RoleId }
   | { type: 'DISCARD_PERSON'; uid: number };

@@ -1,10 +1,10 @@
 // Money: income, upkeep, the Market and skill growth (DESIGN §6.2, §9).
-import { EVENT_CARDS, getEventCard, getOffice, getRegion, getSkillCard, MARKET_COST_FACTOR, MARKET_WEIGHTS, SKILL_CARDS } from '../data';
+import { EVENT_CARDS, getEventCard, getOffice, getPerson, getRegion, getSkillCard, MARKET_COST_FACTOR, MARKET_WEIGHTS, PERSON_PRICE, SKILL_CARDS } from '../data';
 import type { SkillCard } from '../data';
 import { turnNo } from './events';
 import { poll } from './opinion';
 import { adjustStanding, partyFunds } from './parties';
-import { effectiveSkills } from './people';
+import { acquirePerson, effectiveSkills, rollPerson, rosterFull, ROSTER_LIMIT } from './people';
 import { native, TRAITS } from './traits';
 import { Rng } from './rng';
 import { monthsFactor } from './time';
@@ -13,6 +13,7 @@ import type { EventCard, GameState, IncomeBreakdown, MarketOffer, OfficeLevel, R
 export const HAND_LIMIT = 8;
 export const MARKET_SIZE = 6;
 export const MARKET_SKILL_OFFERS = 2;
+export const MARKET_PERSON_OFFERS = 1;
 
 export const INCOME = {
   donorBase: 1000,
@@ -62,6 +63,7 @@ export function skillPrice(card: SkillCard, state: GameState): number {
 }
 
 export function offerPrice(offer: MarketOffer, state: GameState): number {
+  if (offer.kind === 'person') return PERSON_PRICE[getPerson(offer.cardId).rarity];
   return offer.kind === 'event' ? eventPrice(getEventCard(offer.cardId), state) : skillPrice(getSkillCard(offer.cardId), state);
 }
 
@@ -125,6 +127,10 @@ export function dealMarket(state: GameState): GameState {
   const rng = new Rng(state.rng);
   const skills = rng.shuffle(availableSkillCards(state)).slice(0, MARKET_SKILL_OFFERS);
   const offers: MarketOffer[] = skills.map((c) => ({ kind: 'skill', cardId: c.id }));
+  for (let i = 0; i < MARKET_PERSON_OFFERS; i++) {
+    const personId = rollPerson(state, rng, offers.filter((o) => o.kind === 'person').map((o) => o.cardId));
+    if (personId) offers.push({ kind: 'person', cardId: personId });
+  }
   const eventWeights = EVENT_CARDS.filter((c) => MARKET_WEIGHTS[c.id] && (!c.requiresParty || state.career.affiliation !== 'IND')).map(
     (c) => [c.id, MARKET_WEIGHTS[c.id]!] as [string, number],
   );
@@ -137,7 +143,9 @@ export function buyError(state: GameState, offerIndex: number): string | undefin
   const offer = state.market?.offers[offerIndex];
   if (!offer) return 'That offer is gone.';
   if (offerPrice(offer, state) > state.funds) return 'Not enough funds.';
-  if (offer.kind === 'event') {
+  if (offer.kind === 'person') {
+    if (rosterFull(state)) return `Your team is full (${ROSTER_LIMIT}). Discard someone first.`;
+  } else if (offer.kind === 'event') {
     if (state.hand.length >= HAND_LIMIT) return `Your hand is full (${HAND_LIMIT} cards). Play some first.`;
   } else {
     const card = getSkillCard(offer.cardId);
@@ -157,6 +165,13 @@ export function buyOffer(state: GameState, offerIndex: number): GameState {
   const base = { ...state, funds: state.funds - price, market: { ...state.market!, offers } };
   const entry = (text: string) => [...state.log, { year: state.clock.year, turn: state.clock.turn, text }];
 
+  if (offer.kind === 'person') {
+    const person = getPerson(offer.cardId);
+    return {
+      ...acquirePerson(base, person.id),
+      log: entry(`Brought ${person.name} onto the team for $${price.toLocaleString('en-US')}.`),
+    };
+  }
   if (offer.kind === 'event') {
     return {
       ...base,

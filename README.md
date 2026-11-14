@@ -9,9 +9,9 @@ compared.
 - [Design v1 — simulation engine](docs/DESIGN.md)
 - [POC milestones](docs/MILESTONES.md)
 
-Status: **M8 (people cards & the legislature) done** — free people cards from drafts
+Status: **M8 (people cards & the legislature) done** — people cards bought once in the Market
 (assign to campaign manager, chief of staff, party liaison or legislative director, keep in
-reserve, or discard), skill boosts and perks while a role is active, and legislatures whose
+reserve, or discard; no salaries), skill boosts and perks while a role is active, and legislatures whose
 control changes each cycle, so bills must pass. Next: M9 (campaign loot & election night).
 
 ## Development

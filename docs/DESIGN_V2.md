@@ -120,9 +120,9 @@ overlapping.
 
 ## 3. People cards: cabinet and campaign
 
-People are **free cards**; this is a casual game. No signing fees and no salaries. You get a
-card, then either **assign** it to its role, keep it in **reserve** (the "back pocket") for a
-later role, or **discard** it, which is permanent. Resigning, moving to a new office or losing
+People are cards you **buy once** in the Market; this is a casual game, so there's no contract,
+no signing fee and no salary. Once bought, you either **assign** a card to its role, keep it in
+**reserve** (the "back pocket") for a later role, or **discard** it, which is permanent. Resigning, moving to a new office or losing
 an election never loses anyone.
 
 | Role | Active when | Boost | Example perks |
@@ -132,9 +132,11 @@ an election never loses anyone.
 | **Party liaison** | In office as a party member | LEA / DIP | *Whip shield*: standing lost with your party is halved |
 | **Legislative director** ("political rep") | Governor, House or Senate | LAW / DIP | *Across the aisle*: +10% passage against an opposing chamber |
 
-- **Getting people:** a **pick-1-of-3 draft** when you file for a race and when you win one,
-  weighted by rarity (common, rare, epic, legendary) and never repeating someone you hold.
-  You can skip. Later, campaign loot (M9) and scenario rewards (M10) will hand out people too.
+- **Getting people:** every turn the Market offers **one person** (alongside 2 skill and 3 event
+  cards), weighted by rarity and never someone you already hold. One-time price: common $6k,
+  rare $15k, epic $35k, legendary $70k, paid from donor and party money. A bought person
+  fills their role right away if it's empty; otherwise they go to reserve. Later, campaign loot
+  (M9) and scenario rewards (M10) can hand out people too.
 - **Roster:** at most 6 people, assigned and reserve together. A full roster means
   discarding before you can take someone new.
 - **Boosts** add to your skills only while the role is active (a legislative director does
