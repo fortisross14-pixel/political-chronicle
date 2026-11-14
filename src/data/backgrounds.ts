@@ -1,81 +1,144 @@
-import type { IssueId, SkillId } from '../engine/types';
+import type { IssueId, RegionType, SkillId } from '../engine/types';
+
+/** Mechanical perks and weaknesses. Every field is optional; the engine reads what's present. */
+export interface BackgroundPerks {
+  /** Recognition in every region of your resident state at the start (at least this). */
+  statewideRecognition?: number;
+  /** Starting integrity (default 60). */
+  startingIntegrity?: number;
+  /** Your party standing never starts below this when you join. */
+  partyStandingFloor?: number;
+  /** Multiplier on what declining a crisis card costs you. */
+  crisisCost?: number;
+  /** Multiplier on door-knocking effects. */
+  doorKnocking?: number;
+  /** Multiplier on televised-debate persuasion. */
+  debate?: number;
+  /** Credibility multiplier on issues outside `credibleIssues` (celebrities aren't taken seriously on policy). */
+  policyCredibility?: number;
+  /** Energy lost per turn for this many months at the start of the career. */
+  energyPenalty?: { amount: number; months: number };
+}
 
 export interface Background {
   id: string;
   name: string;
   blurb: string;
-  /** Added on top of the base 1 in every skill. */
+  /** Fixed points, added on top of the base 1 in every skill. */
   skillBonus: Partial<Record<SkillId, number>>;
+  /** Weaknesses: these skills can't be raised above this value at creation. */
+  creationCaps?: Partial<Record<SkillId, number>>;
   /** Starting funds at age 25; older politicians have more savings and contacts. */
   baseFunds: number;
-  /** Issues where this background makes you more credible (used by persuasion from M3). */
+  /** Issues where this background makes you more credible. */
   credibleIssues: IssueId[];
+  /** Issues where voters doubt you (×0.85 credibility). */
+  doubtedIssues?: IssueId[];
+  /** +0.08 favorability statewide if your resident state is one of these. */
+  favoredStates: string[];
+  /** −0.05 favorability statewide in these. */
+  disfavoredStates?: string[];
+  /** Extra starting favorability in regions of this type. */
+  regionAffinity?: Partial<Record<RegionType, number>>;
+  perks: BackgroundPerks;
+  perkText: string;
+  weaknessText: string;
 }
 
 export const BACKGROUNDS: Background[] = [
   {
+    id: 'veteran',
+    name: 'Army veteran',
+    blurb: 'Discipline, a story people respect, and calm in a crisis.',
+    skillBonus: { leadership: 2, administration: 1 },
+    creationCaps: { diplomacy: 2 },
+    baseFunds: 15_000,
+    credibleIssues: ['guns', 'immigration', 'policing'],
+    favoredStates: ['TX', 'GA', 'NC', 'AZ', 'WY'],
+    disfavoredStates: ['MA', 'VT'],
+    regionAffinity: { rural: 0.05 },
+    perks: { crisisCost: 0.5 },
+    perkText: 'Declining a crisis costs half. Liked in rural regions.',
+    weaknessText: 'Diplomacy capped at 2 at creation.',
+  },
+  {
+    id: 'public_servant',
+    name: 'Public servant',
+    blurb: 'Years inside government. You know how things get done — and everyone knows you.',
+    skillBonus: { administration: 2, strategy: 2 },
+    baseFunds: 20_000,
+    credibleIssues: ['transit', 'education'],
+    favoredStates: ['NY', 'IL', 'MA'],
+    perks: { partyStandingFloor: 40 },
+    perkText: 'Join a party with at least 40 standing. (A free staff card arrives with people cards.)',
+    weaknessText: 'Establishment: outsider scenarios penalize you.',
+  },
+  {
+    id: 'celebrity',
+    name: 'Celebrity',
+    blurb: 'Everybody knows your face. Nobody knows your policies.',
+    skillBonus: { charisma: 4, strategy: 1 },
+    creationCaps: { administration: 2, economics: 2, law: 2 },
+    baseFunds: 60_000,
+    credibleIssues: ['lgbtq', 'climate'],
+    favoredStates: ['CA', 'NY', 'FL'],
+    disfavoredStates: ['WY', 'ND'],
+    regionAffinity: { urban: 0.05 },
+    perks: { statewideRecognition: 0.25, policyCredibility: 0.8 },
+    perkText: 'Starts with 25% recognition across the state. Loved in big cities.',
+    weaknessText: 'Administration, Economics and Law capped at 2; less credible on policy.',
+  },
+  {
     id: 'lawyer',
     name: 'Lawyer',
     blurb: 'Sharp in a debate and well connected, but voters have heard lawyers before.',
-    skillBonus: { policy: 2, oratory: 1, negotiation: 1 },
+    skillBonus: { law: 3, diplomacy: 1 },
+    creationCaps: { charisma: 2 },
     baseFunds: 40_000,
-    credibleIssues: ['policing', 'immigration'],
+    credibleIssues: ['policing', 'immigration', 'abortion'],
+    favoredStates: ['MA', 'IL', 'NY'],
+    perks: { debate: 1.25 },
+    perkText: 'Debates persuade 25% more.',
+    weaknessText: 'Charisma capped at 2 at creation.',
   },
   {
-    id: 'teacher',
-    name: 'Teacher',
-    blurb: 'Patient, trusted and used to a tough room. Not a lot of money.',
-    skillBonus: { charisma: 2, oratory: 1, policy: 1 },
-    baseFunds: 10_000,
-    credibleIssues: ['education', 'labor'],
+    id: 'business',
+    name: 'Business executive',
+    blurb: 'You’ve run payrolls and boardrooms. You can write your own first check.',
+    skillBonus: { economics: 3, administration: 1 },
+    baseFunds: 70_000,
+    credibleIssues: ['small_biz', 'taxes', 'industry'],
+    doubtedIssues: ['labor', 'min_wage'],
+    favoredStates: ['NY', 'TX', 'FL'],
+    perks: {},
+    perkText: 'Self-funding: starts with $70k.',
+    weaknessText: 'Doubted on labor and the minimum wage.',
   },
   {
-    id: 'small_business',
-    name: 'Small-business owner',
-    blurb: 'Knows payroll, permits and every customer by name.',
-    skillBonus: { fundraising: 2, charisma: 1, negotiation: 1 },
-    baseFunds: 35_000,
-    credibleIssues: ['small_biz', 'taxes'],
-  },
-  {
-    id: 'veteran',
-    name: 'Veteran',
-    blurb: 'Discipline and a story people respect, across the aisle.',
-    skillBonus: { oratory: 2, charisma: 1, negotiation: 1 },
-    baseFunds: 15_000,
-    credibleIssues: ['guns', 'immigration'],
+    id: 'organizer',
+    name: 'Community organizer',
+    blurb: 'You built coalitions block by block. You can fill a hall on short notice.',
+    skillBonus: { leadership: 1, charisma: 1, diplomacy: 1 },
+    creationCaps: { economics: 2 },
+    baseFunds: 8_000,
+    credibleIssues: ['labor', 'housing', 'min_wage'],
+    favoredStates: ['IL', 'MI', 'PA', 'OH'],
+    disfavoredStates: ['WY'],
+    perks: { doorKnocking: 1.2 },
+    perkText: 'Door-knocking is 20% stronger. (Extra election-night ground game arrives with election night.)',
+    weaknessText: 'Economics capped at 2; few donors.',
   },
   {
     id: 'doctor',
-    name: 'Doctor',
-    blurb: 'Credible and comfortable, but new to the cameras.',
-    skillBonus: { policy: 2, fundraising: 1, charisma: 1 },
+    name: 'Doctor / scientist',
+    blurb: 'Trusted, careful and credible — and still finishing your shifts.',
+    skillBonus: { law: 1, administration: 1, economics: 1 },
     baseFunds: 50_000,
-    credibleIssues: ['healthcare', 'abortion'],
-  },
-  {
-    id: 'union_organizer',
-    name: 'Union organizer',
-    blurb: 'Built coalitions one shift at a time. Can fill a hall on short notice.',
-    skillBonus: { negotiation: 2, oratory: 1, charisma: 1 },
-    baseFunds: 12_000,
-    credibleIssues: ['labor', 'min_wage', 'industry'],
-  },
-  {
-    id: 'activist',
-    name: 'Activist',
-    blurb: 'Grassroots energy and a big online following. Few donors.',
-    skillBonus: { digital: 2, oratory: 1, charisma: 1 },
-    baseFunds: 8_000,
-    credibleIssues: ['climate', 'lgbtq', 'housing'],
-  },
-  {
-    id: 'tech_founder',
-    name: 'Tech founder',
-    blurb: 'Deep pockets and a slick feed, but can come off as out of touch.',
-    skillBonus: { digital: 2, fundraising: 2 },
-    baseFunds: 80_000,
-    credibleIssues: ['industry', 'transit'],
+    credibleIssues: ['healthcare', 'climate', 'abortion'],
+    favoredStates: ['MA', 'CO', 'WA'],
+    perks: { startingIntegrity: 75, energyPenalty: { amount: 1, months: 48 } },
+    perkText: 'High trust: integrity starts at 75.',
+    weaknessText: '−1 energy for the first four years (still at the clinic).',
   },
 ];
 

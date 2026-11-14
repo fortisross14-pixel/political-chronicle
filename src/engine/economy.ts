@@ -4,6 +4,7 @@ import type { SkillCard } from '../data';
 import { turnNo } from './events';
 import { poll } from './opinion';
 import { adjustStanding, partyFunds } from './parties';
+import { native, TRAITS } from './traits';
 import { Rng } from './rng';
 import { monthsFactor } from './time';
 import type { EventCard, GameState, IncomeBreakdown, MarketOffer, OfficeLevel, RegionId } from './types';
@@ -31,7 +32,7 @@ export const SKILL_CAP: Record<OfficeLevel | 'none', number> = { none: 6, mayor:
 /** The regions your money and donors come from: the race you're in, your office, or home. */
 export function economicJurisdiction(state: GameState): RegionId[] {
   const id = state.career.race?.officeId ?? state.career.office?.officeId;
-  return id ? getOffice(id).regionIds : [state.politician.birthRegionId];
+  return id ? getOffice(id).regionIds : [state.politician.residentRegionId];
 }
 
 function weightsOf(regionIds: RegionId[]): [RegionId, number][] {
@@ -76,11 +77,12 @@ export function competitiveness(state: GameState): number {
 export function projectedIncome(state: GameState): Omit<IncomeBreakdown, 'quit'> {
   const f = monthsFactor(state.clock);
   const regions = economicJurisdiction(state);
+  const outsiders = native(state) ? 0 : (TRAITS.outsideDonorBase * state.politician.skills.economics) / 3;
   const recognition = weightsOf(regions).reduce((s, [id, w]) => s + w * state.regions[id]!.recognition, 0);
   const phase = state.career.race ? INCOME.campaignMultiplier : state.career.office ? INCOME.officeMultiplier : INCOME.idleMultiplier;
   const statewide = regions.length > 1;
   const donors =
-    (INCOME.donorBase + INCOME.donorPerFundraisingRecognition * state.politician.skills.fundraising * recognition) *
+    (INCOME.donorBase + INCOME.donorPerFundraisingRecognition * state.politician.skills.economics * recognition + outsiders) *
     (statewide ? INCOME.statewideMultiplier : 1) *
     phase *
     f;

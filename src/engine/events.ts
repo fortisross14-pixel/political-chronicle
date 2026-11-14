@@ -3,11 +3,15 @@ import { getBackground, getEventCard, getOffice, getRegion, ISSUES_BY_ID, STATES
 import { alignment, clamp, nudgeFavorability, nudgeRecognition, regionAlignment, relevance, skillMult } from './opinion';
 import { GOVERNING, nudgeApproval } from './governing';
 import { adjustStanding } from './parties';
+import { native } from './traits';
 import { Rng } from './rng';
 import type { EventCard, GameState, IssueId, OfficeLevel, Pledge, RegionId, Stance } from './types';
 
 export const HOMETOWN_EVENT_BONUS = 1.25;
+/** A transplant's own city is still home turf, just less so. */
+export const TRANSPLANT_EVENT_BONUS = 1.15;
 export const CREDIBLE_ISSUE_BONUS = 1.15;
+export const DOUBTED_ISSUE_FACTOR = 0.85;
 export const FATIGUE = 0.7;
 export const FUNDRAISING_FATIGUE = 0.5;
 
@@ -55,9 +59,11 @@ export function stanceFor(state: GameState, issue: IssueId): Stance | undefined 
 export function credibility(state: GameState, issue: IssueId, stance: Stance): number {
   const record = state.record[issue];
   const consistency = record === undefined ? 1 : clamp(alignment(stance, record), 0, 1);
-  const base = (0.7 + 0.03 * state.politician.skills.policy + 0.3 * consistency) / 1.15;
-  const credible = getBackground(state.politician.backgroundId).credibleIssues.includes(issue);
-  return base * (credible ? CREDIBLE_ISSUE_BONUS : 1);
+  const base = (0.7 + 0.03 * state.politician.skills.law + 0.3 * consistency) / 1.15;
+  const bg = getBackground(state.politician.backgroundId);
+  if (bg.credibleIssues.includes(issue)) return base * CREDIBLE_ISSUE_BONUS;
+  if (bg.doubtedIssues?.includes(issue)) return base * DOUBTED_ISSUE_FACTOR;
+  return base * (bg.perks.policyCredibility ?? 1);
 }
 
 export function fatigueFor(state: GameState, regionId: RegionId, issue: IssueId): number {
@@ -67,7 +73,7 @@ export function fatigueFor(state: GameState, regionId: RegionId, issue: IssueId)
 }
 
 export function gaffeChance(card: EventCard, state: GameState): number {
-  return card.gaffeRisk ? Math.max(0.01, 0.08 - 0.006 * state.politician.skills.media) : 0;
+  return card.gaffeRisk ? Math.max(0.01, 0.08 - 0.006 * state.politician.skills.charisma) : 0;
 }
 
 /** Resolves a card from the hand (number uid) or a basic card (string id). */
@@ -111,12 +117,15 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
     const R = state.regions[regionId]!.recognition;
     // Donors tire of being asked: each earlier fundraiser this turn halves the next one.
     const asks = state.eventHistory.filter((e) => e.turnNo === turnNo(state) && e.fundraiser).length;
-    preview.fundsGain = Math.round((card.fundraising * skills.fundraising * (0.5 + R) * FUNDRAISING_FATIGUE ** asks) / 100) * 100;
+    preview.fundsGain = Math.round((card.fundraising * skills.economics * (0.5 + R) * FUNDRAISING_FATIGUE ** asks) / 100) * 100;
   }
   if (stance === undefined || (card.reach === 0 && card.persuasion === 0)) return preview;
 
-  const hometown = regionId === state.politician.birthRegionId ? HOMETOWN_EVENT_BONUS : 1;
-  const mult = skillMult(skills, card.skills) * hometown * fatigue;
+  // Only natives get the hometown bonus; a transplant's city doesn't know them that well yet.
+  const hometown = regionId === state.politician.residentRegionId ? (native(state) ? HOMETOWN_EVENT_BONUS : TRANSPLANT_EVENT_BONUS) : 1;
+  const perks = getBackground(state.politician.backgroundId).perks;
+  const perk = (card.id === 'door_knocking' ? (perks.doorKnocking ?? 1) : 1) * (card.id === 'debate' ? (perks.debate ?? 1) : 1);
+  const mult = skillMult(skills, card.skills) * hometown * fatigue * perk;
   const cred = credibility(state, issue, stance);
   const targets: [RegionId, number][] = [[regionId, 1]];
   if (card.spillover > 0) {

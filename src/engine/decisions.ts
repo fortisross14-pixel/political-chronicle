@@ -1,15 +1,27 @@
 // Decision cards: 3 per turn, apply 1–3, never 0 (DESIGN §6.3).
 // Campaigning they are campaign moments (move favorability); in office they are bills and
 // executive actions (move job approval, which favorability then follows).
-import { DECISION_CARDS, getDecisionCard, getOffice, getRegion, STATES } from '../data';
+import { DECISION_CARDS, getBackground, getDecisionCard, getOffice, getRegion, STATES } from '../data';
 import { activeLevel, turnNo } from './events';
-import { nudgeApproval } from './governing';
+import { executionMultiplier, nudgeApproval } from './governing';
 import { adjustStanding, effectivePlatform, member, PARTY, stanceAgreement } from './parties';
 import { clamp, nudgeFavorability, nudgeRecognition, regionAlignment, relevance } from './opinion';
 import { Rng } from './rng';
 import type { DecisionCard, GameState, IssueId, Pledge, PromiseEvent, RegionId } from './types';
 
 export const DECISIONS_PER_TURN = 3;
+/** Strategy 7+ spots an extra opportunity: 4 cards dealt (you still apply at most 3). */
+export const STRATEGY_EXTRA_CARD = 7;
+
+export function handSize(state: GameState): number {
+  return state.politician.skills.strategy >= STRATEGY_EXTRA_CARD ? DECISIONS_PER_TURN + 1 : DECISIONS_PER_TURN;
+}
+
+/** Leadership (and a veteran's calm) cut what declining a crisis costs. */
+export function crisisCostMultiplier(state: GameState): number {
+  const lea = clamp(1.25 - 0.05 * state.politician.skills.leadership, 0.6, 1.25);
+  return lea * (getBackground(state.politician.backgroundId).perks.crisisCost ?? 1);
+}
 const RECENT_MEMORY = 9;
 
 export const DECISION_EFFECT = {
@@ -48,8 +60,8 @@ export function dealDecisions(state: GameState): GameState {
   if (!pool.length) return { ...state, decisions: undefined };
   const rng = new Rng(state.rng);
   const fresh = pool.filter((c) => !state.recentDecisionIds.includes(c.id));
-  const source = fresh.length >= DECISIONS_PER_TURN ? fresh : pool;
-  const cardIds = rng.shuffle(source).slice(0, DECISIONS_PER_TURN).map((c) => c.id);
+  const size = handSize(state);
+  const cardIds = rng.shuffle(fresh.length >= size ? fresh : pool).slice(0, size).map((c) => c.id);
   return {
     ...state,
     rng: rng.state,
@@ -106,7 +118,7 @@ export function decisionImpact(state: GameState, card: DecisionCard): DecisionIm
     let fit = 0;
     for (const tag of card.tags) fit += region.issueSalience[tag.issue] * regionAlignment(id, tag.issue, tag.stance) * relevance(tag.issue, level);
     if (home.includes(id)) {
-      if (inOffice) impact.approval[id] = DECISION_EFFECT.approval * fit;
+      if (inOffice) impact.approval[id] = DECISION_EFFECT.approval * fit * executionMultiplier(state, card.tags.some((t) => t.issue === 'taxes'));
       else impact.favorability[id] = DECISION_EFFECT.favorability * fit;
     } else {
       impact.favorability[id] = DECISION_EFFECT.favorability * fit * DECISION_EFFECT.spillover;
@@ -171,9 +183,10 @@ export function resolveDecisions(state: GameState, apply: string[]): GameState {
     if (!apply.includes(id)) {
       standing += decisionImpact(state, card).rejectStanding;
       if (card.rejectCost) {
+        const cost = card.rejectCost * crisisCostMultiplier(state);
         for (const r of home) {
-          if (approval) approval[r] = nudgeApproval(approval[r]!, -card.rejectCost);
-          else regions[r] = { ...regions[r]!, favorability: nudgeFavorability(regions[r]!.favorability, -card.rejectCost) };
+          if (approval) approval[r] = nudgeApproval(approval[r]!, -cost);
+          else regions[r] = { ...regions[r]!, favorability: nudgeFavorability(regions[r]!.favorability, -cost) };
         }
       }
       continue;

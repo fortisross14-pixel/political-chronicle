@@ -41,6 +41,18 @@ export function newTerm(officeId: string, electionYear: number, regionShares: Re
   };
 }
 
+/** Administration slows approval wear: 1.25× at ADM 0, 1.0 at 5, 0.75 at 10. */
+export function administrationWear(state: GameState): number {
+  return clamp(1.25 - 0.05 * state.politician.skills.administration, 0.6, 1.25);
+}
+
+/** How hard a signed bill lands: ADM, plus ECO on budget and tax bills. 1.0 at 5. */
+export function executionMultiplier(state: GameState, budgetBill: boolean): number {
+  const adm = 0.8 + 0.04 * state.politician.skills.administration;
+  const eco = budgetBill ? 0.8 + 0.04 * state.politician.skills.economics : 1;
+  return adm * eco;
+}
+
 /** Moves approval with diminishing returns toward 0 or 1. */
 export function nudgeApproval(current: number, delta: number): number {
   const headroom = delta > 0 ? 1 - current : current;
@@ -63,7 +75,7 @@ export function governTick(state: GameState): GameState {
   const approval: Record<RegionId, number> = {};
   const regions = { ...state.regions };
   for (const [id, a] of Object.entries(office.approval)) {
-    const next = clamp(a - GOVERNING.wear * f, 0.02, 0.98);
+    const next = clamp(a - GOVERNING.wear * f * administrationWear(state), 0.02, 0.98);
     approval[id] = next;
     const target = clamp((next - 0.5) * GOVERNING.approvalToFavorability + (state.integrity - 50) / GOVERNING.integrityDivisor, -1, 1);
     const cur = regions[id]!;

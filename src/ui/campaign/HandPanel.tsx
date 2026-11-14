@@ -39,7 +39,7 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
 
   const entry = entries.find((e) => e.key === selected) ?? entries[0]!;
   const preview = previewEvent(state, entry.ref, regionId, issue);
-  const precise = state.politician.skills.policy >= PRECISE_PREVIEW_POLICY;
+  const precise = state.politician.skills.strategy >= PRECISE_PREVIEW_POLICY;
   const target = preview.effects.find((e) => e.regionId === regionId);
   const spill = preview.effects.filter((e) => e.regionId !== regionId);
   const stateRegions = STATES[getRegion(regionId).state]!.regionIds;

@@ -1,6 +1,7 @@
 // Parties: platform fit, standing, funds, nominations and primaries (DESIGN §7, §8).
-import { getOffice, getRegion, ISSUE_IDS, PARTIES, STATES } from '../data';
+import { getBackground, getOffice, getRegion, ISSUE_IDS, PARTIES, STATES } from '../data';
 import { clamp } from './opinion';
+import { native, newcomerPenalty, TRAITS } from './traits';
 import type { Rng } from './rng';
 import { monthsFactor } from './time';
 import type { GameState, IssueId, OfficeId, OfficeLevel, PartyId, PlatformPlank, StateId } from './types';
@@ -30,7 +31,7 @@ export const PARTY = {
 export const PARTY_FUNDS_BASE: Record<OfficeLevel, number> = { mayor: 3000, house: 8000, senate: 20000, governor: 20000 };
 
 export function homeStateId(state: GameState): StateId {
-  return getRegion(state.politician.birthRegionId).state;
+  return getRegion(state.politician.residentRegionId).state;
 }
 
 /** 70% national platform, 30% state chapter (where the chapter has a position). */
@@ -64,14 +65,20 @@ export function stanceAgreement(state: GameState, party: PartyId, issue: IssueId
   return clamp(1 - Math.abs(stance - effectivePlatform(party, homeStateId(state))[issue].position) / 2, -1, 1);
 }
 
-export function negotiationMultiplier(state: GameState): number {
-  return 0.8 + 0.05 * state.politician.skills.negotiation;
+/** Leadership scales standing you gain with your own party. */
+export function leadershipMultiplier(state: GameState): number {
+  return 0.8 + 0.05 * state.politician.skills.leadership;
+}
+
+/** Diplomacy softens standing you lose (you smooth things over): 1.2 at DIP 0 → 0.7 at DIP 10. */
+export function diplomacyCushion(state: GameState): number {
+  return clamp(1.2 - 0.05 * state.politician.skills.diplomacy, 0.6, 1.2);
 }
 
 /** Applies a standing change; gains scale with Negotiation. */
 export function adjustStanding(state: GameState, delta: number): GameState {
   if (state.career.affiliation === 'IND' || state.career.partyStanding === undefined) return state;
-  const scaled = delta > 0 ? delta * negotiationMultiplier(state) : delta;
+  const scaled = delta > 0 ? delta * leadershipMultiplier(state) : delta * diplomacyCushion(state);
   return { ...state, career: { ...state.career, partyStanding: clamp(state.career.partyStanding + scaled, 0, 100) } };
 }
 
@@ -96,9 +103,10 @@ export function invitations(state: GameState): Invitation[] {
     .map((party) => {
       const alignment = partyAlignment(state, party);
       const switching = state.career.affiliation !== 'IND';
-      const startingStanding = Math.round(
-        switching ? PARTY.switchBase + PARTY.switchPerAlignment * alignment : PARTY.joinBase + PARTY.joinPerAlignment * alignment,
-      );
+      const bg = getBackground(state.politician.backgroundId);
+      const base = switching ? PARTY.switchBase + PARTY.switchPerAlignment * alignment : PARTY.joinBase + PARTY.joinPerAlignment * alignment;
+      const bonus = !switching && native(state) ? TRAITS.nativeStanding : 0;
+      const startingStanding = Math.round(Math.max(base + bonus, switching ? 0 : (bg.perks.partyStandingFloor ?? 0)));
       return { party, alignment, startingStanding, switching };
     });
 }
@@ -193,7 +201,7 @@ export function primaryShare(state: GameState): number {
     PRIMARY.alignment * (partyAlignment(state, primary.party) - primary.challengerAlignment) +
     (PRIMARY.standing * ((state.career.partyStanding ?? 0) - 50)) / 50 +
     PRIMARY.recognition * (R - primary.challengerRecognition) +
-    PRIMARY.favorability * F;
+    PRIMARY.favorability * (F - newcomerPenalty(state));
   return 1 / (1 + Math.exp(-x));
 }
 

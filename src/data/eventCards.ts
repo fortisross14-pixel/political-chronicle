@@ -8,14 +8,14 @@ export const EVENT_CARDS: EventCard[] = [
     description: 'Slow, cheap and personal. Works best where people still answer the door.',
   },
   {
-    id: 'social_post', name: 'Social post', basic: true, cost: 0, energy: 1, medium: 'social', skills: ['digital'],
+    id: 'social_post', name: 'Social post', basic: true, cost: 0, energy: 1, medium: 'social', skills: ['charisma'],
     reach: 0.03, persuasion: 0.02, spillover: 0.2, gaffeRisk: false,
     description: 'Free, fast, and a little of it leaks statewide.',
   },
   {
-    id: 'call_time', name: 'Call time', basic: true, cost: 0, energy: 1, medium: 'inPerson', skills: ['fundraising'],
-    reach: 0, persuasion: 0, spillover: 0, gaffeRisk: false, fundraising: 1500,
-    description: 'An afternoon dialing donors. Raises Fundraising × $1.5k × (0.5 + your local recognition).',
+    id: 'call_time', name: 'Call time', basic: true, cost: 0, energy: 1, medium: 'inPerson', skills: ['economics'],
+    reach: 0, persuasion: 0, spillover: 0, gaffeRisk: false, fundraising: 1200,
+    description: 'An afternoon dialing donors. Raises Economics × $1.2k × (0.5 + your local recognition).',
   },
   // Consumable — bought or dealt, used once.
   {
@@ -24,47 +24,47 @@ export const EVENT_CARDS: EventCard[] = [
     description: 'Take questions in a school gym. Strong persuasion, local only.',
   },
   {
-    id: 'radio_interview', name: 'Local radio interview', basic: false, cost: 8000, energy: 1, medium: 'radio', skills: ['media'],
+    id: 'radio_interview', name: 'Local radio interview', basic: false, cost: 8000, energy: 1, medium: 'radio', skills: ['charisma'],
     reach: 0.08, persuasion: 0.05, spillover: 0, gaffeRisk: false,
     description: 'Morning drive-time. Big in rural and Rust Belt regions.',
   },
   {
-    id: 'local_tv_ad', name: 'Local TV ad buy', basic: false, cost: 40000, energy: 1, medium: 'tv', skills: ['media'],
+    id: 'local_tv_ad', name: 'Local TV ad buy', basic: false, cost: 40000, energy: 1, medium: 'tv', skills: ['charisma'],
     reach: 0.15, persuasion: 0.06, spillover: 0.15, gaffeRisk: false,
     description: 'Thirty seconds between the weather and the game. Pure reach.',
   },
   {
-    id: 'cable_interview', name: 'Cable news interview', basic: false, cost: 25000, energy: 1, medium: 'cable', skills: ['media'],
+    id: 'cable_interview', name: 'Cable news interview', basic: false, cost: 25000, energy: 1, medium: 'cable', skills: ['charisma'],
     reach: 0.12, persuasion: 0.08, spillover: 0.5, gaffeRisk: true,
     description: 'A national booking. Half the state hears it — in their own way.',
   },
   {
-    id: 'social_campaign', name: 'Social media campaign', basic: false, cost: 30000, energy: 1, medium: 'social', skills: ['digital'],
+    id: 'social_campaign', name: 'Social media campaign', basic: false, cost: 30000, energy: 1, medium: 'social', skills: ['charisma'],
     reach: 0.14, persuasion: 0.05, spillover: 0.4, gaffeRisk: false,
     description: 'Paid, targeted, shareable. Travels well beyond the target region.',
   },
   {
-    id: 'podcast_tour', name: 'Podcast tour', basic: false, cost: 15000, energy: 2, medium: 'social', skills: ['digital'],
+    id: 'podcast_tour', name: 'Podcast tour', basic: false, cost: 15000, energy: 2, medium: 'social', skills: ['charisma'],
     reach: 0.08, persuasion: 0.09, spillover: 0.3, gaffeRisk: false,
     description: 'Long-form conversations. Persuasive with younger, online voters.',
   },
   {
-    id: 'arena_rally', name: 'Arena rally', basic: false, cost: 120000, energy: 3, medium: 'inPerson', skills: ['oratory'],
+    id: 'arena_rally', name: 'Arena rally', basic: false, cost: 120000, energy: 3, medium: 'inPerson', skills: ['charisma'],
     reach: 0.2, persuasion: 0.14, spillover: 0.2, gaffeRisk: false,
     description: 'Fill an arena. Expensive, exhausting, unforgettable.',
   },
   {
-    id: 'fundraising_dinner', name: 'Fundraising dinner', basic: false, cost: 10000, energy: 2, medium: 'inPerson', skills: ['fundraising'],
-    reach: 0.02, persuasion: 0, spillover: 0, gaffeRisk: false, fundraising: 4000,
-    description: 'Rubber chicken and big checks. Raises Fundraising × $4k × (0.5 + your local recognition).',
+    id: 'fundraising_dinner', name: 'Fundraising dinner', basic: false, cost: 10000, energy: 2, medium: 'inPerson', skills: ['economics'],
+    reach: 0.02, persuasion: 0, spillover: 0, gaffeRisk: false, fundraising: 3000,
+    description: 'Rubber chicken and big checks. Raises Economics × $3k × (0.5 + your local recognition).',
   },
   {
-    id: 'party_unity', name: 'Party unity event', basic: false, cost: 20000, energy: 2, medium: 'inPerson', skills: ['negotiation'],
+    id: 'party_unity', name: 'Party unity event', basic: false, cost: 20000, energy: 2, medium: 'inPerson', skills: ['leadership'],
     reach: 0.05, persuasion: 0.03, spillover: 0, gaffeRisk: false, partyStanding: 4, requiresParty: true,
-    description: 'Headline a party dinner and campaign for the ticket. +4 party standing (more with Negotiation).',
+    description: 'Headline a party dinner and campaign for the ticket. +4 party standing (more with Leadership).',
   },
   {
-    id: 'debate', name: 'Televised debate', basic: false, cost: 0, energy: 2, medium: 'tv', skills: ['policy', 'oratory'],
+    id: 'debate', name: 'Televised debate', basic: false, cost: 0, energy: 2, medium: 'tv', skills: ['charisma', 'strategy'],
     reach: 0.18, persuasion: 0.15, spillover: 0.6, gaffeRisk: true,
     description: 'Face your opponents live. High reward, real risk.',
   },

@@ -1,19 +1,17 @@
-import { getOffice, getRegion, OFFICES, REGIONS } from '../data';
+import { getBackground, getOffice, getRegion, OFFICES } from '../data';
 import { fileRace } from './campaign';
 import { dealMarket } from './economy';
 import { averageApproval } from './governing';
 import { poll } from './opinion';
 import { seedFromString } from './rng';
+import { initialRegions } from './traits';
 import { nextElectionYear, turnsInYear } from './time';
-import type { Career, GameState, Politician, RegionId, RegionStanding, Skills, Snapshot } from './types';
+import type { Career, GameState, Politician, RegionId, Skills, Snapshot } from './types';
 
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 export const MAX_AGE_ENDS_RUN = 85;
 export const DEFAULT_START_YEAR = 2027;
 
-export const BASE_RECOGNITION = 0.05;
-export const HOMETOWN_RECOGNITION = 0.3;
-export const HOMETOWN_FAVORABILITY = 0.1;
 export const STARTING_INTEGRITY = 60;
 
 export interface NewRunConfig {
@@ -27,17 +25,18 @@ export interface NewRunConfig {
 }
 
 export function defaultSkills(): Skills {
-  return { oratory: 3, charisma: 3, media: 3, digital: 3, policy: 3, negotiation: 3, fundraising: 3 };
+  return { charisma: 3, economics: 3, diplomacy: 3, strategy: 3, administration: 3, leadership: 3, law: 3 };
 }
 
-/** Placeholder politician until the character creator lands (M2). */
+/** A neutral test politician: a Watertown native public servant with 3 in every skill. */
 export function defaultPolitician(): Politician {
   return {
     name: 'Jordan Hale',
     gender: 'nonbinary',
     startAge: 32,
-    birthRegionId: 'ny-north',
-    backgroundId: 'teacher',
+    homeState: 'NY',
+    residentRegionId: 'ny-north',
+    backgroundId: 'public_servant',
     skills: defaultSkills(),
   };
 }
@@ -55,22 +54,12 @@ export function hometownMayoralty(regionId: RegionId): string | undefined {
   return OFFICES.find((o) => o.level === 'mayor' && o.regionIds.includes(regionId))?.id;
 }
 
-export function initialRegions(birthRegionId: RegionId): Record<RegionId, RegionStanding> {
-  return Object.fromEntries(
-    REGIONS.map((r) => [
-      r.id,
-      r.id === birthRegionId
-        ? { recognition: HOMETOWN_RECOGNITION, favorability: HOMETOWN_FAVORABILITY }
-        : { recognition: BASE_RECOGNITION, favorability: 0 },
-    ]),
-  );
-}
 
 export function createRun(config: NewRunConfig): GameState {
   const { politician } = config;
-  getRegion(politician.birthRegionId); // validates birthplace
+  getRegion(politician.residentRegionId); // validates birthplace
   const earliest = config.earliestYear ?? DEFAULT_START_YEAR;
-  const raceOfficeId = config.raceOfficeId ?? hometownMayoralty(politician.birthRegionId);
+  const raceOfficeId = config.raceOfficeId ?? hometownMayoralty(politician.residentRegionId);
   // Start in the first race's election year, so the career opens with a campaign.
   const startYear = raceOfficeId ? nextElectionYear(getOffice(raceOfficeId), earliest) : earliest;
 
@@ -83,9 +72,9 @@ export function createRun(config: NewRunConfig): GameState {
     politician: { ...politician, skills: { ...politician.skills } },
     career,
     funds: config.startingFunds,
-    energy: energyForAge(politician.startAge),
-    integrity: STARTING_INTEGRITY,
-    regions: initialRegions(politician.birthRegionId),
+    energy: Math.max(1, energyForAge(politician.startAge) - (getBackground(politician.backgroundId).perks.energyPenalty?.amount ?? 0)),
+    integrity: getBackground(politician.backgroundId).perks.startingIntegrity ?? STARTING_INTEGRITY,
+    regions: initialRegions(politician),
     record: {},
     hand: [],
     nextCardUid: 1,
@@ -119,3 +108,5 @@ export function takeSnapshot(state: GameState): Snapshot {
     regions: Object.fromEntries(Object.entries(state.regions).map(([id, s]) => [id, { ...s }])),
   };
 }
+
+export { initialRegions };

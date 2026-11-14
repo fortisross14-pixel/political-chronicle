@@ -146,7 +146,7 @@ describe('event cards', () => {
 
   it('NYC media costs more than Watertown media', () => {
     const tv = getEventCardSafe('local_tv_ad');
-    const nyc = newRun({ politician: { ...newRun().politician, birthRegionId: 'ny-nyc' } });
+    const nyc = newRun({ politician: { ...newRun().politician, residentRegionId: 'ny-nyc' } });
     expect(eventPrice(tv, nyc)).toBeGreaterThan(eventPrice(tv, newRun()));
   });
 

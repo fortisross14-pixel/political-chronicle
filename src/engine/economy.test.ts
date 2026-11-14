@@ -41,7 +41,7 @@ describe('income', () => {
 
   it('Fundraising and recognition raise donor income', () => {
     const s = readyRun();
-    const better = { ...s, politician: { ...s.politician, skills: { ...s.politician.skills, fundraising: 6 } } };
+    const better = { ...s, politician: { ...s.politician, skills: { ...s.politician.skills, economics: 6 } } };
     const known = { ...s, regions: { ...s.regions, 'ny-north': { recognition: 0.9, favorability: 0.2 } } };
     expect(projectedIncome(better).donors).toBeGreaterThan(projectedIncome(s).donors);
     expect(projectedIncome(known).donors).toBeGreaterThan(projectedIncome(s).donors);
@@ -54,13 +54,13 @@ describe('income', () => {
   });
 
   it('staff are paid every turn and quit (taking the skill point) when you are broke', () => {
-    const s: GameState = { ...readyRun(), staff: [{ cardId: 'digital_director', skill: 'digital', upkeep: 2000 }] };
+    const s: GameState = { ...readyRun(), staff: [{ cardId: 'digital_director', skill: 'charisma', upkeep: 2000 }] };
     const paid = collectIncome({ ...s, funds: 50_000 });
     expect(paid.lastIncome!.upkeep).toBe(2000);
     expect(paid.staff).toHaveLength(1);
     const broke = collectIncome({ ...s, funds: -10_000 });
     expect(broke.staff).toHaveLength(0);
-    expect(broke.politician.skills.digital).toBe(s.politician.skills.digital - 1);
+    expect(broke.politician.skills.charisma).toBe(s.politician.skills.charisma - 1);
     expect(broke.lastIncome!.quit).toEqual(['digital_director']);
   });
 
@@ -111,12 +111,12 @@ describe('Market', () => {
 
   it('skill cards cost more at higher levels, raise the skill and respect the office cap', () => {
     const s = withOffers({ ...resolved(), funds: 1e6 }, [{ kind: 'skill', cardId: 'speech_coach' }]);
-    const level = s.politician.skills.oratory;
+    const level = s.politician.skills.charisma;
     expect(skillPrice(getSkillCard('speech_coach'), s)).toBe(5000 * level);
     const after = applyAction(s, { type: 'BUY_CARD', offerIndex: 0 });
-    expect(after.politician.skills.oratory).toBe(level + 1);
+    expect(after.politician.skills.charisma).toBe(level + 1);
     expect(skillCap(s)).toBe(6);
-    const capped = { ...s, politician: { ...s.politician, skills: { ...s.politician.skills, oratory: 6 } } };
+    const capped = { ...s, politician: { ...s.politician, skills: { ...s.politician.skills, charisma: 6 } } };
     expect(buyError(capped, 0)).toMatch(/capped/);
   });
 
@@ -126,7 +126,7 @@ describe('Market', () => {
       { kind: 'skill', cardId: 'think_tank' },
     ]);
     const hired = applyAction(s, { type: 'BUY_CARD', offerIndex: 0 });
-    expect(hired.staff).toEqual([{ cardId: 'digital_director', skill: 'digital', upkeep: 2000 }]);
+    expect(hired.staff).toEqual([{ cardId: 'digital_director', skill: 'charisma', upkeep: 2000 }]);
     const studied = applyAction(hired, { type: 'BUY_CARD', offerIndex: 0 });
     expect(studied.energy).toBe(hired.energy - 2);
   });
@@ -139,7 +139,7 @@ describe('fundraising events', () => {
     const after = applyAction(s, { type: 'PLAY_EVENT', cardUid: 'call_time', regionId: 'ny-north', issue: 'guns' });
     const second = previewEvent(after, 'call_time', 'ny-north', 'guns').fundsGain;
     expect(after.funds - s.funds).toBe(first);
-    expect(second).toBeCloseTo(first / 2, -2);
+    expect(Math.abs(second - first / 2)).toBeLessThanOrEqual(100); // amounts round to $100
   });
 
   it('fundraisers do not tire voters of your topics', () => {

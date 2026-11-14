@@ -1,5 +1,6 @@
 // Public opinion and vote model (DESIGN §5).
 import { getOffice, getRegion, ISSUES_BY_ID, MAYOR_RELEVANCE_FACTOR } from '../data';
+import { newcomerPenalty } from './traits';
 import type { Affiliation, Candidate, GameState, IssueId, OfficeLevel, Race, RegionId, RegionStanding, SkillId, Skills, Stance } from './types';
 
 export const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
@@ -115,8 +116,10 @@ export function decided(intention: number[]): number[] {
 
 /** Player first, then opponents. */
 export function raceViews(state: GameState, race: Race, regionId: RegionId): VoterView[] {
+  const raw = state.regions[regionId]!;
+  const doubt = newcomerPenalty(state, regionId);
   const player: VoterView = {
-    standing: state.regions[regionId]!,
+    standing: doubt ? { ...raw, favorability: clamp(raw.favorability - doubt, -1, 1) } : raw,
     lean: affiliationLean(state.career.affiliation),
     affiliation: state.career.affiliation,
     incumbent: state.career.office?.officeId === race.officeId,

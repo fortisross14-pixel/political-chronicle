@@ -1,7 +1,7 @@
 // Balance harness: npm run sim [runs]
 import { BACKGROUNDS } from '../src/data';
 import { getEventCard } from '../src/data';
-import { buildRunConfig, createRun, eventPrice } from '../src/engine';
+import { buildRunConfig, createRun, eventPrice, projectedIncome } from '../src/engine';
 import { botCharacter, careerFunds, climbCareer, hometownWinRate, reelectionRate } from '../src/sim/bot';
 import type { BotStyle } from '../src/sim/bot';
 
@@ -15,13 +15,23 @@ for (const home of ['ny-north', 'ny-wny', 'ny-nyc']) {
     console.log(`${home.padEnd(9)} ${style.padEnd(10)} win ${pct(r.winRate)}  avg share ${pct(r.avgShare)}`);
   }
 }
-console.log('\nSensible bot in Watertown by background');
-for (const b of BACKGROUNDS) {
-  const r = hometownWinRate(botCharacter('ny-north', b.id), 'sensible', Math.max(50, runs / 2));
-  console.log(`${b.name.padEnd(22)} win ${pct(r.winRate)}  avg share ${pct(r.avgShare)}`);
+console.log('\nNative vs transplant: first mayoral race and donor income (public servant, age 35)');
+for (const home of ['ny-north', 'ny-wny', 'ny-nyc']) {
+  for (const [label, homeState] of [['native', undefined], ['transplant (TX)', 'TX']] as const) {
+    const r = hometownWinRate(botCharacter(home, 'public_servant', 35, homeState), 'sensible', runs);
+    const start = createRun(buildRunConfig(botCharacter(home, 'public_servant', 35, homeState), 'money'));
+    console.log(`${home.padEnd(9)} ${label.padEnd(16)} win ${pct(r.winRate)}  avg share ${pct(r.avgShare)}  donors/turn $${(projectedIncome(start).donors / 1000).toFixed(1)}k`);
+  }
 }
 
-console.log('\nFundraising investment: Watertown teacher, 20 turns (~6 years)');
+console.log('\nSensible bot by background: first mayoral race (Watertown / NYC)');
+for (const b of BACKGROUNDS) {
+  const north = hometownWinRate(botCharacter('ny-north', b.id), 'sensible', Math.max(50, runs / 2));
+  const nyc = hometownWinRate(botCharacter('ny-nyc', b.id), 'sensible', Math.max(50, runs / 2));
+  console.log(`${b.name.padEnd(22)} Watertown ${pct(north.winRate)} (${pct(north.avgShare)})   NYC ${pct(nyc.winRate)} (${pct(nyc.avgShare)})`);
+}
+
+console.log('\nEconomics investment: Watertown public servant, 20 turns (~6 years)');
 const rallyPrice = eventPrice(getEventCard('arena_rally'), createRun(buildRunConfig(botCharacter('ny-north'), 'price')));
 for (const style of ['sensible', 'investor'] as BotStyle[]) {
   const n = Math.max(40, runs / 4);
@@ -34,7 +44,7 @@ for (const style of ['sensible', 'investor'] as BotStyle[]) {
     fr += r.fundraising;
     if (r.peak >= rallyPrice) rally++;
   }
-  console.log(`${style.padEnd(10)} Fundraising ${(fr / n).toFixed(1)}  avg funds $${Math.round(funds / n / 1000)}k  could afford a $${rallyPrice / 1000}k rally: ${pct(rally / n)}`);
+  console.log(`${style.padEnd(10)} Economics ${(fr / n).toFixed(1)}  avg funds $${Math.round(funds / n / 1000)}k  could afford a $${rallyPrice / 1000}k rally: ${pct(rally / n)}`);
 }
 
 console.log('\nRe-election after a first term (sensible campaigns, governing style varies)');
@@ -46,7 +56,7 @@ for (const home of ['ny-north', 'ny-wny']) {
 }
 
 console.log('\nThe climb (Watertown-born climber, up to 60 turns ≈ 18 years)');
-for (const [background, party] of [['teacher', undefined], ['lawyer', undefined], ['teacher', 'DU']] as const) {
+for (const [background, party] of [['public_servant', undefined], ['lawyer', undefined], ['public_servant', 'DU']] as const) {
   const n = Math.max(40, runs / 3);
   const tally: Record<string, number> = {};
   let house = 0;

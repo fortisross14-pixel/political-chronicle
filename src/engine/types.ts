@@ -110,13 +110,13 @@ export interface Office {
 // ---------- Politician ----------
 
 export type SkillId =
-  | 'oratory'
   | 'charisma'
-  | 'media'
-  | 'digital'
-  | 'policy'
-  | 'negotiation'
-  | 'fundraising';
+  | 'economics'
+  | 'diplomacy'
+  | 'strategy'
+  | 'administration'
+  | 'leadership'
+  | 'law';
 
 export type Skills = Record<SkillId, number>;
 
@@ -127,7 +127,10 @@ export interface Politician {
   gender: Gender;
   /** Age when the run started; current age is derived from elapsed months. */
   startAge: number;
-  birthRegionId: RegionId;
+  /** USPS code of the state you were born in: any of the 50. */
+  homeState: string;
+  /** Where your career happens: a region of a playable state (your city). */
+  residentRegionId: RegionId;
   backgroundId: string;
   skills: Skills;
 }

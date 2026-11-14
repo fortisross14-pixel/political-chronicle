@@ -161,7 +161,7 @@ function climb(state: GameState): GameState {
   const autoReelection = s.career.race?.officeId === office?.officeId && !s.career.race?.platform.length;
   if (!office || (s.career.race && !autoReelection) || s.clock.turn !== 0 || s.career.affiliation === 'IND') return s;
   const rung = LADDER[getOffice(office.officeId).level]!;
-  const home = s.politician.birthRegionId;
+  const home = s.politician.residentRegionId;
   const targets = raceOptions(s)
     .filter((o) => o.eligible && o.electionYear === s.clock.year && !fileRaceError(s, o.officeId))
     .map((o) => getOffice(o.officeId))
@@ -180,7 +180,7 @@ export function playTurn(state: GameState, style: BotStyle): GameState {
   if (style === 'climber') s = climb(s);
   if (!s.career.race && !s.career.office) {
     const last = [...s.elections].reverse().find((e) => e.kind === 'general');
-    const officeId = last && !getOffice(last.officeId).partisan ? last.officeId : (hometownMayoralty(s.politician.birthRegionId) ?? 'mayor-watertown');
+    const officeId = last && !getOffice(last.officeId).partisan ? last.officeId : (hometownMayoralty(s.politician.residentRegionId) ?? 'mayor-watertown');
     if (!fileRaceError(s, officeId)) s = applyAction(s, { type: 'FILE_RACE', officeId });
   }
   if (s.career.race && !s.career.race.platform.length) s = applyAction(s, { type: 'SET_PLATFORM', platform: botPlatform(s, style) });
@@ -198,7 +198,7 @@ export function careerFunds(input: CreationInput, style: BotStyle, turns: number
     s = playTurn(s, style);
     peak = Math.max(peak, s.funds);
   }
-  return { funds: s.funds, peak, fundraising: s.politician.skills.fundraising };
+  return { funds: s.funds, peak, fundraising: s.politician.skills.economics };
 }
 
 export interface BotResult {
@@ -219,8 +219,17 @@ export function playCampaign(state: GameState, style: BotStyle): { state: GameSt
   return { state: s, result: { won: e.playerWon, share: e.totalShares[0]!, finalPoll: e.finalPoll, officeId: e.officeId } };
 }
 
-export function botCharacter(birthRegionId: string, backgroundId = 'teacher', age = 35): CreationInput {
-  return { name: 'Bot', gender: 'female', age, birthRegionId, backgroundId, allocation: autoAllocate(backgroundId, age) };
+/** A test character; native to the resident state unless `homeState` says otherwise. */
+export function botCharacter(residentRegionId: string, backgroundId = 'public_servant', age = 35, homeState?: string): CreationInput {
+  return {
+    name: 'Bot',
+    gender: 'female',
+    age,
+    homeState: homeState ?? getRegion(residentRegionId).state,
+    residentRegionId,
+    backgroundId,
+    allocation: autoAllocate(backgroundId, age),
+  };
 }
 
 /** Win rate for a character's hometown mayoral race across seeds. */
@@ -228,7 +237,7 @@ export function hometownWinRate(input: CreationInput, style: BotStyle, runs: num
   let wins = 0;
   let share = 0;
   for (let i = 0; i < runs; i++) {
-    const start = createRun(buildRunConfig(input, `sim-${style}-${input.birthRegionId}-${input.backgroundId}-${i}`));
+    const start = createRun(buildRunConfig(input, `sim-${style}-${input.residentRegionId}-${input.backgroundId}-${i}`));
     const { result } = playCampaign(start, style);
     if (result.won) wins++;
     share += result.share;
@@ -243,7 +252,7 @@ export function reelectionRate(input: CreationInput, style: BotStyle, runs: numb
   let approval = 0;
   let integrity = 0;
   for (let i = 0; i < runs; i++) {
-    let s = createRun(buildRunConfig(input, `reelect-${input.birthRegionId}-${i}`));
+    let s = createRun(buildRunConfig(input, `reelect-${input.residentRegionId}-${i}`));
     s = playCampaign(s, 'sensible').state;
     if (!s.elections.at(-1)!.playerWon) continue;
     terms++;

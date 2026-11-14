@@ -8,7 +8,7 @@ import { effectLabel, PRECISE_PREVIEW_POLICY, stanceLabel } from './labels';
 export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: (a: Action) => void }) {
   const hand = state.decisions!;
   const [chosen, setChosen] = useState<string[]>([]);
-  const precise = state.politician.skills.policy >= PRECISE_PREVIEW_POLICY;
+  const precise = state.politician.skills.strategy >= PRECISE_PREVIEW_POLICY;
   const inOffice = !!state.career.office;
   const title = inOffice ? 'Bills on your desk' : 'Decisions this turn';
 
@@ -104,7 +104,7 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
         <button className="primary" disabled={!!error} onClick={() => dispatch({ type: 'RESOLVE_DECISIONS', apply: chosen })}>
           Confirm {chosen.length || ''} decision{chosen.length === 1 ? '' : 's'}
         </button>
-        {!precise && <span className="muted small">Raise Policy to {PRECISE_PREVIEW_POLICY} to see exact effects.</span>}
+        {!precise && <span className="muted small">Raise Strategy to {PRECISE_PREVIEW_POLICY} to see exact effects.</span>}
       </div>
     </section>
   );

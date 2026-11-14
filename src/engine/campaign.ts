@@ -52,7 +52,7 @@ export function electionYearIfFiled(state: GameState, officeId: OfficeId): numbe
 }
 
 export function raceOptions(state: GameState): RaceOption[] {
-  const homeState = getRegion(state.politician.birthRegionId).state;
+  const homeState = getRegion(state.politician.residentRegionId).state;
   const held = state.career.office;
   return OFFICES.filter((o) => o.state === homeState).map((office) => {
     const option: RaceOption = { officeId: office.id, electionYear: electionYearIfFiled(state, office.id), eligible: true };
@@ -214,6 +214,37 @@ export function generateOpponents(rng: Rng, officeId: OfficeId, playerIsIncumben
     });
   }
   return opponents;
+}
+
+export const INTEL = { standings: 4, nextMove: 6 };
+
+/** What Strategy lets you see about an opponent (DESIGN_V2 §2.4). */
+export interface OpponentIntel {
+  recognition?: number;
+  favorability?: number;
+  nextMove?: { regionId: RegionId; issue: IssueId };
+}
+
+export function opponentIntel(state: GameState, race: Race, c: Candidate): OpponentIntel {
+  const str = state.politician.skills.strategy;
+  const intel: OpponentIntel = {};
+  if (str < INTEL.standings) return intel;
+  const office = getOffice(race.officeId);
+  const weights = regionWeights(race.officeId);
+  intel.recognition = office.regionIds.reduce((s, id) => s + c.regions[id]!.recognition * weights[id]!, 0);
+  intel.favorability = office.regionIds.reduce((s, id) => s + c.regions[id]!.favorability * weights[id]!, 0);
+  if (str >= INTEL.nextMove) {
+    // Their most likely move: the biggest region, their best-fitting topic there (no noise).
+    const regionId = [...office.regionIds].sort((a, b) => weights[b]! - weights[a]!)[0]!;
+    const region = getRegion(regionId);
+    const best = [...c.platform].sort(
+      (a, b) =>
+        region.issueSalience[b.issue] * regionAlignment(regionId, b.issue, b.stance) * relevance(b.issue, office.level) -
+        region.issueSalience[a.issue] * regionAlignment(regionId, a.issue, a.stance) * relevance(a.issue, office.level),
+    )[0]!;
+    intel.nextMove = { regionId, issue: best.issue };
+  }
+  return intel;
 }
 
 /** Opponents campaign: their best-fitting topic, in their jurisdiction. */

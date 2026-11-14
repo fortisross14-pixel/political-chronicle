@@ -16,12 +16,13 @@ describe('<Creator>', () => {
 
     fireEvent.change(screen.getByPlaceholderText(/Sam Ortega/), { target: { value: 'Riley Chen' } });
     fireEvent.click(screen.getByRole('button', { name: /^Lawyer/ }));
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'ny-wny' } });
+    fireEvent.change(screen.getByLabelText('Your city'), { target: { value: 'ny-wny' } });
+    fireEvent.change(screen.getByLabelText('Home state'), { target: { value: 'TX' } });
     expect(start.disabled).toBe(false);
 
     fireEvent.click(start);
     expect(onCreate).toHaveBeenCalledOnce();
-    expect(onCreate.mock.calls[0]![0]).toMatchObject({ name: 'Riley Chen', backgroundId: 'lawyer', birthRegionId: 'ny-wny' });
+    expect(onCreate.mock.calls[0]![0]).toMatchObject({ name: 'Riley Chen', backgroundId: 'lawyer', residentRegionId: 'ny-wny', homeState: 'TX' });
   });
 
   it('clearing the skills shows the points left and disables submit', () => {
@@ -30,7 +31,7 @@ describe('<Creator>', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
     expect(screen.getByText('11 of 11 points left')).toBeTruthy();
     expect((screen.getByRole('button', { name: 'Start career' }) as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Raise Media Savvy' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Raise Charisma' }));
     expect(screen.getByText('10 of 11 points left')).toBeTruthy();
   });
 });

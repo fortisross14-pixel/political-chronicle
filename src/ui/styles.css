@@ -287,7 +287,7 @@ button.danger {
 
 .skills li {
   display: grid;
-  grid-template-columns: 8rem 1fr 3rem;
+  grid-template-columns: 12rem 1fr 3rem;
   align-items: center;
   gap: 0.75rem;
 }
@@ -1056,4 +1056,70 @@ details summary {
 .whip.rp {
   background: rgba(239, 106, 90, 0.2);
   color: #f5a397;
+}
+
+/* Creator v2 (M7) */
+.origin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+
+.origin-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.origin-card.native {
+  border-color: #2fb39a;
+}
+
+.origin-card.transplant {
+  border-color: var(--accent);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.05rem 0.4rem;
+  border-radius: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.perk-box {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: var(--panel-2);
+}
+
+.code {
+  display: inline-block;
+  min-width: 2.4rem;
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+.intel {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--accent);
+  background: var(--panel-2);
+  border-radius: 0 8px 8px 0;
 }

@@ -1,5 +1,6 @@
 import { fileRace, isPrimaryTurn, opponentsAct, resolveElection, resolvePrimary, setPlatform } from './campaign';
 import { joinParty } from './parties';
+import { backgroundEnergyPenalty } from './traits';
 import { dealDecisions, resolveDecisions } from './decisions';
 import { buyOffer, collectIncome, dealMarket } from './economy';
 import { playEvent } from './events';
@@ -74,7 +75,7 @@ function endTurn(state: GameState): GameState {
   s = { ...s, rng: rng.state, clock: { year, turn, turnsThisYear, monthsElapsed: s.clock.monthsElapsed + months } };
 
   const age = ageOf(s);
-  s = { ...s, energy: energyForAge(age) };
+  s = { ...s, energy: Math.max(1, energyForAge(age) - backgroundEnergyPenalty(s)) };
   if (!s.ended && age >= MAX_AGE_ENDS_RUN) {
     s = {
       ...s,

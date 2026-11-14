@@ -43,6 +43,13 @@ after the first version. Without the early counterweights everyone would pick na
 a native is ~10–12 points likelier to win their first mayoral race, while a transplant raises
 ~20% more money and has the stronger end-game.
 
+**As built (M7):** a transplant's city knows them a little (25% recognition vs 30%; events
+there get ×1.15 instead of ×1.25). Newcomer doubt is −0.10 favorability scaled by region type
+(big city ×0.4, suburb ×0.7, mid-size ×1, small town ×1.2), fading over 8 years. It applies to
+the vote and to primaries. Outside donors add a flat $1k per quarter × ECO/3. Measured: natives
+win their first mayoral race 7 / 13 / 17 points more often (Watertown / Buffalo / NYC, ~12 on
+average), and transplants raise ~29% more donor money.
+
 ### 2.2 Age
 
 Same rules as now: more starting skill points with age (10 at 25, +1 per 5 years), less

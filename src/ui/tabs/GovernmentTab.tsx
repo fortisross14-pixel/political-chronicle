@@ -25,7 +25,7 @@ export function GovernmentTab({ state, dispatch }: Props) {
   const inOffice = !!state.career.office;
   const canHoldEvents = campaigning || (inOffice && !race);
   const [layer, setLayer] = useState<MapLayer>(campaigning ? 'vote' : inOffice ? 'approval' : 'lean');
-  const [selected, setSelected] = useState<RegionId>(race ? getOffice(race.officeId).regionIds[0]! : state.politician.birthRegionId);
+  const [selected, setSelected] = useState<RegionId>(race ? getOffice(race.officeId).regionIds[0]! : state.politician.residentRegionId);
   useEffect(() => {
     if (campaigning) setLayer('vote');
     else if (inOffice) setLayer('approval');

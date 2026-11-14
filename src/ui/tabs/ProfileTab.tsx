@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { getBackground, getOffice, getRegion, ISSUES, ISSUES_BY_ID } from '../../data';
+import { getBackground, getOffice, getRegion, ISSUES, ISSUES_BY_ID, STATES, US_STATE_NAMES } from '../../data';
 import { stanceLabel } from '../campaign/labels';
 import { pct } from '../format';
 import { getSkillCard } from '../../data';
-import { ageOf, energyForAge, skillCap, SKILL_HINTS, SKILL_IDS, SKILL_LABELS } from '../../engine';
+import { ageOf, energyForAge, native, newcomerPenalty, skillCap, SKILL_CODES, SKILL_HINTS, SKILL_IDS, SKILL_LABELS } from '../../engine';
 import { money } from '../format';
 import type { GameState } from '../../engine';
 
@@ -40,10 +40,19 @@ export function ProfileTab({ state }: { state: GameState }) {
             <dd>{age.toFixed(1)}</dd>
             <dt>Gender</dt>
             <dd>{p.gender === 'nonbinary' ? 'Non-binary' : p.gender === 'female' ? 'Female' : 'Male'}</dd>
-            <dt>Hometown</dt>
-            <dd>{getRegion(p.birthRegionId).seatCity}</dd>
+            <dt>Born in</dt>
+            <dd>{US_STATE_NAMES[p.homeState]}</dd>
+            <dt>Lives in</dt>
+            <dd>
+              {getRegion(p.residentRegionId).seatCity}, {STATES[getRegion(p.residentRegionId).state]!.name} ·{' '}
+              {native(state) ? 'native' : `transplant (newcomer doubt −${Math.round(newcomerPenalty(state) * 100)})`}
+            </dd>
             <dt>Background</dt>
             <dd>{getBackground(p.backgroundId).name}</dd>
+            <dt>Perk</dt>
+            <dd>{getBackground(p.backgroundId).perkText}</dd>
+            <dt>Weakness</dt>
+            <dd>{getBackground(p.backgroundId).weaknessText}</dd>
             <dt>Credible on</dt>
             <dd>{getBackground(p.backgroundId).credibleIssues.map((i) => ISSUES_BY_ID[i].name).join(', ')}</dd>
             <dt>Energy per turn</dt>
@@ -69,7 +78,9 @@ export function ProfileTab({ state }: { state: GameState }) {
           <ul className="skills">
             {SKILL_IDS.map((id) => (
               <li key={id}>
-                <span title={SKILL_HINTS[id]}>{SKILL_LABELS[id]}</span>
+                <span title={SKILL_HINTS[id]}>
+                  <span className="code">{SKILL_CODES[id]}</span> {SKILL_LABELS[id]}
+                </span>
                 <meter min={0} max={10} value={p.skills[id]} />
                 <span className="num">{p.skills[id]}/10</span>
               </li>

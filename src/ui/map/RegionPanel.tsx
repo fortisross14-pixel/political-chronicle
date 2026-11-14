@@ -29,7 +29,7 @@ export function RegionPanel({ state, regionId }: { state: GameState; regionId: R
       <p className="muted small">
         {region.seatCity} · {region.type} · {(region.population / 1_000_000).toFixed(1)}M people ({pct(populationShare(regionId))} of the
         state) · turnout {pct(region.turnout)}
-        {regionId === state.politician.birthRegionId && ' · your hometown'}
+        {regionId === state.politician.residentRegionId && ' · your city'}
       </p>
       <p className="small">{region.blurb}</p>
 

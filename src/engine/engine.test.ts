@@ -65,12 +65,15 @@ describe('createRun', () => {
 
   it('gives the hometown a recognition and favorability boost', () => {
     const s = newRun();
-    expect(s.regions['ny-north']).toEqual({ recognition: 0.3, favorability: 0.1 });
-    expect(s.regions['ny-nyc']).toEqual({ recognition: 0.05, favorability: 0 });
+    // Native public servant: hometown 0.30 / +0.10, plus +0.08 statewide (NY favors public servants).
+    expect(s.regions['ny-north']!.recognition).toBe(0.3);
+    expect(s.regions['ny-north']!.favorability).toBeCloseTo(0.18);
+    expect(s.regions['ny-nyc']!.recognition).toBe(0.05);
+    expect(s.regions['ny-nyc']!.favorability).toBeCloseTo(0.08);
   });
 
   it('a NYC-born politician starts in the 2029 NYC mayoral year', () => {
-    const s = newRun({ politician: { ...defaultPolitician(), birthRegionId: 'ny-nyc' } });
+    const s = newRun({ politician: { ...defaultPolitician(), residentRegionId: 'ny-nyc' } });
     expect(s.career.race?.officeId).toBe('mayor-nyc');
     expect(s.clock.year).toBe(2029);
   });

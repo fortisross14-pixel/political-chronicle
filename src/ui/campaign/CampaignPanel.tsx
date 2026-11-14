@@ -1,6 +1,6 @@
-import { getOffice, ISSUES_BY_ID } from '../../data';
+import { getOffice, getRegion, ISSUES_BY_ID } from '../../data';
 import { PARTIES } from '../../data';
-import { poll, primaryShare } from '../../engine';
+import { INTEL, opponentIntel, poll, primaryShare } from '../../engine';
 import type { GameState } from '../../engine';
 import { pct } from '../format';
 import { candidateTag, stanceLabel } from './labels';
@@ -51,6 +51,26 @@ export function CampaignPanel({ state }: { state: GameState }) {
           Share of decided voters. Undecided: {pct(p.total.at(-1)!)}.
           {history.length > 1 && ` Your trend: ${history.map((h) => pct(h.poll!)).join(' → ')} → ${pct(p.decided[0]!)}`}
         </p>
+      </div>
+      <div className="intel small">
+        {state.politician.skills.strategy < INTEL.standings ? (
+          <span className="muted">Raise Strategy to {INTEL.standings} to read your opponents (and {INTEL.nextMove} to anticipate their moves).</span>
+        ) : (
+          race.opponents.map((c) => {
+            const intel = opponentIntel(state, race, c);
+            return (
+              <div key={c.id}>
+                <strong>{c.name}:</strong> {pct(intel.recognition!)} know them, favorability {Math.round(intel.favorability! * 100)}
+                {intel.nextMove && (
+                  <span className="muted">
+                    {' '}
+                    · likely next: {ISSUES_BY_ID[intel.nextMove.issue].name} in {getRegion(intel.nextMove.regionId).seatCity}
+                  </span>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
       <details>
         <summary>Platforms</summary>

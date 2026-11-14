@@ -49,7 +49,7 @@ export function StateMap({ state, layer, selected, onSelect }: Props) {
         const shape = NY_SHAPES[id]!;
         const region = getRegion(id);
         const isSelected = id === selected;
-        const isHome = id === state.politician.birthRegionId;
+        const isHome = id === state.politician.residentRegionId;
         return (
           <g
             key={id}
