@@ -1,3 +1,5 @@
+import { ART_IDS } from '../../data/artManifest';
+import { Painted } from '../cards/CardArt';
 import { getTrinket, TRINKET_WINDOW_LABEL } from '../../data';
 import { ownedTrinkets, trinketSlots } from '../../engine';
 import type { Profile } from '../../engine';
@@ -49,6 +51,11 @@ export function Loadout({ profile, trinkets, onTrinkets, pure }: Props) {
                   {RARITY_LABEL[t.rarity]} · {TRINKET_WINDOW_LABEL[t.window]}
                   {t.uses > 0 ? ` · ${t.uses}×` : ''}
                 </span>
+                {ART_IDS.has(t.id) && (
+                  <span className="trinket-art">
+                    <Painted id={t.id} />
+                  </span>
+                )}
                 <strong>{t.name}</strong>
                 <span className="small muted">{t.text}</span>
               </button>

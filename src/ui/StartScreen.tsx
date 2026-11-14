@@ -2,6 +2,7 @@ import { getScenario, TRINKETS } from '../data';
 import { ownedTrinkets, sandboxUnlocked, totalStars, turnLabel } from '../engine';
 import type { GameState, Profile } from '../engine';
 import { install, useCanInstall } from './fx/install';
+import { ART_IDS } from '../data/artManifest';
 
 interface Props {
   saved: GameState | null;
@@ -20,6 +21,9 @@ export function StartScreen({ saved, notice, profile, onContinue, onScenarios, o
   const live = saved && !saved.ended ? saved : null;
   return (
     <div className="start">
+      {ART_IDS.has('hero_menu') && (
+        <img className="start-hero" src={`${import.meta.env.BASE_URL}art/hero_menu.webp`} alt="" aria-hidden="true" />
+      )}
       <div className="start-logo" aria-hidden="true">
         <span className="live">LIVE</span>
       </div>

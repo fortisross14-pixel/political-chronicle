@@ -1,4 +1,6 @@
 // The trinkets you brought, with a button for each one that can fire right now.
+import { ART_IDS } from '../../data/artManifest';
+import { Painted } from '../cards/CardArt';
 import { getOffice, getRegion, getTrinket, TRINKET_WINDOW_LABEL } from '../../data';
 import type { TrinketWindow } from '../../data';
 import { policyJurisdiction, trinketError, trinketUsesLeft } from '../../engine';
@@ -48,6 +50,11 @@ export function TrinketBar({ state, dispatch, windows, title = 'Your trinkets' }
                 <span className={`rarity-dot r-${t.rarity}`} aria-hidden="true" />
                 {TRINKET_WINDOW_LABEL[t.window]} · {left}/{t.uses} left
               </span>
+              {ART_IDS.has(t.id) && (
+                <span className="trinket-art">
+                  <Painted id={t.id} />
+                </span>
+              )}
               <strong>{t.name}</strong>
               <span className="small muted">{t.text}</span>
               <span className="trinket-actions">

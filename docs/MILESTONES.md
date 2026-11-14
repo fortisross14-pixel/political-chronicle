@@ -333,6 +333,20 @@ seat: win Syracuse), Big city 80 / 100.
 
 ---
 
+## M17 — Visual pass (first round) ✅ done
+
+- **Character creation as a character-select screen:** a live, floating player card (portrait,
+  background, home, wealth / energy / integrity gems, skill pips); a big name field; backgrounds
+  as picture tiles; skills as chunky pips with − / +. Every explanation lives behind an ⓘ.
+- **Launch screen as a matchup poster:** you versus the field, with portraits, lean chips, the
+  incumbent badge and the election date; compact tiles on phones.
+- Mission setup reuses the plates and pips; trinkets show their painted art; the menu shows the
+  painted hero image once it exists.
+- Still to do once the art grids land: painted portraits for opponents on election night and the
+  ballot, pack art, and another pass over the Desk and Team screens.
+
+---
+
 ## After v2 (expansion)
 
 1. **More states:** California, Texas and smaller states (4–6 districts for Iowa-sized states),

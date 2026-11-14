@@ -26,6 +26,8 @@ import {
 } from '../../engine';
 import type { Action, GameState, IssueId, OfficeId, PartyId, Pledge } from '../../engine';
 import { PersonCard, Stars } from '../cards/CardViews';
+import { PortraitArt } from '../cards/CardArt';
+import { Info } from '../Info';
 import { money, pct } from '../format';
 import { cue } from '../fx/sound';
 
@@ -290,6 +292,8 @@ export function LaunchScreen({
           <button onClick={onClose}>Back</button>
         </div>
 
+        <FieldPreview state={state} officeId={officeId} />
+
         <div className="launch-tiles">
           <button className={`launch-tile${manager ? ' done' : ''}`} onClick={() => setPicking(true)}>
             <span className="tile-num">1</span>
@@ -346,8 +350,6 @@ export function LaunchScreen({
           <PartyTile state={state} platform={platform} dispatch={dispatch} partisan={office.partisan} />
         </div>
 
-        <FieldPreview state={state} officeId={officeId} />
-
         <div className="sheet-foot">
           {error && <span className="muted small">{error}</span>}
           <button
@@ -401,24 +403,49 @@ const SIDE_LABEL = { red: 'Leans red', blue: 'Leans blue', neutral: 'Neutral' } 
 
 /** Who else is running, and which way they lean. */
 function FieldPreview({ state, officeId }: { state: GameState; officeId: OfficeId }) {
-  const field = useMemo(() => raceField(state, officeId, campaignWindow(state, officeId).electionYear), [state, officeId]);
+  const window = campaignWindow(state, officeId);
+  const field = useMemo(() => raceField(state, officeId, window.electionYear), [state, officeId, window.electionYear]);
+  const g = state.politician.gender;
+  const you = `you_${g === 'female' ? 'f' : g === 'male' ? 'm' : 'n'}${state.politician.startAge >= 45 ? 2 : 1}`;
   return (
-    <section className="field-preview" aria-label="Who else is running">
-      <span className="tile-title">On the ballot with you</span>
-      <ul>
+    <section className="versus" aria-label="Who else is running">
+      <div className="vs-card you">
+        <span className="vs-portrait">
+          <PortraitArt id={you} name={state.politician.name} role="campaignManager" />
+        </span>
+        <strong>{state.politician.name}</strong>
+        <span className="lean-chip you">You</span>
+      </div>
+      <div className="vs-mark" aria-hidden="true">
+        VS
+        <small>
+          Nov {window.electionYear} · {window.turnsLeft} turns
+        </small>
+      </div>
+      <div className="vs-field">
         {field.map((c) => {
           const side = leanSide(c);
           return (
-            <li key={c.id} className={`field-row ${side}`}>
-              <span className="field-name">{c.name}</span>
-              {c.incumbent && <span className="chip">Incumbent</span>}
+            <div key={c.id} className={`vs-card ${side}`}>
+              <span className="vs-portrait">
+                <PortraitArt id={opponentPortrait(c.name)} name={c.name} role="chiefOfStaff" />
+              </span>
+              <strong>{c.name}</strong>
               <span className={`lean-chip ${side}`}>{c.affiliation !== 'IND' ? PARTIES[c.affiliation].nickname : SIDE_LABEL[side]}</span>
-            </li>
+              {c.incumbent && <span className="vs-inc">Incumbent</span>}
+            </div>
           );
         })}
-      </ul>
+      </div>
     </section>
   );
+}
+
+/** A stable painted face for an opponent (art/grids.json: opp_1…opp_12). */
+export function opponentPortrait(name: string): string {
+  let h = 0;
+  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return `opp_${(h % 12) + 1}`;
 }
 
 function PartyTile({
@@ -460,9 +487,11 @@ function PartyTile({
           })}
         </span>
       )}
-      <span className="muted small">
-        {member ? 'Party money and a ballot line.' : 'Independent: no party money, harder in partisan races.'}
-      </span>
+      <Info label="parties" align="right">
+        {member
+          ? 'Party money and a ballot line.'
+          : 'Independent: no party money, harder in partisan races. The percentage is your chance the party says yes.'}
+      </Info>
     </div>
   );
 }

@@ -16,6 +16,7 @@ import {
 import type { Profile, SkillId } from '../../engine';
 import { money } from '../format';
 import { Loadout } from './Loadout';
+import { Info, Pips } from '../Info';
 
 interface Props {
   profile: Profile;
@@ -63,7 +64,7 @@ export function ScenarioSelect({ profile, onStart, onBack }: Props) {
         <h1>{selected.title}</h1>
         <p className="tagline">{selected.tagline}</p>
         <div className="creator-grid">
-          <section className="panel stack">
+          <section className="cs-step stack">
             <p>{selected.description}</p>
             <h3>Your character</h3>
             <dl className="kv dossier">
@@ -127,7 +128,7 @@ export function ScenarioSelect({ profile, onStart, onBack }: Props) {
               ))}
             </ul>
           </section>
-          <section className="panel stack">
+          <section className="cs-step stack">
             <label className="field">
               <span>Your name</span>
               <input value={name} maxLength={40} placeholder="e.g. Sam Ortega" onChange={(e) => setName(e.target.value)} autoFocus />
@@ -138,13 +139,16 @@ export function ScenarioSelect({ profile, onStart, onBack }: Props) {
                 {left} of {MISSION_EXTRA_POINTS} extra points left
               </span>
             </div>
-            <ul className="skill-alloc">
+            <ul className="cs-skills">
               {SKILL_IDS.map((id) => (
                 <li key={id}>
-                  <div>
-                    <strong>{SKILL_LABELS[id]}</strong>
-                    <span className="muted small">{SKILL_HINTS[id]}</span>
-                  </div>
+                  <span className="cs-skill-name">
+                    {SKILL_LABELS[id]}
+                    <Info label={SKILL_LABELS[id]} align="left">
+                      {SKILL_HINTS[id]}
+                    </Info>
+                  </span>
+                  <Pips value={base[id] + (extra[id] ?? 0)} max={MISSION_SKILL_CAP} label={SKILL_LABELS[id]} />
                   <div className="stepper">
                     <button type="button" aria-label={`Lower ${SKILL_LABELS[id]}`} disabled={!extra[id]} onClick={() => bump(id, -1)}>
                       −
