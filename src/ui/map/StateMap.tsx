@@ -88,7 +88,11 @@ export function StateMap({ state, layer, selected, onSelect }: Props) {
             )}
             {layer === 'night' && night?.regions[id] && (
               <text x={shape.label.x} y={shape.label.y + 14} className="map-label sub" textAnchor="middle">
-                {night.regions[id]!.calledFor !== undefined ? (night.regions[id]!.calledFor === 0 ? '✓ YOU' : '✗ THEM') : `${Math.round(counted(night.regions[id]!, night.step) * 100)}% in`}
+                {night.regions[id]!.calledFor !== undefined
+                  ? night.regions[id]!.calledFor === 0
+                    ? '✓ YOU'
+                    : '✗ THEM'
+                  : `${Math.round(counted(night.regions[id]!, night.step) * 100)}% in`}
               </text>
             )}
             {layer === 'vote' && intention[id] && (

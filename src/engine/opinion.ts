@@ -1,7 +1,19 @@
 // Public opinion and vote model (DESIGN §5).
 import { getOffice, getRegion, ISSUES_BY_ID, MAYOR_RELEVANCE_FACTOR } from '../data';
 import { newcomerPenalty } from './traits';
-import type { Affiliation, Candidate, GameState, IssueId, OfficeLevel, Race, RegionId, RegionStanding, SkillId, Skills, Stance } from './types';
+import type {
+  Affiliation,
+  Candidate,
+  GameState,
+  IssueId,
+  OfficeLevel,
+  Race,
+  RegionId,
+  RegionStanding,
+  SkillId,
+  Skills,
+  Stance,
+} from './types';
 
 export const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 

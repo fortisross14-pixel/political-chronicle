@@ -3,7 +3,18 @@ import { getBackground, getOffice, getRegion, ISSUES, ISSUES_BY_ID, STATES, US_S
 import { stanceLabel } from '../campaign/labels';
 import { CareerCharts } from '../charts/CareerCharts';
 import { pct } from '../format';
-import { ageOf, effectiveSkills, energyForAge, native, newcomerPenalty, skillCap, SKILL_CODES, SKILL_HINTS, SKILL_IDS, SKILL_LABELS } from '../../engine';
+import {
+  ageOf,
+  effectiveSkills,
+  energyForAge,
+  native,
+  newcomerPenalty,
+  skillCap,
+  SKILL_CODES,
+  SKILL_HINTS,
+  SKILL_IDS,
+  SKILL_LABELS,
+} from '../../engine';
 import type { GameState } from '../../engine';
 
 type SubTab = 'overview' | 'skills' | 'ideals' | 'history' | 'stats';
@@ -54,7 +65,11 @@ export function ProfileTab({ state }: { state: GameState }) {
             <dt>Weakness</dt>
             <dd>{getBackground(p.backgroundId).weaknessText}</dd>
             <dt>Credible on</dt>
-            <dd>{getBackground(p.backgroundId).credibleIssues.map((i) => ISSUES_BY_ID[i].name).join(', ')}</dd>
+            <dd>
+              {getBackground(p.backgroundId)
+                .credibleIssues.map((i) => ISSUES_BY_ID[i].name)
+                .join(', ')}
+            </dd>
             <dt>Energy per turn</dt>
             <dd>{energyForAge(age)}</dd>
           </dl>
@@ -87,11 +102,15 @@ export function ProfileTab({ state }: { state: GameState }) {
             ))}
           </ul>
           <p className="muted small">
-            Skill cards in the Market raise a skill by 1. At your current level you can train up to {skillCap(state)} (House: 8, Senate/Governor: 10).
+            Skill cards in the Market raise a skill by 1. At your current level you can train up to {skillCap(state)} (House: 8,
+            Senate/Governor: 10).
           </p>
           {SKILL_IDS.some((id) => effective[id] !== p.skills[id]) && (
             <p className="small">
-              With your team: {SKILL_IDS.filter((id) => effective[id] !== p.skills[id]).map((id) => `${SKILL_CODES[id]} ${effective[id]}`).join(' · ')}
+              With your team:{' '}
+              {SKILL_IDS.filter((id) => effective[id] !== p.skills[id])
+                .map((id) => `${SKILL_CODES[id]} ${effective[id]}`)
+                .join(' · ')}
             </p>
           )}
         </section>
@@ -125,7 +144,9 @@ export function ProfileTab({ state }: { state: GameState }) {
                   <span className="record-axis" aria-label={`${i.name} record ${v.toFixed(1)}`}>
                     <span className="record-dot" style={{ left: `${((v + 2) / 4) * 100}%` }} />
                   </span>
-                  <span className="muted small">{Math.abs(v) < 0.35 ? 'Mixed' : stanceLabel(i.id, Math.abs(v) >= 1.5 ? Math.sign(v) * 2 : Math.sign(v))}</span>
+                  <span className="muted small">
+                    {Math.abs(v) < 0.35 ? 'Mixed' : stanceLabel(i.id, Math.abs(v) >= 1.5 ? Math.sign(v) * 2 : Math.sign(v))}
+                  </span>
                 </li>
               );
             })}
@@ -159,7 +180,8 @@ export function ProfileTab({ state }: { state: GameState }) {
                     <span className="muted">
                       {p.year} T{p.turn + 1}
                     </span>{' '}
-                    <span className={p.kept ? 'pos' : 'neg'}>{p.kept ? 'Kept' : 'Broke'}</span> your {ISSUES_BY_ID[p.issue].name} promise — “{p.title}”
+                    <span className={p.kept ? 'pos' : 'neg'}>{p.kept ? 'Kept' : 'Broke'}</span> your {ISSUES_BY_ID[p.issue].name} promise —
+                    “{p.title}”
                   </li>
                 ))}
               </ul>

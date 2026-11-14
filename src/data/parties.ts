@@ -3,9 +3,10 @@ import type { IssueId, Party, PartyId, PlatformPlank } from '../engine/types';
 type PlatformTable = Record<IssueId, [position: number, weight: number]>;
 
 function platform(table: PlatformTable): Record<IssueId, PlatformPlank> {
-  return Object.fromEntries(
-    Object.entries(table).map(([id, [position, weight]]) => [id, { position, weight }]),
-  ) as Record<IssueId, PlatformPlank>;
+  return Object.fromEntries(Object.entries(table).map(([id, [position, weight]]) => [id, { position, weight }])) as Record<
+    IssueId,
+    PlatformPlank
+  >;
 }
 
 /** Fictional parties — easy to map to real life, but not the real ones. */

@@ -121,7 +121,10 @@ export function creationErrors(input: CreationInput): string[] {
   if (spent < total) errors.push(`Spend your remaining ${total - spent} skill point(s).`);
   const skills = finalSkills(input);
   const over = SKILL_IDS.filter((id) => skills[id] > creationCap(input.backgroundId, id));
-  if (over.length) errors.push(`Over the cap at creation: ${over.map((id) => `${SKILL_LABELS[id]} (max ${creationCap(input.backgroundId, id)})`).join(', ')}.`);
+  if (over.length)
+    errors.push(
+      `Over the cap at creation: ${over.map((id) => `${SKILL_LABELS[id]} (max ${creationCap(input.backgroundId, id)})`).join(', ')}.`,
+    );
   return errors;
 }
 

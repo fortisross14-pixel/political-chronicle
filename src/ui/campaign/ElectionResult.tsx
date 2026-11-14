@@ -18,7 +18,11 @@ export function ElectionResult({ election, dispatch }: { election: ElectionRecor
             : `You lost the race for ${office.name}`}
       </h2>
       <p className="muted small">
-        {election.kind === 'primary' ? `Primary, March ${election.year}. Expected share` : `Election Day, November ${election.year}. Your final poll`}: {pct(election.finalPoll)}{election.kind === 'primary' ? '.' : ' of decided voters.'}
+        {election.kind === 'primary'
+          ? `Primary, March ${election.year}. Expected share`
+          : `Election Day, November ${election.year}. Your final poll`}
+        : {pct(election.finalPoll)}
+        {election.kind === 'primary' ? '.' : ' of decided voters.'}
       </p>
       <div className="poll">
         {order.map(({ c, share }) => (
@@ -59,8 +63,8 @@ export function ElectionResult({ election, dispatch }: { election: ElectionRecor
             ? 'You are the nominee. The general election is in November.'
             : 'Your seat, if you hold one, is safe. Build standing and try again next cycle.'
           : election.playerWon
-          ? 'You take office in January. Bills land on your desk every turn; keep your promises and your approval up — at re-election you are judged on both.'
-          : 'You can try again next cycle, run for a different office, or retire.'}
+            ? 'You take office in January. Bills land on your desk every turn; keep your promises and your approval up — at re-election you are judged on both.'
+            : 'You can try again next cycle, run for a different office, or retire.'}
       </p>
       <button className="primary" onClick={() => dispatch({ type: 'DISMISS_RESULT' })}>
         Continue

@@ -9,14 +9,14 @@
 
 ## 1. What kind of game this is
 
-| Pillar | What it means for mechanics and balance |
-|---|---|
-| **Roguelike runs** | A run is a career (sandbox) or a mission with a cycle limit (scenario). Failure ends the run but still pays out progress. Every run varies through opponents, card draws, the people you can hire and election-night swings. |
-| **Cards are the interface** | Decisions, events, skill training, people and artifacts are all cards. Every turn is a small hand of meaningful choices, never a spreadsheet. |
-| **Readable odds** | You always see your chance of winning (the "needle"). Roguelike decisions need visible risk. |
-| **Short turns, short missions** | A turn takes 60–90 s on a phone. A scenario takes 20–40 min (2–6 cycles). Sandbox careers last as long as you like and save anywhere. |
-| **Election night is the payoff** | Each campaign builds toward a live, animated night with results streaming in, regions called and a few last-minute actions. It should feel like watching a game. |
-| **Meta-progression, capped** | Scenario rewards (artifacts, unlocks) make you stronger at the start of later runs, but never enough to skip the game: at most +10–15% win chance from a full loadout. |
+| Pillar                           | What it means for mechanics and balance                                                                                                                                                                                      |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Roguelike runs**               | A run is a career (sandbox) or a mission with a cycle limit (scenario). Failure ends the run but still pays out progress. Every run varies through opponents, card draws, the people you can hire and election-night swings. |
+| **Cards are the interface**      | Decisions, events, skill training, people and artifacts are all cards. Every turn is a small hand of meaningful choices, never a spreadsheet.                                                                                |
+| **Readable odds**                | You always see your chance of winning (the "needle"). Roguelike decisions need visible risk.                                                                                                                                 |
+| **Short turns, short missions**  | A turn takes 60–90 s on a phone. A scenario takes 20–40 min (2–6 cycles). Sandbox careers last as long as you like and save anywhere.                                                                                        |
+| **Election night is the payoff** | Each campaign builds toward a live, animated night with results streaming in, regions called and a few last-minute actions. It should feel like watching a game.                                                             |
+| **Meta-progression, capped**     | Scenario rewards (artifacts, unlocks) make you stronger at the start of later runs, but never enough to skip the game: at most +10–15% win chance from a full loadout.                                                       |
 
 **Balance rule of thumb.** Good play must beat bad play by a wide margin. That holds today:
 a bot that keeps its promises wins re-election ~100% of the time, one that flip-flops ~2–30%,
@@ -33,10 +33,10 @@ and one that never campaigns 0%. Variance should decide close races, not blowout
 - **Resident state**: where your career happens. One of the playable states (POC: New York,
   then California). You also pick a **resident region** (your city).
 
-| Combination | Early game (local and state races) | Late game (national, post-POC) |
-|---|---|---|
-| **Native** (home = resident) | Hometown bonus: 30% recognition and +0.10 favorability in your region; +5 starting standing with the state party ("one of ours"). | Only one state carries a "favorite son/daughter" bonus. |
-| **Transplant** (home ≠ resident) | No hometown region (15% recognition). A **newcomer** trust penalty of −0.10 favorability statewide that fades over 8 years of residency. Counterweight: an **outside donor network** from your home state (+20% donor income) and an *Outsider* tag that some scenarios reward. | Favorite-son bonus in **both** states in presidential primaries and the general. |
+| Combination                      | Early game (local and state races)                                                                                                                                                                                                                                              | Late game (national, post-POC)                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **Native** (home = resident)     | Hometown bonus: 30% recognition and +0.10 favorability in your region; +5 starting standing with the state party ("one of ours").                                                                                                                                               | Only one state carries a "favorite son/daughter" bonus.                          |
+| **Transplant** (home ≠ resident) | No hometown region (15% recognition). A **newcomer** trust penalty of −0.10 favorability statewide that fades over 8 years of residency. Counterweight: an **outside donor network** from your home state (+20% donor income) and an _Outsider_ tag that some scenarios reward. | Favorite-son bonus in **both** states in presidential primaries and the general. |
 
 **Balance problem to watch:** the transplant's big payoff comes with the presidency, which is
 after the first version. Without the early counterweights everyone would pick native. Target:
@@ -62,15 +62,15 @@ Each background gives **fixed skill points** plus some free points. It also give
 **state affinities** (+0.08 favorability statewide in favored states, −0.05 in disfavored
 ones), a **perk** and a **weakness**.
 
-| Background | Fixed points | Favored states | Perk | Weakness |
-|---|---|---|---|---|
-| **Army veteran** | LEA +2, ADM +1 | TX, GA, NC, AZ, WY; rural regions | Crisis cards cost half when declined; +5 favorability with rural voters | DIP starts at 1 |
-| **Public servant** (career politician) | ADM +2, STR +2 | NY, IL, MA | Starts with standing 40 in the best-fitting party and one Common person card | *Establishment* tag: −0.05 favorability with independents; outsider scenarios penalize it |
-| **Celebrity** | CHA +4, STR +1 | CA, NY, FL; urban regions | Starts with 40% recognition statewide | ADM, ECO and LAW start at 1; higher scandal risk; −10% credibility on policy topics |
-| **Lawyer** | LAW +3, DIP +1 | MA, IL, NY | Legal-challenge cards favor you; +credibility in debates | CHA starts at 1 |
-| **Business executive** | ECO +3, ADM +1 | NY, TX, FL | Can self-fund: starts with $150k | −credibility on labor and min-wage topics |
-| **Community organizer** | LEA +1, CHA +1, DIP +1 | IL, MI, PA, OH | +2 ground-game tokens per campaign; door-knocking ×1.5 | ECO starts at 1 |
-| **Doctor / scientist** | LAW +1, ADM +1, ECO +1 | MA, CO, WA | High trust: integrity starts at 75; credible on healthcare and climate | Lower energy: −1 for the first cycle (still at the clinic) |
+| Background                             | Fixed points           | Favored states                    | Perk                                                                         | Weakness                                                                                  |
+| -------------------------------------- | ---------------------- | --------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Army veteran**                       | LEA +2, ADM +1         | TX, GA, NC, AZ, WY; rural regions | Crisis cards cost half when declined; +5 favorability with rural voters      | DIP starts at 1                                                                           |
+| **Public servant** (career politician) | ADM +2, STR +2         | NY, IL, MA                        | Starts with standing 40 in the best-fitting party and one Common person card | _Establishment_ tag: −0.05 favorability with independents; outsider scenarios penalize it |
+| **Celebrity**                          | CHA +4, STR +1         | CA, NY, FL; urban regions         | Starts with 40% recognition statewide                                        | ADM, ECO and LAW start at 1; higher scandal risk; −10% credibility on policy topics       |
+| **Lawyer**                             | LAW +3, DIP +1         | MA, IL, NY                        | Legal-challenge cards favor you; +credibility in debates                     | CHA starts at 1                                                                           |
+| **Business executive**                 | ECO +3, ADM +1         | NY, TX, FL                        | Can self-fund: starts with $150k                                             | −credibility on labor and min-wage topics                                                 |
+| **Community organizer**                | LEA +1, CHA +1, DIP +1 | IL, MI, PA, OH                    | +2 ground-game tokens per campaign; door-knocking ×1.5                       | ECO starts at 1                                                                           |
+| **Doctor / scientist**                 | LAW +1, ADM +1, ECO +1 | MA, CO, WA                        | High trust: integrity starts at 75; credible on healthcare and climate       | Lower energy: −1 for the first cycle (still at the clinic)                                |
 
 **As built (M7):** weaknesses are creation caps (a skill can't go above 2 at creation); points
 that can't be placed because of caps are lost. Perk values were trimmed after the sim:
@@ -86,26 +86,26 @@ These replace v1's Oratory, Charisma, Media Savvy, Digital, Policy, Negotiation 
 Fundraising. Each runs 1–10, with the same caps by office (6 / 8 / 10); skill cards in the
 Market still train +1.
 
-| Code | Skill | What it covers | Affects (mechanically) |
-|---|---|---|---|
-| **CHA** | Charisma | Public speaking, debates, interviews, inspiring crowds, connecting with voters | Every campaign event (rallies, town halls, TV, cable, social, radio), debate performance, gaffe resistance, how fast favorability decays. Replaces v1 Oratory, Charisma, Media Savvy and Digital. |
-| **ECO** | Economics | Budgets, taxation, growth, public spending, financial crises | **Donor income** (money people trust you with) and fundraising events; in office: **budget cards** (tax, spending, bonds) land better and cost less approval, fiscal-crisis cards, and a state **budget balance** meter (Governor). |
-| **DIP** | Diplomacy | Negotiating, building coalitions, relationships with other politicians (and later foreign leaders) | **Legislative deals**: bill passage when another party or chamber is involved; endorsements from other politicians; softens whip-vote penalties on bipartisan bills; international relations (presidency, post-POC). |
-| **STR** | Strategy | Political intelligence, reading opponents, campaign tactics, spotting opportunities, anticipating consequences | **Preview precision** (exact effects at 5+); **opponent intel** (see their next moves); primary odds; election-night action efficiency; at 7+ you draw **4** decision cards and keep 3; career moves such as nomination odds and the timing of runs. |
-| **ADM** | Administration | Running institutions, delivering services, managing officials, implementing policy | In office: slower approval wear; signed bills land harder ("execution"); success of multi-turn **project cards** (infrastructure, services); chief-of-staff synergy. |
-| **LEA** | Leadership | Loyalty, authority, crises, hard decisions, keeping the team united | **Party standing gains** (your own party); crisis cards; cabinet effectiveness; morale (staff don't quit when money dips). |
-| **LAW** | Law & Policy | Legislation, constitutional limits, regulation, designing policy | **Bill passage** base chance; legal challenges; reform cards; debate credibility on policy topics. |
+| Code    | Skill          | What it covers                                                                                                 | Affects (mechanically)                                                                                                                                                                                                                               |
+| ------- | -------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CHA** | Charisma       | Public speaking, debates, interviews, inspiring crowds, connecting with voters                                 | Every campaign event (rallies, town halls, TV, cable, social, radio), debate performance, gaffe resistance, how fast favorability decays. Replaces v1 Oratory, Charisma, Media Savvy and Digital.                                                    |
+| **ECO** | Economics      | Budgets, taxation, growth, public spending, financial crises                                                   | **Donor income** (money people trust you with) and fundraising events; in office: **budget cards** (tax, spending, bonds) land better and cost less approval, fiscal-crisis cards, and a state **budget balance** meter (Governor).                  |
+| **DIP** | Diplomacy      | Negotiating, building coalitions, relationships with other politicians (and later foreign leaders)             | **Legislative deals**: bill passage when another party or chamber is involved; endorsements from other politicians; softens whip-vote penalties on bipartisan bills; international relations (presidency, post-POC).                                 |
+| **STR** | Strategy       | Political intelligence, reading opponents, campaign tactics, spotting opportunities, anticipating consequences | **Preview precision** (exact effects at 5+); **opponent intel** (see their next moves); primary odds; election-night action efficiency; at 7+ you draw **4** decision cards and keep 3; career moves such as nomination odds and the timing of runs. |
+| **ADM** | Administration | Running institutions, delivering services, managing officials, implementing policy                             | In office: slower approval wear; signed bills land harder ("execution"); success of multi-turn **project cards** (infrastructure, services); chief-of-staff synergy.                                                                                 |
+| **LEA** | Leadership     | Loyalty, authority, crises, hard decisions, keeping the team united                                            | **Party standing gains** (your own party); crisis cards; cabinet effectiveness; morale (staff don't quit when money dips).                                                                                                                           |
+| **LAW** | Law & Policy   | Legislation, constitutional limits, regulation, designing policy                                               | **Bill passage** base chance; legal challenges; reform cards; debate credibility on policy topics.                                                                                                                                                   |
 
 How v1 mechanics map onto the new skills:
 
-| v1 mechanic | v2 driver |
-|---|---|
-| Event multiplier (every medium) | CHA (people cards such as a digital director add per-medium bonuses) |
-| Gaffe chance | CHA |
-| Donor income, call time, dinners | ECO |
-| Effect preview precision | STR |
-| Party standing gains | LEA (own party) · DIP (deals across lines) |
-| Credibility | LAW on policy topics, plus background |
+| v1 mechanic                      | v2 driver                                                            |
+| -------------------------------- | -------------------------------------------------------------------- |
+| Event multiplier (every medium)  | CHA (people cards such as a digital director add per-medium bonuses) |
+| Gaffe chance                     | CHA                                                                  |
+| Donor income, call time, dinners | ECO                                                                  |
+| Effect preview precision         | STR                                                                  |
+| Party standing gains             | LEA (own party) · DIP (deals across lines)                           |
+| Credibility                      | LAW on policy topics, plus background                                |
 
 **As built (M7):** CHA drives every event and the gaffe chance; ECO drives donors and
 fundraising events, plus ×(0.8 + 0.04·ECO) on tax bills in office; DIP cushions standing
@@ -125,12 +125,12 @@ no signing fee and no salary. Once bought, you either **assign** a card to its r
 **reserve** (the "back pocket") for a later role, or **discard** it, which is permanent. Resigning, moving to a new office or losing
 an election never loses anyone.
 
-| Role | Active when | Boost | Example perks |
-|---|---|---|---|
-| **Campaign manager** | You're running | CHA / STR | *Road warrior*: +1 energy per turn · *Spin doctor*: gaffes cost half |
-| **Chief of staff** | You hold any office | ADM / ECO / LEA | *Fixer*: declining a crisis costs half |
-| **Party liaison** | In office as a party member | LEA / DIP | *Whip shield*: standing lost with your party is halved |
-| **Legislative director** ("political rep") | Governor, House or Senate | LAW / DIP | *Across the aisle*: +10% passage against an opposing chamber |
+| Role                                       | Active when                 | Boost           | Example perks                                                        |
+| ------------------------------------------ | --------------------------- | --------------- | -------------------------------------------------------------------- |
+| **Campaign manager**                       | You're running              | CHA / STR       | _Road warrior_: +1 energy per turn · _Spin doctor_: gaffes cost half |
+| **Chief of staff**                         | You hold any office         | ADM / ECO / LEA | _Fixer_: declining a crisis costs half                               |
+| **Party liaison**                          | In office as a party member | LEA / DIP       | _Whip shield_: standing lost with your party is halved               |
+| **Legislative director** ("political rep") | Governor, House or Senate   | LAW / DIP       | _Across the aisle_: +10% passage against an opposing chamber         |
 
 - **Getting people:** every turn the Market offers **one person** (alongside 2 skill and 3 event
   cards), weighted by rarity and never someone you already hold. One-time price: common $6k,
@@ -155,7 +155,7 @@ check**: `pass = base(chamber control) + 3% × LAW + 3% × DIP (only when you do
   roguelike variable you see in advance. **As built:** every even year; state legislatures
   lean with their state (NY is usually blue); Congress is 40% blue, 20% split, 40% red.
 - **As built:** base chance 85% in your own chamber, 60% split, 35% against you, 50% for
-  independents; +3% per LAW, +3% per DIP when it isn't your chamber, +10% *across the aisle*;
+  independents; +3% per LAW, +3% per DIP when it isn't your chamber, +10% _across the aisle_;
   clamped 10–97%. Crises and ethics cards always go through. A failed bill still counts for
   party standing (you voted), and you keep half the promise credit.
 - A failed bill has no policy effect, but you keep half the promise credit ("you fought for
@@ -177,14 +177,14 @@ The election year's 4 turns play like a short roguelike run inside the career:
 - **Items** are one-shot cards with a use window. Some only work during the campaign, some
   only on election night, some in both:
 
-| Item | Earned by | Use |
-|---|---|---|
-| Volunteer list | Door-knocking streaks, organizer events | +2 ground-game tokens on election night |
-| Opposition research dossier | Winning a debate, STR ≥ 6 | Campaign: one opponent loses favorability in a region · Night: none |
-| Endorsement (union / sheriff / paper) | Decision cards, DIP | Campaign: +recognition and favorability with a group · Night: +turnout in one region |
-| Last-minute ad reservation | Fundraising turn over target | Night: a late statewide nudge |
-| Poll-watcher network | Party standing ≥ 60 | Night: protects one close region from bad variance |
-| Celebrity surrogate | Celebrity background, CHA ≥ 7 | Campaign: free rally anywhere · Night: +turnout in an urban region |
+| Item                                  | Earned by                               | Use                                                                                  |
+| ------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------ |
+| Volunteer list                        | Door-knocking streaks, organizer events | +2 ground-game tokens on election night                                              |
+| Opposition research dossier           | Winning a debate, STR ≥ 6               | Campaign: one opponent loses favorability in a region · Night: none                  |
+| Endorsement (union / sheriff / paper) | Decision cards, DIP                     | Campaign: +recognition and favorability with a group · Night: +turnout in one region |
+| Last-minute ad reservation            | Fundraising turn over target            | Night: a late statewide nudge                                                        |
+| Poll-watcher network                  | Party standing ≥ 60                     | Night: protects one close region from bad variance                                   |
+| Celebrity surrogate                   | Celebrity background, CHA ≥ 7           | Campaign: free rally anywhere · Night: +turnout in an urban region                   |
 
 - Unused campaign-only items expire on Election Day, and unused night items expire at the end
   of the night. Nothing carries over between campaigns except money and people, so each
@@ -202,11 +202,11 @@ The election year's 4 turns play like a short roguelike run inside the career:
    candidate's **abilities** (§5.3). Everything targets regions that are **not yet fully
    counted**, so timing matters: act early with little information, or wait and have fewer
    regions left.
-   - *Mobilize turnout* in a region (1 token): +0.5–1.5 points there, scaled by STR.
-   - *Lawyers to the count* in a close region (1 token, or the poll-watcher item): protects
+   - _Mobilize turnout_ in a region (1 token): +0.5–1.5 points there, scaled by STR.
+   - _Lawyers to the count_ in a close region (1 token, or the poll-watcher item): protects
      against bad variance.
-   - *Late ad blitz* (money or the ad-reservation item): small statewide nudge.
-   - *Concede* or *declare victory* (flavor and integrity).
+   - _Late ad blitz_ (money or the ad-reservation item): small statewide nudge.
+   - _Concede_ or _declare victory_ (flavor and integrity).
 
 **Balance:** total achievable swing is capped at about 1–3 points, so the campaign decides
 most races and election night decides the close ones (~20–30% of races, where the drama is).
@@ -223,8 +223,8 @@ most races and election night decides the close ones (~20–30% of races, where 
 - **Night:** 13 half-hour steps from 8 pm. Polls close by region type (suburbs first, cities
   last) and count over 4–8 steps; early returns skew by ±4 points and settle as the count
   fills in. The needle combines the counted vote with the polls for what's left, and a region
-  or race is called at 2.5σ. *Mobilize* adds 1.5 × (0.6 + 0.08·STR) points to the uncounted
-  vote; *Lawyers* recover 30% of a bad draw (max 0.5 points); the *late ad blitz* costs $20k
+  or race is called at 2.5σ. _Mobilize_ adds 1.5 × (0.6 + 0.08·STR) points to the uncounted
+  vote; _Lawyers_ recover 30% of a bad draw (max 0.5 points); the _late ad blitz_ costs $20k
   (market-scaled). Total night swing is capped at 1 point plus lawyers.
 - **Measured** (`npm run sim`): in Watertown, ~7% of races are within 3 points; night actions
   flip about a third of those (~2% of all races) and never a blowout.
@@ -236,15 +236,15 @@ you break a rule once, or do something nobody else can. They are **earned by com
 missions** and become equippable in Sandbox, up to 2 per character, with more slots unlocked
 later.
 
-| Ability | Earned from | Effect |
-|---|---|---|
-| **Barnstormer** | Big city, small town ★★ | Once per campaign, hold one rally that counts in 2 regions |
-| **Rapid response** | Hometown favorite ★★★ | Cancel the next gaffe or attack ad |
-| **Machine boss** | Machine politics | Election night: 3 free mobilizations in your home city |
-| **Comeback kid** | The Comeback | When you trail by 5+ points in the final turn, +1 energy and +1 token |
-| **Crossover appeal** | Blue in a red district | Partisan baseline counts 25% less against you |
-| **Star power** | The Underdog Superstar | Recognition never drops below 50% statewide |
-| **Iron discipline** | Keep your word ★★★ | Breaking a promise costs half the integrity |
+| Ability              | Earned from             | Effect                                                                |
+| -------------------- | ----------------------- | --------------------------------------------------------------------- |
+| **Barnstormer**      | Big city, small town ★★ | Once per campaign, hold one rally that counts in 2 regions            |
+| **Rapid response**   | Hometown favorite ★★★   | Cancel the next gaffe or attack ad                                    |
+| **Machine boss**     | Machine politics        | Election night: 3 free mobilizations in your home city                |
+| **Comeback kid**     | The Comeback            | When you trail by 5+ points in the final turn, +1 energy and +1 token |
+| **Crossover appeal** | Blue in a red district  | Partisan baseline counts 25% less against you                         |
+| **Star power**       | The Underdog Superstar  | Recognition never drops below 50% statewide                           |
+| **Iron discipline**  | Keep your word ★★★      | Breaking a promise costs half the integrity                           |
 
 Abilities are the roguelike "build" layer: background plus abilities plus artifacts make a
 distinct run. Each one should be worth about a few points in its niche, not a flat bonus.
@@ -256,17 +256,17 @@ distinct run. Each one should be worth about a few points in its niche, not a fl
 - **Granularity scales with population.** Every region carries its population weight, so
   statewide races sum correctly at any level of detail.
 
-| Phase | Shape per playable state |
-|---|---|
-| **Now (v2)** | 5 regions: **2 cities**, **2 secondary areas** (mid-size cities or suburbs), **1 rural area** |
-| **Later** | Small states 2 areas (e.g. Rhode Island); NY 10–12 (3 in NYC, 3–4 other urban such as Buffalo, Rochester, Albany and Syracuse, plus Long Island, the Hudson Valley, the North Country and the Southern Tier); CA and TX more |
+| Phase        | Shape per playable state                                                                                                                                                                                                     |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Now (v2)** | 5 regions: **2 cities**, **2 secondary areas** (mid-size cities or suburbs), **1 rural area**                                                                                                                                |
+| **Later**    | Small states 2 areas (e.g. Rhode Island); NY 10–12 (3 in NYC, 3–4 other urban such as Buffalo, Rochester, Albany and Syracuse, plus Long Island, the Hudson Valley, the North Country and the Southern Tier); CA and TX more |
 
 **v2 cut** (population shares approximate):
 
-| State | Cities | Secondary | Rural |
-|---|---|---|---|
-| **New York** | New York City (~43%), Buffalo & Western NY (~12%) | Long Island & Hudson Valley (~25%), Capital Region & Central NY (~11%) | North Country & Southern Tier (~9%) |
-| **California** | Los Angeles (~33%), San Francisco Bay Area (~20%) | San Diego (~8%), Sacramento & Inland Empire (~20%) | Central Valley & the North (~19%) |
+| State          | Cities                                            | Secondary                                                              | Rural                               |
+| -------------- | ------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------- |
+| **New York**   | New York City (~43%), Buffalo & Western NY (~12%) | Long Island & Hudson Valley (~25%), Capital Region & Central NY (~11%) | North Country & Southern Tier (~9%) |
+| **California** | Los Angeles (~33%), San Francisco Bay Area (~20%) | San Diego (~8%), Sacramento & Inland Empire (~20%)                     | Central Valley & the North (~19%)   |
 
 - **Offices:** a mayor for each city and secondary area, plus the rural area's seat town
   (Watertown stays). One House seat per region (abstracted), plus Senate and Governor.
@@ -291,12 +291,12 @@ funds), modifiers, **objectives with a cycle limit**, **star goals**, and reward
 
 **Beginner track** (finishing it unlocks Sandbox):
 
-| # | Scenario | Teaches | Win (1★) | ★★ / ★★★ |
-|---|---|---|---|---|
-| 1 | **Hometown favorite**: win Watertown mayor as the favorite | Platform, events, polls | Win | ≥ 55% · ≥ 60% |
-| 2 | **Keep your word**: start as a first-term mayor; win re-election | Bills, approval, promises | Re-elected | No broken promises · approval ≥ 60% |
-| 3 | **Pick a side**: join a party and win the North Country House seat within 2 cycles | Parties, standing, nominations, partisan races | Win the seat | No primary needed · standing ≥ 70 |
-| 4 | **Big city, small town**: from upstate, win Governor within 3 cycles | Statewide campaigns, NYC, election night | Governor | First try · carry NYC |
+| #   | Scenario                                                                           | Teaches                                        | Win (1★)     | ★★ / ★★★                            |
+| --- | ---------------------------------------------------------------------------------- | ---------------------------------------------- | ------------ | ----------------------------------- |
+| 1   | **Hometown favorite**: win Watertown mayor as the favorite                         | Platform, events, polls                        | Win          | ≥ 55% · ≥ 60%                       |
+| 2   | **Keep your word**: start as a first-term mayor; win re-election                   | Bills, approval, promises                      | Re-elected   | No broken promises · approval ≥ 60% |
+| 3   | **Pick a side**: join a party and win the North Country House seat within 2 cycles | Parties, standing, nominations, partisan races | Win the seat | No primary needed · standing ≥ 70   |
+| 4   | **Big city, small town**: from upstate, win Governor within 3 cycles               | Statewide campaigns, NYC, election night       | Governor     | First try · carry NYC               |
 
 **Advanced scenarios** (examples):
 
@@ -323,12 +323,12 @@ star goals. A run ends when the objective is met (stars scored at that moment) o
 passes. Each scenario unlocks after a star on the previous one, and Sandbox after a star on all
 four. Rewards pay out the first time you reach 1, 2 and 3 stars.
 
-| Scenario | Starts | Objective | Stars | Rewards (1★ / 2★ / 3★) | Bot win rate |
-|---|---|---|---|---|---|
-| Hometown favorite | 2027, Watertown public servant, weaker opponents | Win Watertown mayor 2027 | win · 55%+ · 60%+ | Campaign button / War chest / *Rapid response* | ~83% |
-| Keep your word | 2028, veteran mayor, 45% approval | Re-elected in 2031 | win · no broken promises · approval 60%+ | Lucky tie / Rolodex / *Iron discipline* | ~100%¹ |
-| Pick a side | 2028, independent lawyer mayor | North Country House seat by 2030 | win · no primary · standing 70+ | Union hall key / *Crossover appeal* / Debate notes | ~78% |
-| Big city, small town | 2029, Red House member (standing 55) | Governor by 2034 | win · first try · carry NYC | *Comeback kid* / — / — | ~80% |
+| Scenario             | Starts                                           | Objective                        | Stars                                    | Rewards (1★ / 2★ / 3★)                             | Bot win rate |
+| -------------------- | ------------------------------------------------ | -------------------------------- | ---------------------------------------- | -------------------------------------------------- | ------------ |
+| Hometown favorite    | 2027, Watertown public servant, weaker opponents | Win Watertown mayor 2027         | win · 55%+ · 60%+                        | Campaign button / War chest / _Rapid response_     | ~83%         |
+| Keep your word       | 2028, veteran mayor, 45% approval                | Re-elected in 2031               | win · no broken promises · approval 60%+ | Lucky tie / Rolodex / _Iron discipline_            | ~100%¹       |
+| Pick a side          | 2028, independent lawyer mayor                   | North Country House seat by 2030 | win · no primary · standing 70+          | Union hall key / _Crossover appeal_ / Debate notes | ~78%         |
+| Big city, small town | 2029, Red House member (standing 55)             | Governor by 2034                 | win · first try · carry NYC              | _Comeback kid_ / — / —                             | ~80%         |
 
 ¹ Above the 80–90% band: a sensible bot governs its way from 45% to 60%+ approval within a
 year. Governing is too easy in general; that's an M13 balancing item, not a scenario tweak.
@@ -342,9 +342,9 @@ until it ends. Score with the legacy score and compare in the Hall of Runs.
 ### 8.3 Meta-progression: artifacts and unlocks
 
 - **Artifacts** are passive perk cards you equip before a run: 2 slots at the start, up to 4
-  as you progress. Examples: *Grandfather's campaign button* (+5% hometown recognition),
-  *Rolodex* (start with a Common staff card), *Debate notes* (your first debate can't gaffe),
-  *Union hall key* (+1 ground-game token per campaign).
+  as you progress. Examples: _Grandfather's campaign button_ (+5% hometown recognition),
+  _Rolodex_ (start with a Common staff card), _Debate notes_ (your first debate can't gaffe),
+  _Union hall key_ (+1 ground-game token per campaign).
 - **Unlocks:** backgrounds, playable states, scenarios, **abilities** (§5.3), and **starting skill
   boosts** (+1 to a skill at creation, at most 2 equipped).
 - **Rewards** are tied to stars, and repeat clears pay less, so you're pushed toward new
@@ -381,18 +381,18 @@ approval, + 5 per election won.
 
 ## 10. What changes in the current code
 
-| Area | Change |
-|---|---|
-| Politician | `homeState` (50), `residentState`/`residentRegion` (playable); background v2; **7 skills CHA / ECO / DIP / STR / ADM / LEA / LAW** remapped (save schema bump); abilities slots |
-| Opinion & events | Native/transplant modifiers; background state affinity; CHA drives every medium, with people cards adding per-medium bonuses |
-| Economy | ECO drives donors; budget cards and the Governor's budget meter |
-| Governing | ADM (wear and execution), LEA (crises, own-party standing), DIP and LAW (legislature passage) |
-| Staff | Skill-card staff → **people cards** with roster, slots, salaries and firing |
-| Campaign | **Loot**: items, money and cards from campaign milestones; items with use windows |
-| Elections | Instant resolution → **election-night timeline** (engine) and the animated screen (UI), using tokens, items and abilities |
-| World data | NY re-cut to 5 regions; California with 5 regions; mayors for cities and secondary areas |
-| Modes | Scenario framework (data, objectives, stars, rewards incl. abilities), profile store, Sandbox unlock |
-| Balance harness | Bot plays each scenario; CI asserts its difficulty band |
+| Area             | Change                                                                                                                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Politician       | `homeState` (50), `residentState`/`residentRegion` (playable); background v2; **7 skills CHA / ECO / DIP / STR / ADM / LEA / LAW** remapped (save schema bump); abilities slots |
+| Opinion & events | Native/transplant modifiers; background state affinity; CHA drives every medium, with people cards adding per-medium bonuses                                                    |
+| Economy          | ECO drives donors; budget cards and the Governor's budget meter                                                                                                                 |
+| Governing        | ADM (wear and execution), LEA (crises, own-party standing), DIP and LAW (legislature passage)                                                                                   |
+| Staff            | Skill-card staff → **people cards** with roster, slots, salaries and firing                                                                                                     |
+| Campaign         | **Loot**: items, money and cards from campaign milestones; items with use windows                                                                                               |
+| Elections        | Instant resolution → **election-night timeline** (engine) and the animated screen (UI), using tokens, items and abilities                                                       |
+| World data       | NY re-cut to 5 regions; California with 5 regions; mayors for cities and secondary areas                                                                                        |
+| Modes            | Scenario framework (data, objectives, stars, rewards incl. abilities), profile store, Sandbox unlock                                                                            |
+| Balance harness  | Bot plays each scenario; CI asserts its difficulty band                                                                                                                         |
 
 The old M7 (stats and Hall of Runs) folds into the scenarios milestone as the run-results
 screen.

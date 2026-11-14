@@ -115,11 +115,14 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
               </div>
             ))}
             <ul className="ticker small">
-              {[...night.ticker].slice(-5).reverse().map((t, i) => (
-                <li key={`${night.ticker.length - i}`} className={i === 0 ? 'fresh' : undefined}>
-                  {t}
-                </li>
-              ))}
+              {[...night.ticker]
+                .slice(-5)
+                .reverse()
+                .map((t, i) => (
+                  <li key={`${night.ticker.length - i}`} className={i === 0 ? 'fresh' : undefined}>
+                    {t}
+                  </li>
+                ))}
             </ul>
           </div>
         </div>
@@ -144,7 +147,9 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
                     <div className="night-region-head">
                       <strong>{getRegion(id).name}</strong>
                       {r.calledFor !== undefined ? (
-                        <span className={r.calledFor === 0 ? 'fit good' : 'fit bad'}>{r.calledFor === 0 ? 'Called: you' : 'Called: them'}</span>
+                        <span className={r.calledFor === 0 ? 'fit good' : 'fit bad'}>
+                          {r.calledFor === 0 ? 'Called: you' : 'Called: them'}
+                        </span>
                       ) : c >= 0.3 ? (
                         <span className="fit mixed">Too close to call</span>
                       ) : c > 0 ? (
@@ -182,7 +187,11 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
                 {nightItems.map((item) => {
                   const meta = getItem(item.itemId);
                   return (
-                    <button key={item.uid} title={meta.nightText} onClick={() => dispatch({ type: 'USE_ITEM', uid: item.uid, regionId: meta.targetsRegion ? selected : undefined })}>
+                    <button
+                      key={item.uid}
+                      title={meta.nightText}
+                      onClick={() => dispatch({ type: 'USE_ITEM', uid: item.uid, regionId: meta.targetsRegion ? selected : undefined })}
+                    >
                       Use {meta.name}
                       {meta.targetsRegion ? ` → ${getRegion(selected).seatCity}` : ''}
                     </button>
@@ -190,7 +199,9 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
                 })}
               </div>
             )}
-            <p className="muted small">Actions only move votes that haven’t been counted yet. Act early with less information, or wait and have fewer places left.</p>
+            <p className="muted small">
+              Actions only move votes that haven’t been counted yet. Act early with less information, or wait and have fewer places left.
+            </p>
           </div>
         </div>
       </section>

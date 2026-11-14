@@ -70,7 +70,9 @@ export function credibility(state: GameState, issue: IssueId, stance: Stance): n
 
 export function fatigueFor(state: GameState, regionId: RegionId, issue: IssueId): number {
   const now = turnNo(state);
-  const repeats = state.eventHistory.filter((e) => !e.fundraiser && e.regionId === regionId && e.issue === issue && e.turnNo >= now - 1).length;
+  const repeats = state.eventHistory.filter(
+    (e) => !e.fundraiser && e.regionId === regionId && e.issue === issue && e.turnNo >= now - 1,
+  ).length;
   return FATIGUE ** repeats;
 }
 
@@ -219,18 +221,24 @@ export function playEvent(state: GameState, ref: number | string, regionId: Regi
     preview.card.id === 'debate' && !gaffe && preview.effects.filter((e) => e.share === 1).every((e) => e.dFavorability > 0);
   const result = {
     gaffe,
-    state: adjustStanding({
-      ...state,
-      rng: rng.state,
-      regions,
-      career,
-      hand,
-      // Cards are paid for in the Market; playing one costs only energy.
-      funds: state.funds + preview.fundsGain,
-      energy: state.energy - preview.card.energy,
-      eventHistory: [...state.eventHistory, { turnNo: turnNo(state), regionId, issue, ...(preview.card.fundraising ? { fundraiser: true } : {}) }],
-      log: [...state.log, { year: state.clock.year, turn: state.clock.turn, text }],
-    }, standingGain),
+    state: adjustStanding(
+      {
+        ...state,
+        rng: rng.state,
+        regions,
+        career,
+        hand,
+        // Cards are paid for in the Market; playing one costs only energy.
+        funds: state.funds + preview.fundsGain,
+        energy: state.energy - preview.card.energy,
+        eventHistory: [
+          ...state.eventHistory,
+          { turnNo: turnNo(state), regionId, issue, ...(preview.card.fundraising ? { fundraiser: true } : {}) },
+        ],
+        log: [...state.log, { year: state.clock.year, turn: state.clock.turn, text }],
+      },
+      standingGain,
+    ),
   };
   return debateWon ? { ...result, state: award(result.state, 'debate_win') } : result;
 }

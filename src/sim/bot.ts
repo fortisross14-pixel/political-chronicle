@@ -39,7 +39,11 @@ export function botPlatform(state: GameState, style: BotStyle): Pledge[] {
   const weights = regionWeights(race.officeId);
   const avg = (issue: IssueId, key: 'issueOpinion' | 'issueSalience') =>
     office.regionIds.reduce((sum, id) => sum + getRegion(id)[key][issue] * weights[id]!, 0);
-  return ISSUE_IDS.map((issue) => ({ issue, score: avg(issue, 'issueSalience') * relevance(issue, office.level), opinion: avg(issue, 'issueOpinion') }))
+  return ISSUE_IDS.map((issue) => ({
+    issue,
+    score: avg(issue, 'issueSalience') * relevance(issue, office.level),
+    opinion: avg(issue, 'issueOpinion'),
+  }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 5)
     .map(({ issue, opinion }) => {
@@ -194,7 +198,6 @@ function climb(state: GameState): GameState {
   return next ? applyAction(s, { type: 'FILE_RACE', officeId: next.id }) : s;
 }
 
-
 /**
  * Election night for the bot. 'sensible' and friends use night items, spend tokens on the
  * biggest still-uncounted regions once the first returns are in, and send lawyers where it's
@@ -223,12 +226,20 @@ export function playNight(state: GameState, style: BotStyle, actions = true): Ga
           const n = s.night!;
           const open = Object.keys(n.regions)
             .filter((id) => !mobilizeError(s, id))
-            .sort((a, b) => getRegion(b).population * (1 - counted(n.regions[b]!, n.step)) - getRegion(a).population * (1 - counted(n.regions[a]!, n.step)));
+            .sort(
+              (a, b) =>
+                getRegion(b).population * (1 - counted(n.regions[b]!, n.step)) -
+                getRegion(a).population * (1 - counted(n.regions[a]!, n.step)),
+            );
           if (!open.length) break;
           const view = nightView(n);
           // Lawyers where it's close and half counted; otherwise mobilize the biggest uncounted region.
-          const close = Object.keys(n.regions).find((id) => !lawyersError(s, id) && counted(n.regions[id]!, n.step) >= 0.3 && Math.abs(view.margin) < 0.03);
-          s = close ? applyAction(s, { type: 'NIGHT_LAWYERS', regionId: close }) : applyAction(s, { type: 'NIGHT_MOBILIZE', regionId: open[0]! });
+          const close = Object.keys(n.regions).find(
+            (id) => !lawyersError(s, id) && counted(n.regions[id]!, n.step) >= 0.3 && Math.abs(view.margin) < 0.03,
+          );
+          s = close
+            ? applyAction(s, { type: 'NIGHT_LAWYERS', regionId: close })
+            : applyAction(s, { type: 'NIGHT_MOBILIZE', regionId: open[0]! });
         }
       }
     }
@@ -252,7 +263,8 @@ export function playTurn(state: GameState, style: BotStyle): GameState {
   if (style === 'climber') s = climb(s);
   if (!s.career.race && !s.career.office) {
     const last = [...s.elections].reverse().find((e) => e.kind === 'general');
-    const officeId = last && !getOffice(last.officeId).partisan ? last.officeId : (hometownMayoralty(s.politician.residentRegionId) ?? 'mayor-watertown');
+    const officeId =
+      last && !getOffice(last.officeId).partisan ? last.officeId : (hometownMayoralty(s.politician.residentRegionId) ?? 'mayor-watertown');
     if (!fileRaceError(s, officeId)) s = applyAction(s, { type: 'FILE_RACE', officeId });
   }
   if (s.career.race && !s.career.race.platform.length) s = applyAction(s, { type: 'SET_PLATFORM', platform: botPlatform(s, style) });
@@ -264,7 +276,12 @@ export function playTurn(state: GameState, style: BotStyle): GameState {
 }
 
 /** Funds over a multi-year career. */
-export function careerFunds(input: CreationInput, style: BotStyle, turns: number, seed: string): { funds: number; peak: number; fundraising: number } {
+export function careerFunds(
+  input: CreationInput,
+  style: BotStyle,
+  turns: number,
+  seed: string,
+): { funds: number; peak: number; fundraising: number } {
   let s = createRun(buildRunConfig(input, seed));
   let peak = s.funds;
   for (let i = 0; i < turns && !s.ended; i++) {
@@ -346,7 +363,12 @@ export function reelectionRate(
     }
     if (s.elections[1]?.playerWon) reelected++;
   }
-  return { reelected: reelected / Math.max(1, terms), terms, avgApproval: approval / Math.max(1, terms), integrity: integrity / Math.max(1, terms) };
+  return {
+    reelected: reelected / Math.max(1, terms),
+    terms,
+    avgApproval: approval / Math.max(1, terms),
+    integrity: integrity / Math.max(1, terms),
+  };
 }
 
 export interface ClimbResult {
@@ -394,7 +416,12 @@ export const SCENARIO_STYLE: Record<string, BotStyle> = {
 };
 
 /** Plays a scenario to its end. */
-export function playScenario(scenarioId: string, seed: string, artifacts: string[] = [], style: BotStyle = SCENARIO_STYLE[scenarioId] ?? 'sensible'): GameState {
+export function playScenario(
+  scenarioId: string,
+  seed: string,
+  artifacts: string[] = [],
+  style: BotStyle = SCENARIO_STYLE[scenarioId] ?? 'sensible',
+): GameState {
   forcedParty = undefined;
   let s = createScenarioRun(scenarioId, { name: 'Bot', artifacts, seed });
   for (let guard = 0; guard < 120 && !s.scenario?.result; guard++) s = playTurn(s, style);

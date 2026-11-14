@@ -18,7 +18,8 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
         <h2>{title}</h2>
         <p className="muted small">
           You {inOffice ? 'signed' : 'backed'} {hand.applied.map((id) => `“${getDecisionCard(id).title}”`).join(', ')}.
-          {hand.failed?.length ? ` Failed to pass: ${hand.failed.map((id) => `“${getDecisionCard(id).title}”`).join(', ')}.` : ''} New cards next turn.
+          {hand.failed?.length ? ` Failed to pass: ${hand.failed.map((id) => `“${getDecisionCard(id).title}”`).join(', ')}.` : ''} New cards
+          next turn.
         </p>
       </section>
     );
@@ -48,8 +49,12 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
           return (
             <article key={id} className={on ? 'decision-card on' : 'decision-card'}>
               <h3>{card.title}</h3>
-              {card.partyPriority && <span className={`whip ${card.partyPriority.toLowerCase()}`}>{PARTIES[card.partyPriority].nickname} whip vote</span>}
-              {impact.rejectStanding < 0 && <p className="muted small">Your party expects you to sign this ({impact.rejectStanding} standing if you don’t).</p>}
+              {card.partyPriority && (
+                <span className={`whip ${card.partyPriority.toLowerCase()}`}>{PARTIES[card.partyPriority].nickname} whip vote</span>
+              )}
+              {impact.rejectStanding < 0 && (
+                <p className="muted small">Your party expects you to sign this ({impact.rejectStanding} standing if you don’t).</p>
+              )}
               <p className="small">{card.text}</p>
               <ul className="tags small">
                 {card.tags.map((t) => (
@@ -71,13 +76,17 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
                 {impact.integrity !== 0 && (
                   <div className="kv-row">
                     <dt>Integrity</dt>
-                    <dd className={impact.integrity > 0 ? 'pos' : 'neg'}>{impact.integrity > 0 ? `+${impact.integrity}` : impact.integrity}</dd>
+                    <dd className={impact.integrity > 0 ? 'pos' : 'neg'}>
+                      {impact.integrity > 0 ? `+${impact.integrity}` : impact.integrity}
+                    </dd>
                   </div>
                 )}
                 {impact.standing !== 0 && (
                   <div className="kv-row">
                     <dt>Party standing</dt>
-                    <dd className={impact.standing > 0 ? 'pos' : 'neg'}>{impact.standing > 0 ? `+${impact.standing.toFixed(1)}` : impact.standing.toFixed(1)}</dd>
+                    <dd className={impact.standing > 0 ? 'pos' : 'neg'}>
+                      {impact.standing > 0 ? `+${impact.standing.toFixed(1)}` : impact.standing.toFixed(1)}
+                    </dd>
                   </div>
                 )}
                 {impact.funds !== 0 && (
@@ -94,7 +103,9 @@ export function DecisionTray({ state, dispatch }: { state: GameState; dispatch: 
               )}
               {impact.promisesKept.length > 0 && <p className="fit good small">Keeps a campaign promise</p>}
               {impact.promisesBroken.length > 0 && <p className="fit bad small">Breaks a campaign promise</p>}
-              {card.rejectCost && <p className="muted small">{inOffice ? 'Shelving this will cost approval.' : 'Declining costs you some goodwill.'}</p>}
+              {card.rejectCost && (
+                <p className="muted small">{inOffice ? 'Shelving this will cost approval.' : 'Declining costs you some goodwill.'}</p>
+              )}
               <button
                 className={on ? 'primary' : undefined}
                 aria-pressed={on}

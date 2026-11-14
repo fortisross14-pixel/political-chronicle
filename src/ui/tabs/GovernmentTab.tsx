@@ -89,8 +89,8 @@ export function GovernmentTab({ state, dispatch }: Props) {
           <p>
             {state.ended.reason === 'retired' && `You retired in ${state.ended.year}.`}
             {state.ended.reason === 'losses' && `Three defeats in a row ended your career in ${state.ended.year}.`}
-            {state.ended.reason === 'age' && `You stepped away from public life in ${state.ended.year}.`}{' '}
-            Elections: {wins} won, {state.elections.length - wins} lost.
+            {state.ended.reason === 'age' && `You stepped away from public life in ${state.ended.year}.`} Elections: {wins} won,{' '}
+            {state.elections.length - wins} lost.
           </p>
           <p className="muted small">Career summaries and the Hall of Runs arrive in M7. Start a new run from the menu.</p>
         </section>

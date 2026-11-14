@@ -62,7 +62,9 @@ export function HallOfRuns({ profile, onBack }: { profile: Profile; onBack: () =
                     <div className="muted small">{getBackground(r.backgroundId).name}</div>
                   </td>
                   <td className="small">
-                    {r.mode === 'scenario' && r.scenarioId ? `${getScenario(r.scenarioId).title} ${r.scenarioWon ? `★${r.stars}` : '✗'}` : 'Sandbox'}
+                    {r.mode === 'scenario' && r.scenarioId
+                      ? `${getScenario(r.scenarioId).title} ${r.scenarioWon ? `★${r.stars}` : '✗'}`
+                      : 'Sandbox'}
                   </td>
                   <td>
                     {r.startYear}–{r.endYear}
@@ -71,7 +73,11 @@ export function HallOfRuns({ profile, onBack }: { profile: Profile; onBack: () =
                   <td>
                     {r.electionsWon}/{r.electionsLost}
                   </td>
-                  <td>{r.promisesKept + r.promisesBroken ? `${Math.round((100 * r.promisesKept) / (r.promisesKept + r.promisesBroken))}%` : '—'}</td>
+                  <td>
+                    {r.promisesKept + r.promisesBroken
+                      ? `${Math.round((100 * r.promisesKept) / (r.promisesKept + r.promisesBroken))}%`
+                      : '—'}
+                  </td>
                   <td>
                     <strong>{r.legacy}</strong>
                   </td>
@@ -87,7 +93,13 @@ export function HallOfRuns({ profile, onBack }: { profile: Profile; onBack: () =
             <h2>Compare careers</h2>
             <div className="segmented" role="radiogroup" aria-label="Measure">
               {METRICS.map((x) => (
-                <button key={x.id} role="radio" aria-checked={metric === x.id} className={metric === x.id ? 'active' : undefined} onClick={() => setMetric(x.id)}>
+                <button
+                  key={x.id}
+                  role="radio"
+                  aria-checked={metric === x.id}
+                  className={metric === x.id ? 'active' : undefined}
+                  onClick={() => setMetric(x.id)}
+                >
                   {x.label}
                 </button>
               ))}

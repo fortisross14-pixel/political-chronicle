@@ -82,7 +82,12 @@ describe('meta-progression', () => {
   it('recording a won scenario pays rewards once per star count and files the run', () => {
     const fakeWin = (stars: string[], runId: string): GameState => {
       const s = start('hometown_favorite');
-      return { ...s, runId, scenario: { ...s.scenario!, result: { won: true, stars, year: 2027, reason: '' } }, ended: { reason: 'scenario', year: 2027 } };
+      return {
+        ...s,
+        runId,
+        scenario: { ...s.scenario!, result: { won: true, stars, year: 2027, reason: '' } },
+        ended: { reason: 'scenario', year: 2027 },
+      };
     };
     const one = recordRun(emptyProfile(), fakeWin(['win'], 'r1'));
     expect(one.newArtifacts).toEqual(['campaign_button']);

@@ -22,7 +22,12 @@ describe('<Creator>', () => {
 
     fireEvent.click(start);
     expect(onCreate).toHaveBeenCalledOnce();
-    expect(onCreate.mock.calls[0]![0]).toMatchObject({ name: 'Riley Chen', backgroundId: 'lawyer', residentRegionId: 'ny-wny', homeState: 'TX' });
+    expect(onCreate.mock.calls[0]![0]).toMatchObject({
+      name: 'Riley Chen',
+      backgroundId: 'lawyer',
+      residentRegionId: 'ny-wny',
+      homeState: 'TX',
+    });
   });
 
   it('clearing the skills shows the points left and disables submit', () => {

@@ -38,12 +38,20 @@ export function SandboxSetup({ profile, onStart, onBack }: Props) {
             <legend>Career length</legend>
             <div className="segmented">
               {LENGTHS.map((l) => (
-                <button key={l.label} type="button" className={years === l.years ? 'active' : undefined} aria-pressed={years === l.years} onClick={() => setYears(l.years)}>
+                <button
+                  key={l.label}
+                  type="button"
+                  className={years === l.years ? 'active' : undefined}
+                  aria-pressed={years === l.years}
+                  onClick={() => setYears(l.years)}
+                >
                   {l.label}
                 </button>
               ))}
             </div>
-            <span className="muted small">Your legacy score is tallied when the career ends: by length, three losses in a row, retirement, or age 85.</span>
+            <span className="muted small">
+              Your legacy score is tallied when the career ends: by length, three losses in a row, retirement, or age 85.
+            </span>
           </fieldset>
           <div className="row">
             <button className="primary" onClick={() => onStart(input, artifacts, abilities, years)}>

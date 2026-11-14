@@ -51,7 +51,12 @@ describe('filing & platform', () => {
     const s = newRun();
     expect(platformError(s, [])).toMatch(/at least one/);
     expect(platformError(s, [...WATERTOWN_PLATFORM, { issue: 'labor', stance: 1 }])).toMatch(/at most 5/);
-    expect(platformError(s, [{ issue: 'guns', stance: 1 }, { issue: 'guns', stance: 2 }])).toMatch(/once/);
+    expect(
+      platformError(s, [
+        { issue: 'guns', stance: 1 },
+        { issue: 'guns', stance: 2 },
+      ]),
+    ).toMatch(/once/);
     expect(platformError(s, [{ issue: 'guns', stance: 0 }])).toMatch(/side/);
     expect(platformError(s, WATERTOWN_PLATFORM)).toBeUndefined();
   });
@@ -91,7 +96,10 @@ describe('decisions', () => {
     const kept = applyAction({ ...base, decisions: hand }, { type: 'RESOLVE_DECISIONS', apply: ['cm_property_tax_freeze'] });
     expect(kept.integrity).toBeGreaterThan(base.integrity);
 
-    const breaker = { ...base, career: { ...base.career, race: { ...base.career.race!, platform: [{ issue: 'taxes' as const, stance: -2 }] } } };
+    const breaker = {
+      ...base,
+      career: { ...base.career, race: { ...base.career.race!, platform: [{ issue: 'taxes' as const, stance: -2 }] } },
+    };
     const broken = applyAction({ ...breaker, decisions: hand }, { type: 'RESOLVE_DECISIONS', apply: ['cm_property_tax_freeze'] });
     expect(broken.integrity).toBeLessThan(base.integrity);
     expect(base.integrity - broken.integrity).toBeGreaterThan(kept.integrity - base.integrity);

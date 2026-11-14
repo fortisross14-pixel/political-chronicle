@@ -1,5 +1,16 @@
 // Money: income, upkeep, the Market and skill growth (DESIGN §6.2, §9).
-import { EVENT_CARDS, getEventCard, getOffice, getPerson, getRegion, getSkillCard, MARKET_COST_FACTOR, MARKET_WEIGHTS, PERSON_PRICE, SKILL_CARDS } from '../data';
+import {
+  EVENT_CARDS,
+  getEventCard,
+  getOffice,
+  getPerson,
+  getRegion,
+  getSkillCard,
+  MARKET_COST_FACTOR,
+  MARKET_WEIGHTS,
+  PERSON_PRICE,
+  SKILL_CARDS,
+} from '../data';
 import type { SkillCard } from '../data';
 import { turnNo } from './events';
 import { poll } from './opinion';
@@ -106,9 +117,7 @@ export function collectIncome(state: GameState): GameState {
 
 function availableSkillCards(state: GameState): SkillCard[] {
   const cap = skillCap(state);
-  return SKILL_CARDS.filter(
-    (c) => (!c.requiresParty || state.career.affiliation !== 'IND') && state.politician.skills[c.skill] < cap,
-  );
+  return SKILL_CARDS.filter((c) => (!c.requiresParty || state.career.affiliation !== 'IND') && state.politician.skills[c.skill] < cap);
 }
 
 function weightedPick(rng: Rng, weights: [string, number][]): string {
@@ -128,7 +137,11 @@ export function dealMarket(state: GameState): GameState {
   const skills = rng.shuffle(availableSkillCards(state)).slice(0, MARKET_SKILL_OFFERS);
   const offers: MarketOffer[] = skills.map((c) => ({ kind: 'skill', cardId: c.id }));
   for (let i = 0; i < MARKET_PERSON_OFFERS; i++) {
-    const personId = rollPerson(state, rng, offers.filter((o) => o.kind === 'person').map((o) => o.cardId));
+    const personId = rollPerson(
+      state,
+      rng,
+      offers.filter((o) => o.kind === 'person').map((o) => o.cardId),
+    );
     if (personId) offers.push({ kind: 'person', cardId: personId });
   }
   const eventWeights = EVENT_CARDS.filter((c) => MARKET_WEIGHTS[c.id] && (!c.requiresParty || state.career.affiliation !== 'IND')).map(

@@ -107,7 +107,10 @@ export function buildRunSummary(state: GameState): RunSummary {
   const generals = state.elections.filter((e) => e.kind === 'general');
   // Offices served, plus any won on the final Election Day (a scenario can end before you take office).
   const offices = [
-    ...new Set([...state.snapshots.map((s) => s.officeId).filter((o): o is string => !!o), ...generals.filter((e) => e.playerWon).map((e) => e.officeId)]),
+    ...new Set([
+      ...state.snapshots.map((s) => s.officeId).filter((o): o is string => !!o),
+      ...generals.filter((e) => e.playerWon).map((e) => e.officeId),
+    ]),
   ];
   const highest = offices.sort((a, b) => LADDER[getOffice(b).level] - LADDER[getOffice(a).level])[0];
   const result = state.scenario?.result;

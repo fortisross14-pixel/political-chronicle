@@ -33,7 +33,12 @@ function governor(party: 'DU' | 'RP', control: 'DU' | 'RP' | 'split', law = 3, d
   return {
     ...s,
     politician: { ...s.politician, skills: { ...s.politician.skills, law, diplomacy } },
-    career: { ...s.career, affiliation: party, partyStanding: 60, office: { ...s.career.office!, officeId: 'governor-ny', approval: { 'ny-north': 0.6 } } },
+    career: {
+      ...s.career,
+      affiliation: party,
+      partyStanding: 60,
+      office: { ...s.career.office!, officeId: 'governor-ny', approval: { 'ny-north': 0.6 } },
+    },
     chambers: { ...s.chambers, state: { NY: control } },
     team: { cards: [], assigned: {}, nextUid: 1 },
   };
@@ -41,7 +46,11 @@ function governor(party: 'DU' | 'RP', control: 'DU' | 'RP' | 'split', law = 3, d
 
 describe('hiring people in the Market', () => {
   const empty = (s: GameState): GameState => ({ ...s, team: { cards: [], assigned: {}, nextUid: 1 } });
-  const offer = (s: GameState, personId: string): GameState => ({ ...s, funds: 1e6, market: { turnNo: s.snapshots.length, offers: [{ kind: 'person', cardId: personId }] } });
+  const offer = (s: GameState, personId: string): GameState => ({
+    ...s,
+    funds: 1e6,
+    market: { turnNo: s.snapshots.length, offers: [{ kind: 'person', cardId: personId }] },
+  });
 
   it('the Market offers a person you don’t already have, every turn', () => {
     const s = newRun();
@@ -113,7 +122,9 @@ describe('roles & boosts', () => {
     const s = readyRun();
     const base = applyAction(applyAction(s, { type: 'RESOLVE_DECISIONS', apply: [s.decisions!.cardIds[0]!] }), { type: 'END_TURN' });
     const boosted0 = grantPerson({ ...s, team: { cards: [], assigned: {}, nextUid: 1 } }, 'cm_harlan');
-    const boosted = applyAction(applyAction(boosted0, { type: 'RESOLVE_DECISIONS', apply: [boosted0.decisions!.cardIds[0]!] }), { type: 'END_TURN' });
+    const boosted = applyAction(applyAction(boosted0, { type: 'RESOLVE_DECISIONS', apply: [boosted0.decisions!.cardIds[0]!] }), {
+      type: 'END_TURN',
+    });
     expect(boosted.energy).toBe(base.energy + 1);
   });
 });
@@ -145,7 +156,16 @@ describe('legislature', () => {
     const s0 = governor('DU', 'RP', 0, 0);
     let failedOnce = false;
     for (let i = 0; i < 30 && !failedOnce; i++) {
-      const s = { ...s0, rng: i, decisions: { turnNo: s0.snapshots.length, cardIds: ['gv_housing_compact', 'gv_snowstorm', 'gv_gas_ban'], resolved: false, applied: [] } };
+      const s = {
+        ...s0,
+        rng: i,
+        decisions: {
+          turnNo: s0.snapshots.length,
+          cardIds: ['gv_housing_compact', 'gv_snowstorm', 'gv_gas_ban'],
+          resolved: false,
+          applied: [],
+        },
+      };
       const after = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: ['gv_housing_compact'] });
       if (after.decisions!.failed!.includes('gv_housing_compact')) {
         failedOnce = true;

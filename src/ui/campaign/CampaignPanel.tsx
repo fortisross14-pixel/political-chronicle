@@ -28,8 +28,8 @@ export function CampaignPanel({ state }: { state: GameState }) {
       </div>
       {race.primary && (
         <div className="primary-banner">
-          <strong>{PARTIES[race.primary.party].name} primary</strong> vs {race.primary.challenger}, decided at the end of Mar {race.electionYear}. Party voters
-          weigh your fit with the platform, your standing and how well they know you. Your expected share:{' '}
+          <strong>{PARTIES[race.primary.party].name} primary</strong> vs {race.primary.challenger}, decided at the end of Mar{' '}
+          {race.electionYear}. Party voters weigh your fit with the platform, your standing and how well they know you. Your expected share:{' '}
           <b className={primaryShare(state) >= 0.5 ? 'pos' : 'neg'}>{pct(primaryShare(state))}</b>.
         </div>
       )}
@@ -54,7 +54,9 @@ export function CampaignPanel({ state }: { state: GameState }) {
       </div>
       <div className="intel small">
         {state.politician.skills.strategy < INTEL.standings ? (
-          <span className="muted">Raise Strategy to {INTEL.standings} to read your opponents (and {INTEL.nextMove} to anticipate their moves).</span>
+          <span className="muted">
+            Raise Strategy to {INTEL.standings} to read your opponents (and {INTEL.nextMove} to anticipate their moves).
+          </span>
         ) : (
           race.opponents.map((c) => {
             const intel = opponentIntel(state, race, c);

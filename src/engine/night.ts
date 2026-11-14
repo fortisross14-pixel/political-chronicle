@@ -4,7 +4,7 @@ import { getBackground, getEventCard, getItem, getOffice, getRegion } from '../d
 import { eventPrice } from './economy';
 import { clamp } from './opinion';
 import { effectiveSkills } from './people';
-import { Rng } from './rng';
+import type { Rng } from './rng';
 import type { ElectionNight, GameState, NightRegion, RegionId, RegionType } from './types';
 
 export const NIGHT = {
@@ -117,7 +117,13 @@ export function nightView(night: ElectionNight): NightView {
 // ---------- Start, advance, finish ----------
 
 /** Election-day draw → a night to reveal it. `regionShares` are the true final shares. */
-export function startNight(state: GameState, rng: Rng, regionShares: Record<RegionId, number[]>, priors: Record<RegionId, number>, finalPoll: number): GameState {
+export function startNight(
+  state: GameState,
+  rng: Rng,
+  regionShares: Record<RegionId, number[]>,
+  priors: Record<RegionId, number>,
+  finalPoll: number,
+): GameState {
   const race = state.career.race!;
   const regions: Record<RegionId, NightRegion> = {};
   for (const [id, shares] of Object.entries(regionShares)) {
@@ -172,9 +178,15 @@ function updateCalls(state: GameState): GameState {
   let next: ElectionNight = { ...night, regions, ticker };
   if (next.calledFor === undefined) {
     const view = nightView(next);
-    const sd = Math.sqrt(Object.entries(regions).reduce((s, [id, r]) => s + (w[id]! * (1 - counted(r, next.step)) * NIGHT.regionSd) ** 2, 0)) + 0.004;
+    const sd =
+      Math.sqrt(Object.entries(regions).reduce((s, [id, r]) => s + (w[id]! * (1 - counted(r, next.step)) * NIGHT.regionSd) ** 2, 0)) +
+      0.004;
     if (view.countedTotal >= 0.999 || Math.abs(view.margin) > NIGHT.callZ * sd) {
-      next = { ...next, calledFor: view.margin > 0 ? 0 : 1, ticker: [...next.ticker, view.margin > 0 ? 'The race is called: YOU WIN!' : 'The race is called for your opponent.'] };
+      next = {
+        ...next,
+        calledFor: view.margin > 0 ? 0 : 1,
+        ticker: [...next.ticker, view.margin > 0 ? 'The race is called: YOU WIN!' : 'The race is called for your opponent.'],
+      };
     }
   }
   return { ...state, night: next };
@@ -220,7 +232,11 @@ export function mobilizeEffect(state: GameState, regionId: RegionId, multiplier 
   return Math.min(raw, room / w);
 }
 
-export function mobilize(state: GameState, regionId: RegionId, opts: { free?: boolean; multiplier?: number; label?: string } = {}): GameState {
+export function mobilize(
+  state: GameState,
+  regionId: RegionId,
+  opts: { free?: boolean; multiplier?: number; label?: string } = {},
+): GameState {
   const error = mobilizeError(state, regionId, opts.free);
   if (error) throw new Error(error);
   const night = state.night!;
@@ -232,7 +248,10 @@ export function mobilize(state: GameState, regionId: RegionId, opts: { free?: bo
       ...night,
       tokens: opts.free ? night.tokens : night.tokens - 1,
       regions: { ...night.regions, [regionId]: { ...r, boost: r.boost + effect } },
-      ticker: [...night.ticker, `${opts.label ?? 'Volunteers knock doors'} in ${getRegion(regionId).name} (+${(effect * 100).toFixed(1)} pts on the uncounted vote).`],
+      ticker: [
+        ...night.ticker,
+        `${opts.label ?? 'Volunteers knock doors'} in ${getRegion(regionId).name} (+${(effect * 100).toFixed(1)} pts on the uncounted vote).`,
+      ],
     },
   };
 }
@@ -284,19 +303,31 @@ export function adBlitz(state: GameState, free = false): GameState {
   return {
     ...state,
     funds: free ? state.funds : state.funds - adBlitzCost(state),
-    night: { ...night, adBought: true, statewideBoost: night.statewideBoost + effect, ticker: [...night.ticker, 'Your late ads hit every channel.'] },
+    night: {
+      ...night,
+      adBought: true,
+      statewideBoost: night.statewideBoost + effect,
+      ticker: [...night.ticker, 'Your late ads hit every channel.'],
+    },
   };
 }
 
 /** Night-window items. */
-export function useNightItem(state: GameState, uid: number, regionId?: RegionId): GameState {
+export function applyNightItem(state: GameState, uid: number, regionId?: RegionId): GameState {
   const card = state.items.find((i) => i.uid === uid);
   if (!card || !state.night) throw new Error('You can’t use that now.');
   const items = state.items.filter((i) => i.uid !== uid);
   const base = { ...state, items };
   switch (card.itemId) {
     case 'volunteer_list':
-      return { ...base, night: { ...base.night!, tokens: base.night!.tokens + NIGHT.volunteerTokens, ticker: [...base.night!.ticker, 'Fresh volunteers arrive (+2 tokens).'] } };
+      return {
+        ...base,
+        night: {
+          ...base.night!,
+          tokens: base.night!.tokens + NIGHT.volunteerTokens,
+          ticker: [...base.night!.ticker, 'Fresh volunteers arrive (+2 tokens).'],
+        },
+      };
     case 'endorsement':
       return mobilize(base, regionId!, { free: true, multiplier: NIGHT.endorsementMultiplier, label: 'Your endorser rallies voters' });
     case 'poll_watchers':

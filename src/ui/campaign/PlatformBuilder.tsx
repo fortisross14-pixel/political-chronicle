@@ -28,7 +28,9 @@ export function PlatformBuilder({ state, dispatch }: { state: GameState; dispatc
   return (
     <section className="panel">
       <div className="panel-head">
-        <h2>{incumbent ? 'Re-election platform' : 'Your platform'} — {office.name}</h2>
+        <h2>
+          {incumbent ? 'Re-election platform' : 'Your platform'} — {office.name}
+        </h2>
         <span className={full ? 'muted' : 'points-left'}>
           {platform.length}/{MAX_PLATFORM} topics
         </span>
@@ -42,7 +44,11 @@ export function PlatformBuilder({ state, dispatch }: { state: GameState; dispatc
               {raceOptions(state)
                 .filter((o) => o.electionYear === state.clock.year && !fileRaceError(state, o.officeId))
                 .map((o) => (
-                  <button key={o.officeId} title={nominationStatus(state, o.officeId).text} onClick={() => dispatch({ type: 'FILE_RACE', officeId: o.officeId })}>
+                  <button
+                    key={o.officeId}
+                    title={nominationStatus(state, o.officeId).text}
+                    onClick={() => dispatch({ type: 'FILE_RACE', officeId: o.officeId })}
+                  >
                     {getOffice(o.officeId).name}
                   </button>
                 ))}
@@ -51,14 +57,19 @@ export function PlatformBuilder({ state, dispatch }: { state: GameState; dispatc
         </>
       )}
       <p className="muted small">
-        Pick up to {MAX_PLATFORM} topics and a side on each. Every event you hold is about one of them, and the decisions you take will be judged
-        against these promises. Sorted by how much {office.regionIds.length === 1 ? getRegion(office.regionIds[0]!).seatCity : 'the electorate'}{' '}
-        cares.
+        Pick up to {MAX_PLATFORM} topics and a side on each. Every event you hold is about one of them, and the decisions you take will be
+        judged against these promises. Sorted by how much{' '}
+        {office.regionIds.length === 1 ? getRegion(office.regionIds[0]!).seatCity : 'the electorate'} cares.
       </p>
       <ul className="platform-list">
         {rows.map(({ issue, salience, opinion }) => {
           const chosen = picks[issue.id];
-          const relevanceNote = office.level === 'mayor' && issue.mayorRelevance !== 'full' ? (issue.mayorRelevance === 'none' ? 'Little effect as mayor' : 'Partly a local issue') : '';
+          const relevanceNote =
+            office.level === 'mayor' && issue.mayorRelevance !== 'full'
+              ? issue.mayorRelevance === 'none'
+                ? 'Little effect as mayor'
+                : 'Partly a local issue'
+              : '';
           const record = state.record[issue.id];
           return (
             <li key={issue.id} className={chosen !== undefined ? 'chosen' : undefined}>
@@ -66,7 +77,10 @@ export function PlatformBuilder({ state, dispatch }: { state: GameState; dispatc
                 <strong>{issue.name}</strong>
                 <meter min={0} max={1} value={salience} aria-label={`${issue.name}: how much voters care`} />
                 <span className="muted small">
-                  Voters: {Math.abs(opinion) < 0.35 ? 'split' : stanceLabel(issue.id, opinion < 0 ? (opinion <= -1.2 ? -2 : -1) : opinion >= 1.2 ? 2 : 1)}
+                  Voters:{' '}
+                  {Math.abs(opinion) < 0.35
+                    ? 'split'
+                    : stanceLabel(issue.id, opinion < 0 ? (opinion <= -1.2 ? -2 : -1) : opinion >= 1.2 ? 2 : 1)}
                   {relevanceNote && ` · ${relevanceNote}`}
                 </span>
               </div>
@@ -98,7 +112,9 @@ export function PlatformBuilder({ state, dispatch }: { state: GameState; dispatc
                 {chosen !== undefined && (
                   <>
                     <span className={`fit ${fitLabel(alignment(chosen, opinion)).tone}`}>{fitLabel(alignment(chosen, opinion)).text}</span>
-                    {record !== undefined && Math.sign(record) !== Math.sign(chosen) && <span className="fit bad">Flip-flop vs your record</span>}
+                    {record !== undefined && Math.sign(record) !== Math.sign(chosen) && (
+                      <span className="fit bad">Flip-flop vs your record</span>
+                    )}
                   </>
                 )}
               </div>

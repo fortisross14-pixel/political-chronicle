@@ -47,10 +47,14 @@ export function RunResults({ state, outcome, onMenu, onHall }: Props) {
           <div className="rewards">
             <h3>Rewards</h3>
             {outcome.newArtifacts.map((a) => (
-              <div key={a}>🎁 Artifact: {ARTIFACTS_BY_ID[a]!.name} — {ARTIFACTS_BY_ID[a]!.text}</div>
+              <div key={a}>
+                🎁 Artifact: {ARTIFACTS_BY_ID[a]!.name} — {ARTIFACTS_BY_ID[a]!.text}
+              </div>
             ))}
             {outcome.newAbilities.map((a) => (
-              <div key={a}>✨ Ability: {ABILITIES_BY_ID[a]!.name} — {ABILITIES_BY_ID[a]!.text}</div>
+              <div key={a}>
+                ✨ Ability: {ABILITIES_BY_ID[a]!.name} — {ABILITIES_BY_ID[a]!.text}
+              </div>
             ))}
             {outcome.unlockedSandbox && <div>🔓 Sandbox unlocked!</div>}
           </div>

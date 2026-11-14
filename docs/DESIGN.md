@@ -14,11 +14,11 @@
 ## 1. Pillars
 
 1. **The balancing act.** Voters reward you for doing what you promised and for
-   positions that fit *their* region. Your party rewards you for sticking to *its*
+   positions that fit _their_ region. Your party rewards you for sticking to _its_
    platform. In a red state as a Blue (or a blue city as a Red) those
    pull in different directions. That tension is the game.
-2. **Where × What × How.** Every campaign action is a choice of *location*, *issue*
-   (one of your 5 platform topics) and *medium* (TV, social, arena rally...). The same
+2. **Where × What × How.** Every campaign action is a choice of _location_, _issue_
+   (one of your 5 platform topics) and _medium_ (TV, social, arena rally...). The same
    message can win one region and lose another.
 3. **Money buys options.** Funds buy event cards (to campaign) and skill cards (to grow
    your politician). Fundraising is a resource loop, not a side activity.
@@ -75,14 +75,14 @@ the flavour of the decision cards and what gets scored changes.
 
 ### 3.1 Creation
 
-| Field | Options | Mechanical effect |
-|---|---|---|
-| Name | free text | — |
-| Gender | female / male / non-binary | Pronouns and portrait only. **No mechanical effect** (avoids stereotyped modifiers). |
-| Age | 25–65 | Younger: more Energy, fewer starting skill points, longer career. Older: fewer Energy, more skill points (experience). |
-| Place of birth | any region in the game | **Hometown bonus**: +25% recognition and +10 favorability there, permanently decaying slowly. |
-| Background | Lawyer, Teacher, Small-business owner, Veteran, Doctor, Union organizer, Activist, Tech founder | Starting skill bias, starting funds, and +/- affinity with a couple of issues (e.g. Union organizer is credible on Labor). |
-| Starting ideology (optional) | sliders on a few issues | Pre-fills your Record so you don't start blank. |
+| Field                        | Options                                                                                         | Mechanical effect                                                                                                          |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Name                         | free text                                                                                       | —                                                                                                                          |
+| Gender                       | female / male / non-binary                                                                      | Pronouns and portrait only. **No mechanical effect** (avoids stereotyped modifiers).                                       |
+| Age                          | 25–65                                                                                           | Younger: more Energy, fewer starting skill points, longer career. Older: fewer Energy, more skill points (experience).     |
+| Place of birth               | any region in the game                                                                          | **Hometown bonus**: +25% recognition and +10 favorability there, permanently decaying slowly.                              |
+| Background                   | Lawyer, Teacher, Small-business owner, Veteran, Doctor, Union organizer, Activist, Tech founder | Starting skill bias, starting funds, and +/- affinity with a couple of issues (e.g. Union organizer is credible on Labor). |
+| Starting ideology (optional) | sliders on a few issues                                                                         | Pre-fills your Record so you don't start blank.                                                                            |
 
 Starting skill points: `10 + floor((age − 25) / 5)` distributed by the player on top of
 background bonuses, max 5 in any skill at creation.
@@ -92,15 +92,15 @@ background bonuses, max 5 in any skill at creation.
 Each skill runs **1–10**. Skill multiplier used everywhere: `skillMult = 0.6 + 0.08 × skill`
 (skill 1 → 0.68, skill 5 → 1.0, skill 10 → 1.4).
 
-| Skill | Drives |
-|---|---|
-| **Oratory** | Arena rallies, speeches, convention addresses, debate delivery |
-| **Charisma** | Retail politics: town halls, door-knocking, diners; slows favorability loss |
-| **Media Savvy** | TV & cable interviews, press conferences; lowers gaffe chance |
-| **Digital** | Social-media campaigns, podcasts, viral reach & spillover |
+| Skill                     | Drives                                                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Oratory**               | Arena rallies, speeches, convention addresses, debate delivery                                                     |
+| **Charisma**              | Retail politics: town halls, door-knocking, diners; slows favorability loss                                        |
+| **Media Savvy**           | TV & cable interviews, press conferences; lowers gaffe chance                                                      |
+| **Digital**               | Social-media campaigns, podcasts, viral reach & spillover                                                          |
 | **Policy** (intelligence) | Debates, credibility (persuasion multiplier), previews the regional effect of decision cards before you apply them |
-| **Negotiation** | Party standing gains, endorsements, legislative deal cards |
-| **Fundraising** | Donor income per turn, fundraising events |
+| **Negotiation**           | Party standing gains, endorsements, legislative deal cards                                                         |
+| **Fundraising**           | Donor income per turn, fundraising events                                                                          |
 
 Derived (not trained directly):
 
@@ -124,19 +124,19 @@ We model the US as **regions**: a seat city plus its surrounding area. Each regi
 
 ```ts
 interface Region {
-  id: string;               // "ny-nyc"
-  state: string;            // "NY"
-  name: string;             // "New York City"
+  id: string; // "ny-nyc"
+  state: string; // "NY"
+  name: string; // "New York City"
   seatCity: string;
-  type: "urban" | "suburban" | "midsize" | "rural";
-  population: number;       // used to weight statewide races
-  turnout: number;          // 0..1
-  partisanLean: number;     // -1 (strong DU / blue) .. +1 (strong RP / red)
-  issueOpinion: Record<IssueId, number>;   // -2..+2 average stance
-  issueSalience: Record<IssueId, number>;  // 0..1 how much they care
+  type: 'urban' | 'suburban' | 'midsize' | 'rural';
+  population: number; // used to weight statewide races
+  turnout: number; // 0..1
+  partisanLean: number; // -1 (strong DU / blue) .. +1 (strong RP / red)
+  issueOpinion: Record<IssueId, number>; // -2..+2 average stance
+  issueSalience: Record<IssueId, number>; // 0..1 how much they care
   media: { tv; cable; social; inPerson; radio }; // 0.5..1.5 effectiveness
-  mayorOffice?: OfficeId;   // only some regions have a playable mayoralty
-  houseSeat: OfficeId;      // abstracted: one House seat per region
+  mayorOffice?: OfficeId; // only some regions have a playable mayoralty
+  houseSeat: OfficeId; // abstracted: one House seat per region
 }
 ```
 
@@ -148,12 +148,12 @@ Regions inside a state **cover the whole state population**, so statewide races
 
 ### 4.2 POC map — New York (4 regions)
 
-| Region | Seat | Type | Pop share | Lean | Mayor office | Flavour |
-|---|---|---|---|---|---|---|
-| New York City | NYC | urban | 43% | −0.60 | ✅ Mayor of NYC | Transit, housing, policing, LGBTQ rights, social & cable heavy |
-| Suburbs (Long Island & Hudson Valley) | White Plains | suburban | 25% | −0.10 | — | Property taxes, schools, crime; TV heavy, swing region |
-| Western NY | Buffalo | midsize | 15% | +0.05 | ✅ Mayor of Buffalo | Industry, unions, jobs; local TV & radio |
-| North Country & Southern Tier | Watertown | rural | 17% | +0.40 | ✅ Mayor of Watertown | Guns, farming, energy, military (Fort Drum); radio & in-person |
+| Region                                | Seat         | Type     | Pop share | Lean  | Mayor office          | Flavour                                                        |
+| ------------------------------------- | ------------ | -------- | --------- | ----- | --------------------- | -------------------------------------------------------------- |
+| New York City                         | NYC          | urban    | 43%       | −0.60 | ✅ Mayor of NYC       | Transit, housing, policing, LGBTQ rights, social & cable heavy |
+| Suburbs (Long Island & Hudson Valley) | White Plains | suburban | 25%       | −0.10 | —                     | Property taxes, schools, crime; TV heavy, swing region         |
+| Western NY                            | Buffalo      | midsize  | 15%       | +0.05 | ✅ Mayor of Buffalo   | Industry, unions, jobs; local TV & radio                       |
+| North Country & Southern Tier         | Watertown    | rural    | 17%       | +0.40 | ✅ Mayor of Watertown | Guns, farming, energy, military (Fort Drum); radio & in-person |
 
 Offices in the POC: 3 mayors, 4 House seats, 1 Senate seat (races every 2 years, abstracting
 the two staggered seats), 1 Governor.
@@ -163,23 +163,23 @@ The intended POC journey: born in Watertown → win Watertown mayor easily → j
 
 ### 4.3 Full game — 15 states, 25 regions (expansion target)
 
-| State | Regions |
-|---|---|
-| New York | NYC, Suburbs, Western NY (Buffalo), North Country (Watertown) |
-| California | Los Angeles, Central Valley (Fresno), Bay Area (San Francisco) |
-| Texas | Houston, Austin, West Texas (Lubbock) |
-| Illinois | Chicago, Downstate (Peoria) |
-| Florida | Miami-Dade, I-4 Corridor (Orlando) |
-| Pennsylvania | Philadelphia, Pittsburgh & West |
-| Ohio | Columbus, Mahoning Valley (Youngstown) |
-| Georgia | Atlanta, South Georgia (Macon) |
-| Michigan | Detroit & suburbs |
-| Wisconsin | Milwaukee |
-| Arizona | Phoenix |
-| Colorado | Denver |
-| Massachusetts | Boston |
-| North Carolina | Charlotte |
-| Wyoming | Cheyenne (at-large) |
+| State          | Regions                                                        |
+| -------------- | -------------------------------------------------------------- |
+| New York       | NYC, Suburbs, Western NY (Buffalo), North Country (Watertown)  |
+| California     | Los Angeles, Central Valley (Fresno), Bay Area (San Francisco) |
+| Texas          | Houston, Austin, West Texas (Lubbock)                          |
+| Illinois       | Chicago, Downstate (Peoria)                                    |
+| Florida        | Miami-Dade, I-4 Corridor (Orlando)                             |
+| Pennsylvania   | Philadelphia, Pittsburgh & West                                |
+| Ohio           | Columbus, Mahoning Valley (Youngstown)                         |
+| Georgia        | Atlanta, South Georgia (Macon)                                 |
+| Michigan       | Detroit & suburbs                                              |
+| Wisconsin      | Milwaukee                                                      |
+| Arizona        | Phoenix                                                        |
+| Colorado       | Denver                                                         |
+| Massachusetts  | Boston                                                         |
+| North Carolina | Charlotte                                                      |
+| Wyoming        | Cheyenne (at-large)                                            |
 
 Single-region states make House and statewide races overlap (true for Wyoming). For the
 presidency (post-POC), these 15 states carry scaled electoral votes and stand in for the
@@ -190,24 +190,24 @@ nation.
 Each issue is an axis from **−2 to +2**. Negative is roughly "progressive", positive
 "conservative", but labels are shown per pole, never as left/right.
 
-| Id | −2 pole | +2 pole | Mayor-relevant? |
-|---|---|---|---|
-| taxes | Raise taxes on high earners | Cut taxes broadly | ✅ (local taxes) |
-| min_wage | Raise minimum wage | Leave to the market | ✅ |
-| healthcare | Public option / single payer | Private market | — |
-| guns | Stricter gun control | Protect gun rights | partial |
-| abortion | Protect abortion access | Restrict abortion | — |
-| lgbtq | Expand LGBTQ protections | Limit / roll back | partial |
-| immigration | Path to citizenship | Enforcement first | partial |
-| climate | Green transition | Expand fossil energy | partial |
-| industry | Industrial policy & subsidies | Deregulate & let markets pick | ✅ |
-| policing | Reform & reinvest | Fund & expand police | ✅ |
-| education | Fund public schools | School choice / vouchers | ✅ |
-| housing | Build more & rent protections | Local control / single-family | ✅ |
-| transit | Invest in transit | Prioritise roads & cars | ✅ |
-| labor | Strengthen unions | Right-to-work | partial |
-| cannabis | Legalise | Keep prohibited | partial |
-| small_biz | Regulate business | Cut red tape | ✅ |
+| Id          | −2 pole                       | +2 pole                       | Mayor-relevant?  |
+| ----------- | ----------------------------- | ----------------------------- | ---------------- |
+| taxes       | Raise taxes on high earners   | Cut taxes broadly             | ✅ (local taxes) |
+| min_wage    | Raise minimum wage            | Leave to the market           | ✅               |
+| healthcare  | Public option / single payer  | Private market                | —                |
+| guns        | Stricter gun control          | Protect gun rights            | partial          |
+| abortion    | Protect abortion access       | Restrict abortion             | —                |
+| lgbtq       | Expand LGBTQ protections      | Limit / roll back             | partial          |
+| immigration | Path to citizenship           | Enforcement first             | partial          |
+| climate     | Green transition              | Expand fossil energy          | partial          |
+| industry    | Industrial policy & subsidies | Deregulate & let markets pick | ✅               |
+| policing    | Reform & reinvest             | Fund & expand police          | ✅               |
+| education   | Fund public schools           | School choice / vouchers      | ✅               |
+| housing     | Build more & rent protections | Local control / single-family | ✅               |
+| transit     | Invest in transit             | Prioritise roads & cars       | ✅               |
+| labor       | Strengthen unions             | Right-to-work                 | partial          |
+| cannabis    | Legalise                      | Keep prohibited               | partial          |
+| small_biz   | Regulate business             | Cut red tape                  | ✅               |
 
 **Jurisdiction relevance** multiplies the effect of an issue by office:
 ✅ = 1.0, partial = 0.6, — = 0.3 at mayor level; every issue is 1.0 at House/Senate/Governor.
@@ -232,7 +232,7 @@ For a stance `x` on issue `i` in region `r` with average opinion `o`:
 alignment(x, r, i) = clamp(1 − |x − o| / 1.5, −1, +1)
 ```
 
-A +2 stance in a region averaging −2 has alignment −1: talking about it there *hurts*.
+A +2 stance in a region averaging −2 has alignment −1: talking about it there _hurts_.
 Being 1.5 points away from voters is neutral; anything further costs you. (Tuned in M3: the
 original `/ 2` let a stance on the wrong side of a moderate region still help.)
 
@@ -279,23 +279,23 @@ Three card families. Every card is data (JSON/TS), no bespoke code per card.
 ### 6.1 Event cards (campaigning & outreach)
 
 Played from your hand: **pick a region** (in the race's jurisdiction — later anywhere) and
-**one of your 5 platform topics**. Consumable unless marked *Basic*.
+**one of your 5 platform topics**. Consumable unless marked _Basic_.
 
-| Card | Cost | Energy | Medium | Skill | Reach | Persuasion | Spillover |
-|---|---|---|---|---|---|---|---|
-| Door-knocking *(Basic)* | $0 | 2 | inPerson | Charisma | 0.04 | 0.06 | none |
-| Free social post *(Basic)* | $0 | 1 | social | Digital | 0.03 | 0.02 | 20% state |
-| Call time *(Basic)* | $0 | 1 | — | Fundraising | 0 | 0 | → +Fundraising × $1.5k × (0.5 + R) |
-| Town hall | $5k | 2 | inPerson | Charisma | 0.06 | 0.10 | none |
-| Local radio interview | $8k | 1 | radio | Media | 0.08 | 0.05 | none |
-| Local TV ad buy | $40k | 1 | tv | Media | 0.15 | 0.06 | 15% state |
-| CNN-style cable interview | $25k | 1 | cable | Media | 0.12 | 0.08 | 50% state, 10% national |
-| Social media campaign | $30k | 1 | social | Digital | 0.14 | 0.05 | 40% state |
-| Podcast tour | $15k | 2 | social | Digital | 0.08 | 0.09 | 30% state |
-| Arena rally | $120k | 3 | inPerson | Oratory | 0.20 | 0.14 | 20% state |
-| Televised debate | $0 (drawn, not bought) | 2 | tv | Policy + Oratory | 0.18 | ±0.15 | 60% state |
-| Fundraising dinner | $10k | 2 | inPerson | Fundraising | 0.02 | 0 | → +$ (Fundraising × recognition) |
-| Party unity event | $20k | 2 | inPerson | Negotiation | 0.05 | 0.03 | → +Party standing |
+| Card                       | Cost                   | Energy | Medium   | Skill            | Reach | Persuasion | Spillover                          |
+| -------------------------- | ---------------------- | ------ | -------- | ---------------- | ----- | ---------- | ---------------------------------- |
+| Door-knocking _(Basic)_    | $0                     | 2      | inPerson | Charisma         | 0.04  | 0.06       | none                               |
+| Free social post _(Basic)_ | $0                     | 1      | social   | Digital          | 0.03  | 0.02       | 20% state                          |
+| Call time _(Basic)_        | $0                     | 1      | —        | Fundraising      | 0     | 0          | → +Fundraising × $1.5k × (0.5 + R) |
+| Town hall                  | $5k                    | 2      | inPerson | Charisma         | 0.06  | 0.10       | none                               |
+| Local radio interview      | $8k                    | 1      | radio    | Media            | 0.08  | 0.05       | none                               |
+| Local TV ad buy            | $40k                   | 1      | tv       | Media            | 0.15  | 0.06       | 15% state                          |
+| CNN-style cable interview  | $25k                   | 1      | cable    | Media            | 0.12  | 0.08       | 50% state, 10% national            |
+| Social media campaign      | $30k                   | 1      | social   | Digital          | 0.14  | 0.05       | 40% state                          |
+| Podcast tour               | $15k                   | 2      | social   | Digital          | 0.08  | 0.09       | 30% state                          |
+| Arena rally                | $120k                  | 3      | inPerson | Oratory          | 0.20  | 0.14       | 20% state                          |
+| Televised debate           | $0 (drawn, not bought) | 2      | tv       | Policy + Oratory | 0.18  | ±0.15      | 60% state                          |
+| Fundraising dinner         | $10k                   | 2      | inPerson | Fundraising      | 0.02  | 0          | → +$ (Fundraising × recognition)   |
+| Party unity event          | $20k                   | 2      | inPerson | Negotiation      | 0.05  | 0.03       | → +Party standing                  |
 
 **You pay when you buy, not when you play.** The Cost column is the Market price; holding the
 event then costs only Energy. Prices scale with the media market of your race (or office, or
@@ -326,22 +326,22 @@ F      = clamp(F + ΔF × (1 − |F|), −1, 1)
   (flip-flopping is less persuasive).
 - **Gaffe**: small chance on TV/cable/debate (`8% − 0.6% × Media Savvy`) of a negative swing.
 
-The UI previews the *expected* effect in each region before you confirm (coarse for low
+The UI previews the _expected_ effect in each region before you confirm (coarse for low
 Policy skill, precise for high).
 
 ### 6.2 Skill cards (profile growth)
 
 Bought in the Market, applied immediately, permanent.
 
-| Card | Effect | Cost |
-|---|---|---|
-| Speech coach | +1 Oratory | $5k × current level |
-| Retail-politics workshop | +1 Charisma, 1 Energy now | $5k × level |
-| Media training | +1 Media Savvy | $5k × level |
-| Hire a digital director | +1 Digital, $2k per 3 months salary (quits, taking the point, if unpaid) | $6k × level |
-| Think-tank fellowship | +1 Policy, costs 2 Energy this turn | $4k × level |
-| Mentorship with a party elder | +1 Negotiation, +5 party standing | requires party member (M6) |
-| Donor network gala | +1 Fundraising, 1 Energy now | $8k × level |
+| Card                          | Effect                                                                   | Cost                       |
+| ----------------------------- | ------------------------------------------------------------------------ | -------------------------- |
+| Speech coach                  | +1 Oratory                                                               | $5k × current level        |
+| Retail-politics workshop      | +1 Charisma, 1 Energy now                                                | $5k × level                |
+| Media training                | +1 Media Savvy                                                           | $5k × level                |
+| Hire a digital director       | +1 Digital, $2k per 3 months salary (quits, taking the point, if unpaid) | $6k × level                |
+| Think-tank fellowship         | +1 Policy, costs 2 Energy this turn                                      | $4k × level                |
+| Mentorship with a party elder | +1 Negotiation, +5 party standing                                        | requires party member (M6) |
+| Donor network gala            | +1 Fundraising, 1 Energy now                                             | $8k × level                |
 
 (Prices cut to about a third of the first draft in M4 so a mayoral campaign budget of
 $20–70k can afford one or two.)
@@ -354,20 +354,20 @@ is paced by career progress.
 Every turn you are dealt **3 decision cards**. You must **apply at least 1 and up to 3**;
 the rest are rejected. You cannot pass.
 
-- **While campaigning** they are *campaign moments*: interest-group questionnaires,
+- **While campaigning** they are _campaign moments_: interest-group questionnaires,
   endorsement offers, debate questions, local controversies ("Do you support the
   stadium tax break?").
-- **While in office** they are *bills and executive actions*, filtered by office level
+- **While in office** they are _bills and executive actions_, filtered by office level
   (zoning reform as mayor, a federal farm bill in the House, a state budget as Governor).
 
 ```ts
 interface DecisionCard {
   id: string;
   title: string;
-  offices: OfficeLevel[];           // where it can be drawn
-  tags: { issue: IssueId; stance: number }[];  // what applying it means
-  partyPriority?: "DU" | "RP";        // marked as a whip vote for that party
-  rejectCost?: number;              // some cards hurt to reject (crisis response)
+  offices: OfficeLevel[]; // where it can be drawn
+  tags: { issue: IssueId; stance: number }[]; // what applying it means
+  partyPriority?: 'DU' | 'RP'; // marked as a whip vote for that party
+  rejectCost?: number; // some cards hurt to reject (crisis response)
   effects?: { funds?: number; integrity?: number; regions?: Partial<Record<RegionId, number>> };
 }
 ```
@@ -383,7 +383,7 @@ interface DecisionCard {
 4. **Party**: agreement with the party platform raises Party standing; disagreement on a
    `partyPriority` card lowers it sharply.
 
-**Rejecting** is neutral except for `rejectCost` cards. Choosing *which* card to apply is
+**Rejecting** is neutral except for `rejectCost` cards. Choosing _which_ card to apply is
 the puzzle: 3 bad options means picking the least bad one.
 
 ### 6.4 Governing (M5)
@@ -417,13 +417,13 @@ scandals (post-POC) should make safe incumbents less certain.
 
 ## 7. Offices & elections
 
-| Office | Jurisdiction | Term | Campaign length | Partisan? | How to get on the ballot |
-|---|---|---|---|---|---|
-| Mayor | 1 region | 4 yrs = 13 turns | election year (4 turns) | No (independent OK) | Open — just file |
-| U.S. House | 1 region | 2 yrs = 7 turns | election year (4 turns) | Yes | Party nomination (standing ≥ 40) or primary |
-| U.S. Senate | state | 6 yrs = 19 turns | election year (4 turns) | Yes | Party nomination (standing ≥ 60) or primary |
-| Governor | state | 4 yrs = 13 turns | election year (4 turns) | Yes | Party nomination (standing ≥ 60) or primary |
-| *President (post-POC)* | nation | 4 yrs = 13 turns | election year (4 turns) + primaries | Yes | Presidential primaries (standing ≥ 75 + national recognition) |
+| Office                 | Jurisdiction | Term             | Campaign length                     | Partisan?           | How to get on the ballot                                      |
+| ---------------------- | ------------ | ---------------- | ----------------------------------- | ------------------- | ------------------------------------------------------------- |
+| Mayor                  | 1 region     | 4 yrs = 13 turns | election year (4 turns)             | No (independent OK) | Open — just file                                              |
+| U.S. House             | 1 region     | 2 yrs = 7 turns  | election year (4 turns)             | Yes                 | Party nomination (standing ≥ 40) or primary                   |
+| U.S. Senate            | state        | 6 yrs = 19 turns | election year (4 turns)             | Yes                 | Party nomination (standing ≥ 60) or primary                   |
+| Governor               | state        | 4 yrs = 13 turns | election year (4 turns)             | Yes                 | Party nomination (standing ≥ 60) or primary                   |
+| _President (post-POC)_ | nation       | 4 yrs = 13 turns | election year (4 turns) + primaries | Yes                 | Presidential primaries (standing ≥ 75 + national recognition) |
 
 House members are always in a 3-turn year followed by a 4-turn campaign year. Statewide
 races are bigger, so the opponent starts stronger rather than the campaign being longer.
@@ -447,10 +447,10 @@ races are bigger, so the opponent starts stronger rather than the campaign being
 
 Two **fictional** parties in the POC, easy to map to real life but not the real ones:
 
-| Party | Short | Colour | Mascot | Vibe |
-|---|---|---|---|---|
-| **Democratic Union** | DU, "the Blues" | blue | the Mule | centre-left coalition of cities, unions and progressives |
-| **Republic Party** | RP, "the Reds" | red | the Mammoth | centre-right coalition of business, rural and religious voters |
+| Party                | Short           | Colour | Mascot      | Vibe                                                           |
+| -------------------- | --------------- | ------ | ----------- | -------------------------------------------------------------- |
+| **Democratic Union** | DU, "the Blues" | blue   | the Mule    | centre-left coalition of cities, unions and progressives       |
+| **Republic Party**   | RP, "the Reds"  | red    | the Mammoth | centre-right coalition of business, rural and religious voters |
 
 Both have stylised platforms (a −2..+2 position and a priority weight on each issue). Independent is a
 valid affiliation but gets no party funds and pays the `indepPenalty` above mayor.
@@ -534,13 +534,13 @@ a Watertown-minded Blue on its ballot, and North Country voters won't elect one.
 
 ## 9. Economy
 
-| Source | Formula (per turn) |
-|---|---|
-| Donors | `(1k + 1.5k × Fundraising × R̄) × phase × monthsFactor`, where R̄ is your recognition averaged over the jurisdiction (pop × turnout); phase = 1 while running, 0.5 in office, 0.25 out of politics; ×3 for statewide jurisdictions |
-| Party | see §8.4 / §8.6 |
-| Fundraising events | dinner and call time, see §6.1 |
-| Salary | token: per 3 months mayor $1k, House $1.5k, Senate/Governor $2k |
-| Staff | − upkeep per 3 months |
+| Source             | Formula (per turn)                                                                                                                                                                                                               |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Donors             | `(1k + 1.5k × Fundraising × R̄) × phase × monthsFactor`, where R̄ is your recognition averaged over the jurisdiction (pop × turnout); phase = 1 while running, 0.5 in office, 0.25 out of politics; ×3 for statewide jurisdictions |
+| Party              | see §8.4 / §8.6                                                                                                                                                                                                                  |
+| Fundraising events | dinner and call time, see §6.1                                                                                                                                                                                                   |
+| Salary             | token: per 3 months mayor $1k, House $1.5k, Senate/Governor $2k                                                                                                                                                                  |
+| Staff              | − upkeep per 3 months                                                                                                                                                                                                            |
 
 Income lands at the start of each turn (shown next to Funds in the header). Spending: event
 cards, skill cards, staff. Funds carry over between races; a losing campaign that overspent
@@ -562,6 +562,7 @@ one that doesn't.
 Top-level tabs (plus a header with date, office, funds, energy, integrity):
 
 ### 10.1 Government
+
 - **Map** of the state (POC: schematic SVG of New York's 4 regions). Toggle layers: vote
   intention, recognition, favorability, approval, partisan lean, issue salience for a
   selected topic.
@@ -573,6 +574,7 @@ Top-level tabs (plus a header with date, office, funds, energy, integrity):
 - **End turn** button.
 
 ### 10.2 My profile (sub-tabs)
+
 - **Overview** – portrait, age, background, current office, key numbers.
 - **Skills** – 7 skills with level, cap, and history.
 - **Ideals & record** – your current 5 platform topics, full Record across 16 issues,
@@ -581,9 +583,11 @@ Top-level tabs (plus a header with date, office, funds, energy, integrity):
 - **Stats** – charts over time (funds, recognition, approval, standing, alignment, skills).
 
 ### 10.3 My party
+
 - Platform comparison, standing, alignment, funds history, nomination requests (§8.5).
 
 ### Outside a run
+
 - **New run** (character creator), **Continue**, **Hall of Runs** (compare finished
   careers: highest office, years served, elections W/L, funds raised, promises kept %,
   legacy score; charts overlaid).
@@ -607,7 +611,7 @@ Governor 40, President 100) × years served, + promises kept %, + peak approval,
 
 - **Stack**: React + Vite + TypeScript, static site deployed to GitHub Pages.
 - **Engine** (`src/engine/`) is pure TypeScript, no React: `applyAction(state, action) →
-  state`, seeded RNG, fully deterministic and unit-testable (Vitest).
+state`, seeded RNG, fully deterministic and unit-testable (Vitest).
 - **Data** (`src/data/`): regions, states, issues, parties, offices and every card as typed
   data files. Adding a state = adding data, not code.
 - **UI** (`src/ui/`): React components reading state from a single store (Zustand or

@@ -42,7 +42,8 @@ export function effectivePlatform(party: PartyId, stateId: StateId): Record<Issu
   return Object.fromEntries(
     ISSUE_IDS.map((id) => {
       const local = chapter[id];
-      const position = local === undefined ? national[id].position : PARTY.nationalShare * national[id].position + (1 - PARTY.nationalShare) * local;
+      const position =
+        local === undefined ? national[id].position : PARTY.nationalShare * national[id].position + (1 - PARTY.nationalShare) * local;
       return [id, { position, weight: national[id].weight }];
     }),
   ) as Record<IssueId, PlatformPlank>;
@@ -105,7 +106,9 @@ export function invitations(state: GameState): Invitation[] {
       const alignment = partyAlignment(state, party);
       const switching = state.career.affiliation !== 'IND';
       const bg = getBackground(state.politician.backgroundId);
-      const base = switching ? PARTY.switchBase + PARTY.switchPerAlignment * alignment : PARTY.joinBase + PARTY.joinPerAlignment * alignment;
+      const base = switching
+        ? PARTY.switchBase + PARTY.switchPerAlignment * alignment
+        : PARTY.joinBase + PARTY.joinPerAlignment * alignment;
       const bonus = !switching && native(state) ? TRAITS.nativeStanding : 0;
       const startingStanding = Math.round(Math.max(base + bonus, switching ? 0 : (bg.perks.partyStandingFloor ?? 0)));
       return { party, alignment, startingStanding, switching };
@@ -116,7 +119,8 @@ export function joinError(state: GameState, party: PartyId): string | undefined 
   if (state.ended) return 'Your career is over.';
   if (state.career.affiliation === party) return 'You are already a member.';
   if (!state.elections.length) return 'Parties notice you once you’ve run for office.';
-  if (state.career.race && getOffice(state.career.race.officeId).partisan) return 'You can’t change parties in the middle of a partisan race.';
+  if (state.career.race && getOffice(state.career.race.officeId).partisan)
+    return 'You can’t change parties in the middle of a partisan race.';
   return undefined;
 }
 
@@ -144,7 +148,8 @@ export function partyFunds(state: GameState, competitiveness: number): number {
   if (!id) return 0;
   const level = getOffice(id).level;
   const alignment = partyAlignment(state, party);
-  const amount = PARTY_FUNDS_BASE[level] * ((state.career.partyStanding ?? 0) / 100) * alignment ** 2 * competitiveness * monthsFactor(state.clock);
+  const amount =
+    PARTY_FUNDS_BASE[level] * ((state.career.partyStanding ?? 0) / 100) * alignment ** 2 * competitiveness * monthsFactor(state.clock);
   return Math.round(amount / 100) * 100;
 }
 
@@ -166,10 +171,26 @@ export function nominationStatus(state: GameState, officeId: OfficeId): Nominati
   if (!party) return { kind: 'independent', text: 'Run as an independent: no party money and a penalty with voters.' };
   const required = office.nominationStanding ?? 50;
   const standing = Math.round(state.career.partyStanding ?? 0);
-  if (standing >= required) return { kind: 'nominee', required, standing, text: `The ${PARTIES[party].nickname} will back you (standing ${standing} ≥ ${required}).` };
+  if (standing >= required)
+    return {
+      kind: 'nominee',
+      required,
+      standing,
+      text: `The ${PARTIES[party].nickname} will back you (standing ${standing} ≥ ${required}).`,
+    };
   if (standing >= required - PARTY.primaryWindow)
-    return { kind: 'primary', required, standing, text: `You’ll have to win a primary first (standing ${standing}, ${required} for an uncontested nomination).` };
-  return { kind: 'denied', required, standing, text: `The party won’t let you on its ballot (standing ${standing}; primaries need ${required - PARTY.primaryWindow}).` };
+    return {
+      kind: 'primary',
+      required,
+      standing,
+      text: `You’ll have to win a primary first (standing ${standing}, ${required} for an uncontested nomination).`,
+    };
+  return {
+    kind: 'denied',
+    required,
+    standing,
+    text: `The party won’t let you on its ballot (standing ${standing}; primaries need ${required - PARTY.primaryWindow}).`,
+  };
 }
 
 // ---------- Primaries ----------

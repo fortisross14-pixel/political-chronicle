@@ -63,7 +63,11 @@ export function Creator({ onCreate, onCancel }: Props) {
   const firstRace = mayoralty ? getOffice(mayoralty) : undefined;
   const start = initialRegions({ name, gender, startAge: age, homeState, residentRegionId, backgroundId, skills });
   const cityStart = start[residentRegionId]!;
-  const fit = background.favoredStates.includes(residentStateId) ? 'favored' : background.disfavoredStates?.includes(residentStateId) ? 'disfavored' : 'neutral';
+  const fit = background.favoredStates.includes(residentStateId)
+    ? 'favored'
+    : background.disfavoredStates?.includes(residentStateId)
+      ? 'disfavored'
+      : 'neutral';
 
   // Background or age changes invalidate the allocation, so re-spread the points.
   const resetAllocation = (bg: string, a: number) => setAllocation(autoAllocate(bg, a));
@@ -95,7 +99,13 @@ export function Creator({ onCreate, onCancel }: Props) {
             <legend>Gender</legend>
             <div className="segmented">
               {GENDERS.map((g) => (
-                <button type="button" key={g.id} className={gender === g.id ? 'active' : undefined} aria-pressed={gender === g.id} onClick={() => setGender(g.id)}>
+                <button
+                  type="button"
+                  key={g.id}
+                  className={gender === g.id ? 'active' : undefined}
+                  aria-pressed={gender === g.id}
+                  onClick={() => setGender(g.id)}
+                >
                   {g.label}
                 </button>
               ))}
@@ -168,17 +178,17 @@ export function Creator({ onCreate, onCancel }: Props) {
                 <>
                   <strong>Native {US_STATE_NAMES[homeState]}er</strong>
                   <span className="small">
-                    Your city knows you ({pct(TRAITS.nativeRecognition)} recognition, vs {pct(TRAITS.transplantRecognition)} for a newcomer) and likes you; +{TRAITS.nativeStanding} standing when you join a party.
+                    Your city knows you ({pct(TRAITS.nativeRecognition)} recognition, vs {pct(TRAITS.transplantRecognition)} for a newcomer)
+                    and likes you; +{TRAITS.nativeStanding} standing when you join a party.
                   </span>
                 </>
               ) : (
                 <>
-                  <strong>
-                    Transplant from {US_STATE_NAMES[homeState]}
-                  </strong>
+                  <strong>Transplant from {US_STATE_NAMES[homeState]}</strong>
                   <span className="small">
-                    Newcomer doubt: −{Math.round(TRAITS.newcomerPenalty * 100)} favorability (milder in big cities, harsher in small towns), fading over {TRAITS.newcomerYears} years. Outside donors from your home state: +
-                    {money(TRAITS.outsideDonorBase)} a quarter (more with Economics). Later, a presidential run gets a home-state bonus in both states.
+                    Newcomer doubt: −{Math.round(TRAITS.newcomerPenalty * 100)} favorability (milder in big cities, harsher in small towns),
+                    fading over {TRAITS.newcomerYears} years. Outside donors from your home state: +{money(TRAITS.outsideDonorBase)} a
+                    quarter (more with Economics). Later, a presidential run gets a home-state bonus in both states.
                   </span>
                 </>
               )}
@@ -189,7 +199,11 @@ export function Creator({ onCreate, onCancel }: Props) {
             <legend>Background</legend>
             <div className="background-grid">
               {BACKGROUNDS.map((b) => {
-                const here = b.favoredStates.includes(residentStateId) ? 'good' : b.disfavoredStates?.includes(residentStateId) ? 'bad' : undefined;
+                const here = b.favoredStates.includes(residentStateId)
+                  ? 'good'
+                  : b.disfavoredStates?.includes(residentStateId)
+                    ? 'bad'
+                    : undefined;
                 return (
                   <button
                     type="button"
@@ -203,7 +217,11 @@ export function Creator({ onCreate, onCancel }: Props) {
                   >
                     <strong>
                       {b.name}
-                      {here && <span className={`fit ${here}`}>{here === 'good' ? `Favored in ${residentStateId}` : `Disliked in ${residentStateId}`}</span>}
+                      {here && (
+                        <span className={`fit ${here}`}>
+                          {here === 'good' ? `Favored in ${residentStateId}` : `Disliked in ${residentStateId}`}
+                        </span>
+                      )}
                     </strong>
                     <span className="small muted">{b.blurb}</span>
                     <span className="chips">
@@ -253,13 +271,23 @@ export function Creator({ onCreate, onCancel }: Props) {
                     <span className="muted small">{SKILL_HINTS[id]}</span>
                   </div>
                   <div className="stepper">
-                    <button type="button" aria-label={`Lower ${SKILL_LABELS[id]}`} disabled={!(allocation[id] ?? 0)} onClick={() => bump(id, -1)}>
+                    <button
+                      type="button"
+                      aria-label={`Lower ${SKILL_LABELS[id]}`}
+                      disabled={!(allocation[id] ?? 0)}
+                      onClick={() => bump(id, -1)}
+                    >
                       −
                     </button>
                     <span className="num" title={`${base[id]} from background, +${allocation[id] ?? 0} allocated`}>
                       {skills[id]}
                     </span>
-                    <button type="button" aria-label={`Raise ${SKILL_LABELS[id]}`} disabled={left <= 0 || skills[id] >= cap} onClick={() => bump(id, 1)}>
+                    <button
+                      type="button"
+                      aria-label={`Raise ${SKILL_LABELS[id]}`}
+                      disabled={left <= 0 || skills[id] >= cap}
+                      onClick={() => bump(id, 1)}
+                    >
                       +
                     </button>
                   </div>
@@ -295,7 +323,11 @@ export function Creator({ onCreate, onCancel }: Props) {
             </dd>
             <dt>Statewide fit</dt>
             <dd className={fit === 'favored' ? 'pos' : fit === 'disfavored' ? 'neg' : undefined}>
-              {fit === 'favored' ? `+${TRAITS.favoredState * 100} favorability (favored state)` : fit === 'disfavored' ? `${TRAITS.disfavoredState * 100} favorability (disliked)` : 'Neutral'}
+              {fit === 'favored'
+                ? `+${TRAITS.favoredState * 100} favorability (favored state)`
+                : fit === 'disfavored'
+                  ? `${TRAITS.disfavoredState * 100} favorability (disliked)`
+                  : 'Neutral'}
             </dd>
             <dt>Credible on</dt>
             <dd>{background.credibleIssues.map((i) => ISSUES_BY_ID[i].name).join(', ')}</dd>

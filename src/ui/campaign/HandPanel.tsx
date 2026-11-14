@@ -121,7 +121,9 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
                   ))}
                 </span>
               )}
-              {preview.gaffeChance > 0 && <span className="muted">Gaffe risk {Math.round(preview.gaffeChance * 100)}% (Media Savvy lowers it)</span>}
+              {preview.gaffeChance > 0 && (
+                <span className="muted">Gaffe risk {Math.round(preview.gaffeChance * 100)}% (Media Savvy lowers it)</span>
+              )}
             </>
           ) : null}
         </div>
@@ -131,7 +133,9 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
             {race && (
               <span>
                 <strong>{race.tokens}</strong> ground-game tokens for election night
-                {race.milestones.length > 0 && <span className="muted"> · milestones: {race.milestones.map((m) => MILESTONES_BY_ID[m]!.name).join(', ')}</span>}
+                {race.milestones.length > 0 && (
+                  <span className="muted"> · milestones: {race.milestones.map((m) => MILESTONES_BY_ID[m]!.name).join(', ')}</span>
+                )}
               </span>
             )}
             {items.map((item) => {
@@ -140,9 +144,16 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
               return (
                 <span key={item.uid} className="item-chip">
                   <strong>{meta.name}</strong>
-                  <span className="muted"> {meta.window === 'night' ? `— election night: ${meta.nightText}` : `— ${meta.campaignText}`}</span>
+                  <span className="muted">
+                    {' '}
+                    {meta.window === 'night' ? `— election night: ${meta.nightText}` : `— ${meta.campaignText}`}
+                  </span>
                   {meta.window !== 'night' && (
-                    <button disabled={!!error} title={error} onClick={() => dispatch({ type: 'USE_ITEM', uid: item.uid, regionId: meta.targetsRegion ? regionId : undefined })}>
+                    <button
+                      disabled={!!error}
+                      title={error}
+                      onClick={() => dispatch({ type: 'USE_ITEM', uid: item.uid, regionId: meta.targetsRegion ? regionId : undefined })}
+                    >
                       Use{meta.targetsRegion ? ` in ${getRegion(regionId).seatCity}` : ''}
                     </button>
                   )}

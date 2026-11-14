@@ -33,7 +33,11 @@ export function award(state: GameState, milestoneId: string): GameState {
   if (m.reward.money) s = { ...s, funds: s.funds + m.reward.money };
   if (m.reward.item) s = { ...s, items: [...s.items, { uid: s.nextItemUid, itemId: m.reward.item }], nextItemUid: s.nextItemUid + 1 };
   if (m.reward.card) s = { ...s, hand: [...s.hand, { uid: s.nextCardUid, cardId: m.reward.card }], nextCardUid: s.nextCardUid + 1 };
-  const reward = m.reward.item ? getItem(m.reward.item).name : m.reward.card ? getEventCard(m.reward.card).name : `$${m.reward.money!.toLocaleString('en-US')}`;
+  const reward = m.reward.item
+    ? getItem(m.reward.item).name
+    : m.reward.card
+      ? getEventCard(m.reward.card).name
+      : `$${m.reward.money!.toLocaleString('en-US')}`;
   return { ...s, log: [...s.log, { year: s.clock.year, turn: s.clock.turn, text: `🏅 ${m.name}: ${m.text} (+${reward})` }] };
 }
 
@@ -74,7 +78,7 @@ export function itemError(state: GameState, uid: number, regionId?: RegionId): s
 }
 
 /** Uses a campaign-window item. Night use goes through the election-night actions. */
-export function useCampaignItem(state: GameState, uid: number, regionId?: RegionId): GameState {
+export function applyCampaignItem(state: GameState, uid: number, regionId?: RegionId): GameState {
   const error = itemError(state, uid, regionId);
   if (error) throw new Error(error);
   const card = state.items.find((i) => i.uid === uid)!;
@@ -87,7 +91,13 @@ export function useCampaignItem(state: GameState, uid: number, regionId?: Region
     const opponents = race.opponents.map((c, i) => {
       if (i !== leader) return c;
       const cur = c.regions[regionId!]!;
-      return { ...c, regions: { ...c.regions, [regionId!]: { ...cur, favorability: nudgeFavorability(cur.favorability, ITEM_EFFECT.dossierFavorability) } } };
+      return {
+        ...c,
+        regions: {
+          ...c.regions,
+          [regionId!]: { ...cur, favorability: nudgeFavorability(cur.favorability, ITEM_EFFECT.dossierFavorability) },
+        },
+      };
     });
     return {
       ...state,

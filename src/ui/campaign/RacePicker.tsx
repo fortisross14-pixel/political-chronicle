@@ -35,9 +35,15 @@ export function RacePicker({ state, dispatch }: { state: GameState; dispatch: (a
                 <td>Nov {o.electionYear}</td>
                 <td>
                   <button disabled={!!error} title={error} onClick={() => dispatch({ type: 'FILE_RACE', officeId: o.officeId })}>
-                    {{ nominee: 'Run as nominee', primary: 'Enter primary', independent: 'Run as independent', nonpartisan: 'File', denied: 'Denied' }[
-                      nominationStatus(state, o.officeId).kind
-                    ]}
+                    {
+                      {
+                        nominee: 'Run as nominee',
+                        primary: 'Enter primary',
+                        independent: 'Run as independent',
+                        nonpartisan: 'File',
+                        denied: 'Denied',
+                      }[nominationStatus(state, o.officeId).kind]
+                    }
                   </button>
                 </td>
               </tr>

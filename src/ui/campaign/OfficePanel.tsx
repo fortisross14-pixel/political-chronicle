@@ -23,7 +23,9 @@ export function OfficePanel({ state, dispatch }: { state: GameState; dispatch: (
             ? state.career.race!.officeId === term.officeId
               ? 'Re-election year'
               : `Running for ${getOffice(state.career.race!.officeId).name} — seat at stake`
-            : yearsLeft <= 1 ? `Re-election campaign starts Jan ${term.termEndsYear}` : `Term ends Nov ${term.termEndsYear}`}
+            : yearsLeft <= 1
+              ? `Re-election campaign starts Jan ${term.termEndsYear}`
+              : `Term ends Nov ${term.termEndsYear}`}
         </span>
       </div>
       <div className="approval-row">
@@ -45,14 +47,16 @@ export function OfficePanel({ state, dispatch }: { state: GameState; dispatch: (
       </div>
       <p className="muted small">
         Approval wears down a little every turn. Sign bills your voters like and that keep your promises; at re-election you are judged on
-        it. Promises this term: <span className="pos">{kept} kept</span>, <span className="neg">{broken} broken</span>. To run for higher office, see
-        My party → Nominations.
+        it. Promises this term: <span className="pos">{kept} kept</span>, <span className="neg">{broken} broken</span>. To run for higher
+        office, see My party → Nominations.
       </p>
       {chamber && (
         <p className="small">
           Bills must pass {chamber.name}, controlled this cycle by{' '}
           <strong>{chamber.control === 'split' ? 'neither party (split)' : `the ${PARTIES[chamber.control].nickname}`}</strong>
-          {state.career.affiliation !== 'IND' && chamber.control === state.career.affiliation ? ' — your party.' : '. LAW, DIP and a legislative director help.'}
+          {state.career.affiliation !== 'IND' && chamber.control === state.career.affiliation
+            ? ' — your party.'
+            : '. LAW, DIP and a legislative director help.'}
         </p>
       )}
       <details>

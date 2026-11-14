@@ -28,7 +28,11 @@ export function StartScreen({ saved, profile, onContinue, onScenarios, onSandbox
         <button className={live ? '' : 'primary'} onClick={onScenarios}>
           Scenarios <span className="muted small">· {totalStars(profile)} ★ earned</span>
         </button>
-        <button disabled={!sandbox} title={sandbox ? undefined : 'Finish the four beginner scenarios to unlock Sandbox'} onClick={onSandbox}>
+        <button
+          disabled={!sandbox}
+          title={sandbox ? undefined : 'Finish the four beginner scenarios to unlock Sandbox'}
+          onClick={onSandbox}
+        >
           Sandbox {sandbox ? '' : '🔒'}
         </button>
         <button disabled={profile.runs.length === 0} onClick={onHall}>

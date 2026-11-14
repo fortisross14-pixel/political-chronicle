@@ -95,7 +95,6 @@ export function hometownMayoralty(regionId: RegionId): string | undefined {
   return OFFICES.find((o) => o.level === 'mayor' && o.regionIds.includes(regionId))?.id;
 }
 
-
 export function createRun(config: NewRunConfig): GameState {
   const { politician } = config;
   getRegion(politician.residentRegionId); // validates birthplace

@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { getDecisionCard } from '../data';
 import { botCharacter, playCampaign, playTurn, reelectionRate } from '../sim/bot';
-import { applyAction, averageApproval, decisionContext, decisionImpact, endTurnBlocker, governTick, previewEvent, raceViews } from './index';
+import {
+  applyAction,
+  averageApproval,
+  decisionContext,
+  decisionImpact,
+  endTurnBlocker,
+  governTick,
+  previewEvent,
+  raceViews,
+} from './index';
 import { newRun } from './testUtils';
 import type { GameState } from './types';
 

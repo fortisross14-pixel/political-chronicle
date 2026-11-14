@@ -109,14 +109,7 @@ export interface Office {
 
 // ---------- Politician ----------
 
-export type SkillId =
-  | 'charisma'
-  | 'economics'
-  | 'diplomacy'
-  | 'strategy'
-  | 'administration'
-  | 'leadership'
-  | 'law';
+export type SkillId = 'charisma' | 'economics' | 'diplomacy' | 'strategy' | 'administration' | 'leadership' | 'law';
 
 export type Skills = Record<SkillId, number>;
 

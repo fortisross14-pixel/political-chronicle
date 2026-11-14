@@ -145,7 +145,8 @@ describe('native vs transplant', () => {
       return applyAction(p, { type: 'RESOLVE_DECISIONS', apply: [p.decisions!.cardIds[0]!] });
     };
     const a = previewEvent(ready(nativeRun), 'door_knocking', 'ny-north', 'guns').effects[0]!.dRecognition;
-    const b = previewEvent({ ...ready(transplantRun), regions: ready(nativeRun).regions }, 'door_knocking', 'ny-north', 'guns').effects[0]!.dRecognition;
+    const b = previewEvent({ ...ready(transplantRun), regions: ready(nativeRun).regions }, 'door_knocking', 'ny-north', 'guns').effects[0]!
+      .dRecognition;
     expect(a).toBeGreaterThan(b);
   });
 });

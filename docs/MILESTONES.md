@@ -23,7 +23,7 @@ Each milestone ends with something playable or testable and a green build.
 - App shell with the 3 tabs (Government, My profile, My party) as placeholders and a
   header (date, funds, energy).
 
-**Done when:** you can start a dummy run, press *End turn* repeatedly, reload the page
+**Done when:** you can start a dummy run, press _End turn_ repeatedly, reload the page
 and continue; engine tests pass in CI.
 
 ---

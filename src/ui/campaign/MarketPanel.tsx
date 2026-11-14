@@ -31,7 +31,10 @@ export function MarketPanel({ state, dispatch }: { state: GameState; dispatch: (
                   <strong>{c.name}</strong>
                   <span className="muted small">{c.description}</span>
                   <span className="small">
-                    ⚡{c.energy} to play · {c.fundraising ? 'raises money' : `${c.medium === 'inPerson' ? 'in person' : c.medium}${c.spillover ? `, ${Math.round(c.spillover * 100)}% statewide` : ''}`}
+                    ⚡{c.energy} to play ·{' '}
+                    {c.fundraising
+                      ? 'raises money'
+                      : `${c.medium === 'inPerson' ? 'in person' : c.medium}${c.spillover ? `, ${Math.round(c.spillover * 100)}% statewide` : ''}`}
                   </span>
                   <button disabled={!!error} title={error} onClick={() => dispatch({ type: 'BUY_CARD', offerIndex: i })}>
                     Buy {money(price)}

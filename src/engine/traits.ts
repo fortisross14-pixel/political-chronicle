@@ -43,7 +43,11 @@ export function initialRegions(politician: Politician): Record<RegionId, RegionS
   const home = residentState(politician);
   const isNativeHere = isNative(politician);
   const stateRegions = new Set(STATES[home]?.regionIds ?? []);
-  const stateBias = bg.favoredStates.includes(home) ? TRAITS.favoredState : bg.disfavoredStates?.includes(home) ? TRAITS.disfavoredState : 0;
+  const stateBias = bg.favoredStates.includes(home)
+    ? TRAITS.favoredState
+    : bg.disfavoredStates?.includes(home)
+      ? TRAITS.disfavoredState
+      : 0;
   return Object.fromEntries(
     REGIONS.map((r) => {
       let recognition = TRAITS.baseRecognition;

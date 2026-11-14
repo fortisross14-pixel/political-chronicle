@@ -64,7 +64,10 @@ export function dealDecisions(state: GameState): GameState {
   const rng = new Rng(state.rng);
   const fresh = pool.filter((c) => !state.recentDecisionIds.includes(c.id));
   const size = handSize(state);
-  const cardIds = rng.shuffle(fresh.length >= size ? fresh : pool).slice(0, size).map((c) => c.id);
+  const cardIds = rng
+    .shuffle(fresh.length >= size ? fresh : pool)
+    .slice(0, size)
+    .map((c) => c.id);
   return {
     ...state,
     rng: rng.state,
@@ -122,9 +125,17 @@ export function decisionImpact(state: GameState, card: DecisionCard): DecisionIm
   for (const id of STATES[office.state]!.regionIds) {
     const region = getRegion(id);
     let fit = 0;
-    for (const tag of card.tags) fit += region.issueSalience[tag.issue] * regionAlignment(id, tag.issue, tag.stance) * relevance(tag.issue, level);
+    for (const tag of card.tags)
+      fit += region.issueSalience[tag.issue] * regionAlignment(id, tag.issue, tag.stance) * relevance(tag.issue, level);
     if (home.includes(id)) {
-      if (inOffice) impact.approval[id] = DECISION_EFFECT.approval * fit * executionMultiplier(state, card.tags.some((t) => t.issue === 'taxes'));
+      if (inOffice)
+        impact.approval[id] =
+          DECISION_EFFECT.approval *
+          fit *
+          executionMultiplier(
+            state,
+            card.tags.some((t) => t.issue === 'taxes'),
+          );
       else impact.favorability[id] = DECISION_EFFECT.favorability * fit;
     } else {
       impact.favorability[id] = DECISION_EFFECT.favorability * fit * DECISION_EFFECT.spillover;
@@ -207,7 +218,9 @@ export function resolveDecisions(state: GameState, apply: string[]): GameState {
       failed.push(id);
       standing += impact.standing;
       integrity += impact.promisesKept.length * Math.round(DECISION_EFFECT.promiseKeptIntegrity / 2);
-      if (approval) for (const r of home) approval[r] = nudgeApproval(approval[r]!, impact.promisesKept.length * DECISION_EFFECT.promiseKeptEffect * 0.5);
+      if (approval)
+        for (const r of home)
+          approval[r] = nudgeApproval(approval[r]!, impact.promisesKept.length * DECISION_EFFECT.promiseKeptEffect * 0.5);
       notes.push(`“${card.title}” failed in ${yourChamber(state)?.name ?? 'the legislature'}`);
       continue;
     }
@@ -231,16 +244,25 @@ export function resolveDecisions(state: GameState, apply: string[]): GameState {
 
   const verb = office ? 'Signed' : 'Backed';
   const titles = apply.map((id) => getDecisionCard(id).title).join(', ');
-  return adjustStanding({
-    ...state,
-    regions,
-    record,
-    funds,
-    promises,
-    integrity: clamp(Math.round(integrity), 0, 100),
-    career: office && approval ? { ...state.career, office: { ...office, approval } } : state.career,
-    rng: rng.state,
-    decisions: { ...hand, resolved: true, applied: [...apply], failed },
-    log: [...state.log, { ...at, text: `${verb}: ${titles}.${notes.length ? ` ${notes.map((n) => (n.startsWith('“') ? n : `You ${n}`)).join('; ')}.` : ''}` }],
-  }, standing);
+  return adjustStanding(
+    {
+      ...state,
+      regions,
+      record,
+      funds,
+      promises,
+      integrity: clamp(Math.round(integrity), 0, 100),
+      career: office && approval ? { ...state.career, office: { ...office, approval } } : state.career,
+      rng: rng.state,
+      decisions: { ...hand, resolved: true, applied: [...apply], failed },
+      log: [
+        ...state.log,
+        {
+          ...at,
+          text: `${verb}: ${titles}.${notes.length ? ` ${notes.map((n) => (n.startsWith('“') ? n : `You ${n}`)).join('; ')}.` : ''}`,
+        },
+      ],
+    },
+    standing,
+  );
 }

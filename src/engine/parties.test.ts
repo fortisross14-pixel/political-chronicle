@@ -52,7 +52,11 @@ describe('joining', () => {
   it('parties notice you only after your first race', () => {
     expect(invitations(newRun())).toEqual([]);
     expect(joinError(newRun(), 'RP')).toMatch(/run for office/);
-    expect(invitations(mayor()).map((i) => i.party).sort()).toEqual(['DU', 'RP']);
+    expect(
+      invitations(mayor())
+        .map((i) => i.party)
+        .sort(),
+    ).toEqual(['DU', 'RP']);
   });
 
   it('joining sets standing from alignment; switching costs integrity and standing', () => {
@@ -75,7 +79,10 @@ describe('standing', () => {
     expect(plain.standing).toBeGreaterThan(0);
     const against = decisionImpact(RED_MAYOR, getDecisionCard('of_tax_hike_services'));
     expect(against.standing).toBeLessThan(0);
-    const house: GameState = { ...RED_MAYOR, career: { ...RED_MAYOR.career, office: { ...RED_MAYOR.career.office!, officeId: 'house-ny-north' } } };
+    const house: GameState = {
+      ...RED_MAYOR,
+      career: { ...RED_MAYOR.career, office: { ...RED_MAYOR.career.office!, officeId: 'house-ny-north' } },
+    };
     const whip = decisionImpact(house, getDecisionCard('fd_rp_tax_cut'));
     const sameTagsNoWhip = decisionImpact(house, { ...getDecisionCard('fd_rp_tax_cut'), partyPriority: undefined });
     expect(whip.standing).toBeCloseTo(sameTagsNoWhip.standing * 3);
@@ -117,7 +124,13 @@ describe('nominations & primaries', () => {
     let s = mayor('RP', 30); // House needs 40: primary window
     s = applyAction(s, { type: 'FILE_RACE', officeId: 'house-ny-north' });
     expect(s.career.race!.primary?.party).toBe('RP');
-    s = applyAction(s, { type: 'SET_PLATFORM', platform: [{ issue: 'guns', stance: 2 }, { issue: 'taxes', stance: 2 }] });
+    s = applyAction(s, {
+      type: 'SET_PLATFORM',
+      platform: [
+        { issue: 'guns', stance: 2 },
+        { issue: 'taxes', stance: 2 },
+      ],
+    });
     // Filed in 2028 turn 0 (an election year): the primary resolves when that turn ends.
     expect(s.clock).toMatchObject({ year: 2028, turn: 0 });
     s = passTurn(s);
@@ -164,7 +177,16 @@ describe('partisan elections', () => {
       career: {
         ...s.career,
         office: { ...s.career.office!, officeId: 'house-ny-north', termEndsYear: 2030 },
-        race: { officeId: 'house-ny-north', electionYear: 2030, platform: [], opponents: [], tokens: 2, milestones: [], doorKnocks: 0, raisedThisTurn: 0 },
+        race: {
+          officeId: 'house-ny-north',
+          electionYear: 2030,
+          platform: [],
+          opponents: [],
+          tokens: 2,
+          milestones: [],
+          doorKnocks: 0,
+          raisedThisTurn: 0,
+        },
       },
     };
     expect(fileRaceError(house, 'governor-ny')).toBeUndefined();

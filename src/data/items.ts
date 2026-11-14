@@ -13,10 +13,35 @@ export interface Item {
 /** One-shot loot from campaign milestones (DESIGN_V2 §5.1). Unused items expire with the window. */
 export const ITEMS: Item[] = [
   { id: 'volunteer_list', name: 'Volunteer list', window: 'night', targetsRegion: false, nightText: '+2 ground-game tokens' },
-  { id: 'oppo_dossier', name: 'Opposition research dossier', window: 'campaign', targetsRegion: true, campaignText: 'Your leading opponent loses favorability in a region' },
-  { id: 'endorsement', name: 'Local endorsement', window: 'both', targetsRegion: true, campaignText: '+recognition and favorability in a region', nightText: 'A free, stronger mobilization in an uncounted region' },
-  { id: 'ad_reservation', name: 'Last-minute ad reservation', window: 'night', targetsRegion: false, nightText: 'A free late ad blitz across the race' },
-  { id: 'poll_watchers', name: 'Poll-watcher network', window: 'night', targetsRegion: true, nightText: 'Free lawyers at the count in one region' },
+  {
+    id: 'oppo_dossier',
+    name: 'Opposition research dossier',
+    window: 'campaign',
+    targetsRegion: true,
+    campaignText: 'Your leading opponent loses favorability in a region',
+  },
+  {
+    id: 'endorsement',
+    name: 'Local endorsement',
+    window: 'both',
+    targetsRegion: true,
+    campaignText: '+recognition and favorability in a region',
+    nightText: 'A free, stronger mobilization in an uncounted region',
+  },
+  {
+    id: 'ad_reservation',
+    name: 'Last-minute ad reservation',
+    window: 'night',
+    targetsRegion: false,
+    nightText: 'A free late ad blitz across the race',
+  },
+  {
+    id: 'poll_watchers',
+    name: 'Poll-watcher network',
+    window: 'night',
+    targetsRegion: true,
+    nightText: 'Free lawyers at the count in one region',
+  },
 ];
 
 export const ITEMS_BY_ID: Record<string, Item> = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
@@ -36,12 +61,32 @@ export interface Milestone {
 }
 
 export const MILESTONES: Milestone[] = [
-  { id: 'frontrunner', name: 'Front-runner', reward: { item: 'endorsement' }, text: 'You lead the polls for the first time — a local leader endorses you.' },
+  {
+    id: 'frontrunner',
+    name: 'Front-runner',
+    reward: { item: 'endorsement' },
+    text: 'You lead the polls for the first time — a local leader endorses you.',
+  },
   { id: 'momentum', name: 'Momentum', reward: { money: 6000 }, text: 'Up 3+ points in a turn — small donors pour in.' },
-  { id: 'debate_win', name: 'Debate win', reward: { item: 'oppo_dossier' }, text: 'You won the debate — and someone slipped you a dossier.' },
-  { id: 'fundraising_haul', name: 'Fundraising haul', reward: { item: 'ad_reservation' }, text: 'A $10k+ fundraising turn — you lock in late ad time.' },
+  {
+    id: 'debate_win',
+    name: 'Debate win',
+    reward: { item: 'oppo_dossier' },
+    text: 'You won the debate — and someone slipped you a dossier.',
+  },
+  {
+    id: 'fundraising_haul',
+    name: 'Fundraising haul',
+    reward: { item: 'ad_reservation' },
+    text: 'A $10k+ fundraising turn — you lock in late ad time.',
+  },
   { id: 'ground_game', name: 'Ground game', reward: { item: 'volunteer_list' }, text: 'Three door-knocking days — volunteers sign up.' },
-  { id: 'party_machine', name: 'Party machine', reward: { item: 'poll_watchers' }, text: 'Your party (standing 60+) lends you its poll watchers.' },
+  {
+    id: 'party_machine',
+    name: 'Party machine',
+    reward: { item: 'poll_watchers' },
+    text: 'Your party (standing 60+) lends you its poll watchers.',
+  },
   { id: 'underdog', name: 'Underdog', reward: { card: 'town_hall' }, text: 'Down 10+ points — a town hall slot opens up for you.' },
 ];
 

@@ -38,16 +38,29 @@ export function createScenarioRun(scenarioId: string, start: ScenarioStart): Gam
     const o = setup.office;
     const office = getOffice(o.officeId);
     const shares = Object.fromEntries(office.regionIds.map((id) => [id, [o.share, 1 - o.share]]));
-    const term = { ...newTerm(o.officeId, o.wonYear, shares, o.platform), approval: Object.fromEntries(office.regionIds.map((id) => [id, o.approval])) };
+    const term = {
+      ...newTerm(o.officeId, o.wonYear, shares, o.platform),
+      approval: Object.fromEntries(office.regionIds.map((id) => [id, o.approval])),
+    };
     const regions = { ...s.regions };
-    for (const id of office.regionIds) regions[id] = { ...regions[id]!, recognition: nudgeRecognition(regions[id]!.recognition, 0.5), favorability: Math.max(regions[id]!.favorability, 0.15) };
+    for (const id of office.regionIds)
+      regions[id] = {
+        ...regions[id]!,
+        recognition: nudgeRecognition(regions[id]!.recognition, 0.5),
+        favorability: Math.max(regions[id]!.favorability, 0.15),
+      };
     const past: ElectionRecord = {
       officeId: o.officeId,
       year: o.wonYear,
       kind: 'general',
       candidates: [
         { name: start.name, isPlayer: true, affiliation: setup.party?.id ?? 'IND', lean: 0 },
-        { name: 'Your last opponent', isPlayer: false, affiliation: office.partisan ? (setup.party?.id === 'DU' ? 'RP' : 'DU') : 'IND', lean: 0 },
+        {
+          name: 'Your last opponent',
+          isPlayer: false,
+          affiliation: office.partisan ? (setup.party?.id === 'DU' ? 'RP' : 'DU') : 'IND',
+          lean: 0,
+        },
       ],
       regionShares: shares,
       totalShares: [o.share, 1 - o.share],
@@ -71,7 +84,11 @@ export function createScenarioRun(scenarioId: string, start: ScenarioStart): Gam
     };
   }
   if (setup.funds) s = { ...s, funds: s.funds + setup.funds };
-  s = { ...s, clock: { ...s.clock, turnsThisYear: turnsInYear(s.career, s.clock.year) }, scenario: { id: scenarioId, startYear: setup.startYear } };
+  s = {
+    ...s,
+    clock: { ...s.clock, turnsThisYear: turnsInYear(s.career, s.clock.year) },
+    scenario: { id: scenarioId, startYear: setup.startYear },
+  };
   return dealMarket(dealDecisions({ ...s, decisions: undefined, market: undefined }));
 }
 
@@ -79,7 +96,9 @@ export function createScenarioRun(scenarioId: string, start: ScenarioStart): Gam
 function objectiveWin(state: GameState, scenario: Scenario): ElectionRecord | undefined {
   const obj = scenario.objective;
   const from = obj.minYear ?? state.scenario!.startYear;
-  return state.elections.find((e) => e.kind === 'general' && e.officeId === obj.officeId && e.playerWon && e.year >= from && e.year <= obj.by);
+  return state.elections.find(
+    (e) => e.kind === 'general' && e.officeId === obj.officeId && e.playerWon && e.year >= from && e.year <= obj.by,
+  );
 }
 
 export function starEarned(state: GameState, scenario: Scenario, rule: StarRule, win: ElectionRecord): boolean {
@@ -100,7 +119,9 @@ export function starEarned(state: GameState, scenario: Scenario, rule: StarRule,
     case 'standing':
       return (state.career.partyStanding ?? 0) >= rule.min;
     case 'firstTry':
-      return state.elections.filter((e) => e.kind === 'general' && e.officeId === scenario.objective.officeId && e.year >= start).length === 1;
+      return (
+        state.elections.filter((e) => e.kind === 'general' && e.officeId === scenario.objective.officeId && e.year >= start).length === 1
+      );
     case 'carryRegion': {
       const shares = win.regionShares[rule.regionId];
       return !!shares && shares[0]! > Math.max(...shares.slice(1));

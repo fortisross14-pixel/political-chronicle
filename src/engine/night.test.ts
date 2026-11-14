@@ -118,7 +118,9 @@ describe('items', () => {
     s = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: [s.decisions!.cardIds[0]!] });
     s = giveItem(s, 'oppo_dossier');
     const after = applyAction(s, { type: 'USE_ITEM', uid: s.items[0]!.uid, regionId: 'ny-north' });
-    expect(after.career.race!.opponents[0]!.regions['ny-north']!.favorability).toBeLessThan(s.career.race!.opponents[0]!.regions['ny-north']!.favorability);
+    expect(after.career.race!.opponents[0]!.regions['ny-north']!.favorability).toBeLessThan(
+      s.career.race!.opponents[0]!.regions['ny-north']!.favorability,
+    );
   });
 
   it('campaign-only items expire on Election Day; volunteers add tokens at night', () => {
@@ -149,7 +151,11 @@ describe('loot', () => {
     let s = readyRun();
     s = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: [s.decisions!.cardIds[0]!] });
     const start = s.career.race!.tokens;
-    for (let i = 0; i < 3; i++) s = applyAction({ ...s, energy: 6 }, { type: 'PLAY_EVENT', cardUid: 'door_knocking', regionId: 'ny-north', issue: s.career.race!.platform[0]!.issue });
+    for (let i = 0; i < 3; i++)
+      s = applyAction(
+        { ...s, energy: 6 },
+        { type: 'PLAY_EVENT', cardUid: 'door_knocking', regionId: 'ny-north', issue: s.career.race!.platform[0]!.issue },
+      );
     expect(s.career.race!.tokens).toBe(start + 3);
     expect(s.career.race!.doorKnocks).toBe(3);
     s = applyAction(s, { type: 'END_TURN' });

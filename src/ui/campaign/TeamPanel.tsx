@@ -88,9 +88,7 @@ export function TeamPanel({ state, dispatch }: { state: GameState; dispatch: (a:
         </>
       )}
       {cards.length > 0 && reserve.length === 0 && (
-        <p className="muted small">
-          Assigned people can be discarded from the reserve: move them there first.
-        </p>
+        <p className="muted small">Assigned people can be discarded from the reserve: move them there first.</p>
       )}
     </section>
   );

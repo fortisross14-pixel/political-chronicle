@@ -92,7 +92,10 @@ export function discardPerson(state: GameState, uid: number): GameState {
   return {
     ...state,
     team: { ...state.team, cards: state.team.cards.filter((c) => c.uid !== uid), assigned },
-    log: [...state.log, { year: state.clock.year, turn: state.clock.turn, text: `${getPerson(card.personId).name} left your team for good.` }],
+    log: [
+      ...state.log,
+      { year: state.clock.year, turn: state.clock.turn, text: `${getPerson(card.personId).name} left your team for good.` },
+    ],
   };
 }
 

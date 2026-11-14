@@ -20,11 +20,32 @@ export function CareerCharts({ snapshots }: { snapshots: Snapshot[] }) {
   const approvalOrPoll = snapshots.map((s) => s.approval ?? s.poll ?? 0);
   return (
     <div className="chart-grid-2">
-      <LineChart title="Approval in office (or your poll while running)" series={[{ name: 'Approval / poll', values: approvalOrPoll }]} format={pctFmt} xLabels={xLabels} yMin={0} yMax={1} />
-      <LineChart title="Recognition (average across regions)" series={[{ name: 'Recognition', values: recognition }]} format={pctFmt} xLabels={xLabels} yMin={0} yMax={1} />
+      <LineChart
+        title="Approval in office (or your poll while running)"
+        series={[{ name: 'Approval / poll', values: approvalOrPoll }]}
+        format={pctFmt}
+        xLabels={xLabels}
+        yMin={0}
+        yMax={1}
+      />
+      <LineChart
+        title="Recognition (average across regions)"
+        series={[{ name: 'Recognition', values: recognition }]}
+        format={pctFmt}
+        xLabels={xLabels}
+        yMin={0}
+        yMax={1}
+      />
       <LineChart title="Funds" series={[{ name: 'Funds', values: snapshots.map((s) => s.funds) }]} format={money} xLabels={xLabels} />
       {standing.some((v) => v > 0) && (
-        <LineChart title="Party standing" series={[{ name: 'Standing', values: standing }]} format={(v) => `${Math.round(v)}`} xLabels={xLabels} yMin={0} yMax={100} />
+        <LineChart
+          title="Party standing"
+          series={[{ name: 'Standing', values: standing }]}
+          format={(v) => `${Math.round(v)}`}
+          xLabels={xLabels}
+          yMin={0}
+          yMax={100}
+        />
       )}
     </div>
   );

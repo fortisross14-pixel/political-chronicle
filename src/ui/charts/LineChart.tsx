@@ -116,7 +116,15 @@ export function LineChart({ title, series, format, xLabels, yMin, yMax, height =
               <line x1={x(hover)} x2={x(hover)} y1={PAD.top} y2={H - PAD.bottom} className="chart-crosshair" />
               {colored.map((s) =>
                 s.values[hover] === undefined ? null : (
-                  <circle key={s.name} cx={x(hover)} cy={y(s.values[hover]!)} r={4.5} fill={s.color} stroke="var(--panel)" strokeWidth={2} />
+                  <circle
+                    key={s.name}
+                    cx={x(hover)}
+                    cy={y(s.values[hover]!)}
+                    r={4.5}
+                    fill={s.color}
+                    stroke="var(--panel)"
+                    strokeWidth={2}
+                  />
                 ),
               )}
             </g>

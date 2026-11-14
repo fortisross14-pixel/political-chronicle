@@ -107,7 +107,8 @@ export const SCENARIOS: Scenario[] = [
     order: 1,
     title: 'Hometown favorite',
     tagline: 'Everyone in Watertown knows your name. Now make it official.',
-    description: 'A Watertown native and public servant, you file for mayor as the favorite. Pick a platform that fits the North Country, hold events, back the right causes, and win in November.',
+    description:
+      'A Watertown native and public servant, you file for mayor as the favorite. Pick a platform that fits the North Country, hold events, back the right causes, and win in November.',
     teaches: 'Platform, events, polls, election night',
     setup: {
       character: { gender: 'female', age: 34, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'public_servant' },
@@ -128,7 +129,8 @@ export const SCENARIOS: Scenario[] = [
     order: 2,
     title: 'Keep your word',
     tagline: 'You won on promises. Now keep them — and keep your job.',
-    description: 'You’re the newly elected Mayor of Watertown. Bills land on your desk every turn; sign the ones your voters want and that keep your campaign promises, then win re-election in 2031.',
+    description:
+      'You’re the newly elected Mayor of Watertown. Bills land on your desk every turn; sign the ones your voters want and that keep your campaign promises, then win re-election in 2031.',
     teaches: 'Bills, approval, promises, re-election',
     setup: {
       character: { gender: 'male', age: 41, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'veteran' },
@@ -149,7 +151,8 @@ export const SCENARIOS: Scenario[] = [
     order: 3,
     title: 'Pick a side',
     tagline: 'Independents can only go so far. Time to choose a team.',
-    description: 'As the independent Mayor of Watertown, join a party, earn its trust, and win the North Country & Southern Tier House seat by 2030.',
+    description:
+      'As the independent Mayor of Watertown, join a party, earn its trust, and win the North Country & Southern Tier House seat by 2030.',
     teaches: 'Parties, standing, nominations, partisan races',
     setup: {
       character: { gender: 'nonbinary', age: 38, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'lawyer' },
@@ -171,7 +174,8 @@ export const SCENARIOS: Scenario[] = [
     order: 4,
     title: 'Big city, small town',
     tagline: 'Upstate loves you. Now win over New York City.',
-    description: 'A Republic Party congresswoman from the North Country, you set your sights on the Governor’s mansion. Win statewide by 2034 — and that means competing in NYC.',
+    description:
+      'A Republic Party congresswoman from the North Country, you set your sights on the Governor’s mansion. Win statewide by 2034 — and that means competing in NYC.',
     teaches: 'Statewide campaigns, NYC, election night',
     setup: {
       character: { gender: 'female', age: 44, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'business' },

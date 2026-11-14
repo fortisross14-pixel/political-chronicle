@@ -4,11 +4,35 @@ import { dealDecisions } from './decisions';
 import { effectiveSkills } from './people';
 import { startingTokens } from './night';
 import { adjustStanding, effectivePlatform, member, newPrimary, nominationStatus, PARTY, primaryShare, PRIMARY } from './parties';
-import { clamp, decided, nudgeFavorability, nudgeRecognition, poll, raceViews, regionAlignment, regionIntention, regionWeights, relevance } from './opinion';
+import {
+  clamp,
+  decided,
+  nudgeFavorability,
+  nudgeRecognition,
+  poll,
+  raceViews,
+  regionAlignment,
+  regionIntention,
+  regionWeights,
+  relevance,
+} from './opinion';
 import { Rng } from './rng';
 import { newTerm } from './governing';
 import { nextElectionYear, turnsInYear } from './time';
-import type { Affiliation, Candidate, ElectionRecord, GameState, IssueId, Office, OfficeId, OfficeLevel, PartyId, Pledge, Race, RegionId } from './types';
+import type {
+  Affiliation,
+  Candidate,
+  ElectionRecord,
+  GameState,
+  IssueId,
+  Office,
+  OfficeId,
+  OfficeLevel,
+  PartyId,
+  Pledge,
+  Race,
+  RegionId,
+} from './types';
 
 export const MAX_PLATFORM = 5;
 export const VALID_STANCES = [-2, -1, 1, 2] as const;
@@ -31,7 +55,10 @@ export const OPPONENT = {
 };
 
 /** Partisan races: tougher, better-funded opponents as the office grows (DESIGN §5.3). */
-export const PARTISAN_OPPONENT: Record<Exclude<OfficeLevel, 'mayor'>, { recognition: number; incumbentChance: number; activity: number }> = {
+export const PARTISAN_OPPONENT: Record<
+  Exclude<OfficeLevel, 'mayor'>,
+  { recognition: number; incumbentChance: number; activity: number }
+> = {
   house: { recognition: 0.42, incumbentChance: 0.6, activity: 4 },
   senate: { recognition: 0.2, incumbentChance: 0.35, activity: 4 },
   governor: { recognition: 0.2, incumbentChance: 0.35, activity: 4 },
@@ -70,7 +97,8 @@ export function raceOptions(state: GameState): RaceOption[] {
 export function fileRaceError(state: GameState, officeId: OfficeId): string | undefined {
   if (state.ended) return 'Your career is over.';
   const race = state.career.race;
-  const swappingReelection = !!race && race.officeId === state.career.office?.officeId && !race.platform.length && race.officeId !== officeId;
+  const swappingReelection =
+    !!race && race.officeId === state.career.office?.officeId && !race.platform.length && race.officeId !== officeId;
   if (race && !swappingReelection) return 'You are already running.';
   const held = state.career.office;
   if (held && held.officeId === officeId) {
@@ -149,11 +177,15 @@ function partisanOpponents(rng: Rng, office: Office, playerIsIncumbent: boolean,
       regions[r.id] = inRace
         ? {
             recognition: clamp(
-              tuning.recognition + rng.float() * OPPONENT.recognitionSpread + (incumbent ? OPPONENT.incumbentRecognition : 0) + (playerIsIncumbent ? OPPONENT.challengerRecognition * 0.6 : 0),
+              tuning.recognition +
+                rng.float() * OPPONENT.recognitionSpread +
+                (incumbent ? OPPONENT.incumbentRecognition : 0) +
+                (playerIsIncumbent ? OPPONENT.challengerRecognition * 0.6 : 0),
               0,
               0.95,
             ),
-            favorability: OPPONENT.baseFavorability + rng.float() * OPPONENT.favorabilitySpread + (incumbent ? OPPONENT.incumbentFavorability : 0),
+            favorability:
+              OPPONENT.baseFavorability + rng.float() * OPPONENT.favorabilitySpread + (incumbent ? OPPONENT.incumbentFavorability : 0),
           }
         : { recognition: 0.03, favorability: 0 };
     }
@@ -195,11 +227,17 @@ export function generateOpponents(rng: Rng, officeId: OfficeId, playerIsIncumben
       regions[r.id] = inRace
         ? {
             recognition: clamp(
-              OPPONENT.baseRecognition + rng.float() * OPPONENT.recognitionSpread + (incumbent ? OPPONENT.incumbentRecognition : 0) + (playerIsIncumbent && i === 0 ? OPPONENT.challengerRecognition : 0) + (seat.type === 'urban' || seat.type === 'midsize' ? 0.06 : 0) - (i > 0 ? 0.12 : 0),
+              OPPONENT.baseRecognition +
+                rng.float() * OPPONENT.recognitionSpread +
+                (incumbent ? OPPONENT.incumbentRecognition : 0) +
+                (playerIsIncumbent && i === 0 ? OPPONENT.challengerRecognition : 0) +
+                (seat.type === 'urban' || seat.type === 'midsize' ? 0.06 : 0) -
+                (i > 0 ? 0.12 : 0),
               0,
               0.95,
             ),
-            favorability: OPPONENT.baseFavorability + rng.float() * OPPONENT.favorabilitySpread + (incumbent ? OPPONENT.incumbentFavorability : 0),
+            favorability:
+              OPPONENT.baseFavorability + rng.float() * OPPONENT.favorabilitySpread + (incumbent ? OPPONENT.incumbentFavorability : 0),
           }
         : { recognition: 0.02, favorability: 0 };
     }
@@ -268,10 +306,19 @@ export function opponentsAct(rng: Rng, race: Race): Race {
       }
       const region = getRegion(regionId);
       const best = c.platform
-        .map((p) => ({ p, score: region.issueSalience[p.issue] * regionAlignment(regionId, p.issue, p.stance) * relevance(p.issue, office.level) + rng.float() * 0.2 }))
+        .map((p) => ({
+          p,
+          score:
+            region.issueSalience[p.issue] * regionAlignment(regionId, p.issue, p.stance) * relevance(p.issue, office.level) +
+            rng.float() * 0.2,
+        }))
         .sort((a, b) => b.score - a.score)[0]!.p;
       const cur = regions[regionId]!;
-      const dF = OPPONENT.persuasionPerEvent * region.issueSalience[best.issue] * regionAlignment(regionId, best.issue, best.stance) * relevance(best.issue, office.level);
+      const dF =
+        OPPONENT.persuasionPerEvent *
+        region.issueSalience[best.issue] *
+        regionAlignment(regionId, best.issue, best.stance) *
+        relevance(best.issue, office.level);
       regions[regionId] = {
         recognition: nudgeRecognition(cur.recognition, OPPONENT.reachPerEvent),
         favorability: nudgeFavorability(cur.favorability, dF),
@@ -293,7 +340,10 @@ export function fileRace(state: GameState, officeId: OfficeId): GameState {
   const opponents = generateOpponents(rng, officeId, state.career.office?.officeId === officeId, state.career.affiliation).map((c) => {
     const scale = state.modifiers.opponentRecognition;
     if (scale === 1) return c;
-    return { ...c, regions: Object.fromEntries(Object.entries(c.regions).map(([id, r]) => [id, { ...r, recognition: r.recognition * scale }])) };
+    return {
+      ...c,
+      regions: Object.fromEntries(Object.entries(c.regions).map(([id, r]) => [id, { ...r, recognition: r.recognition * scale }])),
+    };
   });
   const race: Race = {
     officeId,
@@ -455,7 +505,6 @@ export function finalizeElection(state: GameState, rng: Rng, regionShares: Recor
   };
 }
 
-
 // ---------- Primaries ----------
 
 export function isPrimaryTurn(state: GameState): boolean {
@@ -488,7 +537,9 @@ export function resolvePrimary(state: GameState, rng: Rng): GameState {
   const text = won
     ? `Won the ${PARTIES[primary.party].name} primary for ${office.name} with ${pct(share)}. On to November.`
     : `Lost the ${PARTIES[primary.party].name} primary for ${office.name} to ${primary.challenger} (${pct(share)}).`;
-  const career = won ? { ...state.career, race: { ...race, primary: undefined, nominee: primary.party } } : (({ race: _r, ...rest }) => rest)(state.career);
+  const career = won
+    ? { ...state.career, race: { ...race, primary: undefined, nominee: primary.party } }
+    : (({ race: _r, ...rest }) => rest)(state.career);
   const next = adjustStanding({ ...state, career }, won ? 3 : -3);
   return {
     ...next,

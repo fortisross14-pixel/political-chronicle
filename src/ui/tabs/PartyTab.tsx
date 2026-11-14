@@ -17,7 +17,12 @@ function Axis({ marks }: { marks: { value: number; className: string; label: str
   return (
     <span className="record-axis">
       {marks.map((m) => (
-        <span key={m.label} className={`record-dot ${m.className}`} title={`${m.label}: ${m.value.toFixed(1)}`} style={{ left: `${((m.value + 2) / 4) * 100}%` }} />
+        <span
+          key={m.label}
+          className={`record-dot ${m.className}`}
+          title={`${m.label}: ${m.value.toFixed(1)}`}
+          style={{ left: `${((m.value + 2) / 4) * 100}%` }}
+        />
       ))}
     </span>
   );
@@ -60,7 +65,8 @@ export function PartyTab({ state, dispatch }: { state: GameState; dispatch: (a: 
                     disabled={!!error}
                     title={error}
                     onClick={() => {
-                      if (!inv.switching || window.confirm(`Switch to the ${p.name}? This costs integrity.`)) dispatch({ type: 'JOIN_PARTY', party: inv.party });
+                      if (!inv.switching || window.confirm(`Switch to the ${p.name}? This costs integrity.`))
+                        dispatch({ type: 'JOIN_PARTY', party: inv.party });
                     }}
                   >
                     {inv.switching ? 'Switch to' : 'Join'} the {p.nickname}
@@ -117,8 +123,8 @@ function Membership({ state, party }: { state: GameState; party: PartyId }) {
         </div>
       </div>
       <p className="muted small">
-        Standing rises when you sign or back what the party wants (whip votes count triple), headline party events and win races; it falls when you
-        vote against them. Party money grows with standing × fit², and flows to close races.
+        Standing rises when you sign or back what the party wants (whip votes count triple), headline party events and win races; it falls
+        when you vote against them. Party money grows with standing × fit², and flows to close races.
       </p>
     </section>
   );
@@ -132,7 +138,8 @@ function PlatformComparison({ state, party, stateId }: { state: GameState; party
     <section className="panel">
       <h2>Your record vs. the platform{party ? '' : 's'}</h2>
       <p className="muted small">
-        Each party’s effective platform here is 70% national and 30% {chapterName} chapter — the local party tolerates more deviation than the national one.
+        Each party’s effective platform here is 70% national and 30% {chapterName} chapter — the local party tolerates more deviation than
+        the national one.
       </p>
       <div className="legend small">
         <span>
@@ -146,7 +153,11 @@ function PlatformComparison({ state, party, stateId }: { state: GameState; party
       </div>
       <ul className="record">
         {issues.map((i) => {
-          const marks = parties.map((p) => ({ value: effectivePlatform(p, stateId)[i.id].position, className: p.toLowerCase(), label: PARTIES[p].nickname }));
+          const marks = parties.map((p) => ({
+            value: effectivePlatform(p, stateId)[i.id].position,
+            className: p.toLowerCase(),
+            label: PARTIES[p].nickname,
+          }));
           const you = state.record[i.id as IssueId];
           if (you !== undefined) marks.push({ value: you, className: 'you', label: 'You' });
           const gap = party && you !== undefined ? Math.abs(you - effectivePlatform(party, stateId)[i.id].position) : undefined;
@@ -172,8 +183,8 @@ function Nominations({ state, dispatch }: { state: GameState; dispatch: (a: Acti
     <section className="panel">
       <h2>Nominations</h2>
       <p className="muted small">
-        Uncontested nomination: House needs standing 40, Senate and Governor 60. Up to 25 below, you can force a primary among party voters, decided at the
-        end of the election year’s first turn. Running for a different office puts your current seat on the line.
+        Uncontested nomination: House needs standing 40, Senate and Governor 60. Up to 25 below, you can force a primary among party voters,
+        decided at the end of the election year’s first turn. Running for a different office puts your current seat on the line.
       </p>
       <table className="table">
         <thead>
@@ -188,7 +199,14 @@ function Nominations({ state, dispatch }: { state: GameState; dispatch: (a: Acti
           {options.map((o) => {
             const status = nominationStatus(state, o.officeId);
             const error = fileRaceError(state, o.officeId);
-            const label = status.kind === 'nominee' ? 'Request nomination' : status.kind === 'primary' ? 'Enter primary' : status.kind === 'independent' ? 'Run as independent' : 'Denied';
+            const label =
+              status.kind === 'nominee'
+                ? 'Request nomination'
+                : status.kind === 'primary'
+                  ? 'Enter primary'
+                  : status.kind === 'independent'
+                    ? 'Run as independent'
+                    : 'Denied';
             return (
               <tr key={o.officeId}>
                 <td>{getOffice(o.officeId).name}</td>

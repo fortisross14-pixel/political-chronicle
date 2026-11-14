@@ -21,7 +21,10 @@ export function Stars({ n, of = 3 }: { n: number; of?: number }) {
 }
 
 function rewardText(r: Reward): string {
-  const parts = [...(r.artifacts ?? []).map((a) => ARTIFACTS_BY_ID[a]!.name), ...(r.abilities ?? []).map((a) => `ability: ${ABILITIES_BY_ID[a]!.name}`)];
+  const parts = [
+    ...(r.artifacts ?? []).map((a) => ARTIFACTS_BY_ID[a]!.name),
+    ...(r.abilities ?? []).map((a) => `ability: ${ABILITIES_BY_ID[a]!.name}`),
+  ];
   return parts.join(', ') || '—';
 }
 
@@ -57,7 +60,10 @@ export function ScenarioSelect({ profile, onStart, onBack }: Props) {
               {selected.stars.map((g, i) => (
                 <li key={g.id} className={earned.includes(g.id) ? 'done' : undefined}>
                   <span>{earned.includes(g.id) ? '★' : '☆'}</span> {g.text}
-                  <span className="muted small"> · reward at {i + 1}★: {rewardText(selected.rewards[i]!)}</span>
+                  <span className="muted small">
+                    {' '}
+                    · reward at {i + 1}★: {rewardText(selected.rewards[i]!)}
+                  </span>
                 </li>
               ))}
             </ul>
