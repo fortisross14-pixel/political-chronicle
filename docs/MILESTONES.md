@@ -128,8 +128,8 @@ sandbox, people cards, a legislature and an animated election night. See
 
 - Home state (any of 50) and resident state/region (playable); native vs transplant rules
   (hometown bonus vs newcomer penalty plus outside donors).
-- 7 skills: CHA, COM, FUN, POL, ADM, LEA, LAW, remapped onto existing mechanics; POL ≥ 7 draws
-  4 decision cards.
+- 7 skills: CHA, ECO, DIP, STR, ADM, LEA, LAW, remapped onto existing mechanics (CHA drives
+  events and gaffes, ECO donors, STR previews; STR ≥ 7 draws 4 decision cards).
 - 7 backgrounds with fixed and free points, state affinities, perks and weaknesses.
 - Creator v2; save schema bump; bot and sim updated.
 
@@ -141,17 +141,20 @@ perk shows up in the sim.
 
 - People market (2–3 per turn), roster (max 6), signing fee plus salary, firing (card lost).
 - Slots: campaign manager, chief of staff, party liaison, legislative director.
-- Bill passage for Governor and federal offices: chamber control per cycle, LAW, director.
-- ADM and LEA effects in office (wear, execution, crises).
+- Bill passage for Governor and federal offices: chamber control per cycle, LAW, DIP, director.
+- ADM, ECO and LEA effects in office (wear, execution, budget cards and the Governor's budget
+  meter, crises).
 
 **Done when:** a Rare cabinet is worth about +2 skill levels in the sim, and a Governor with
 low LAW and no director sees noticeably more failed bills.
 
-## M9 — Election night
+## M9 — Campaign loot & election night
 
 - Engine: reporting timeline per region (poll closings, count progress, shrinking noise),
   call logic, win probability.
-- Ground-game tokens earned in the campaign; actions on uncounted regions; capped swing.
+- Campaign loot: items, money and cards from campaign milestones; items with use windows
+  (campaign / night / both).
+- Ground-game tokens and night items; actions on uncounted regions; capped swing.
 - Animated screen: map fills, totals, needle, called banners, final call.
 
 **Done when:** election nights for a mayoral and a statewide race play out live in about
@@ -163,7 +166,8 @@ blowouts.
 - Scenario framework: data definitions, objectives, cycle limits, stars, rewards.
 - 4 beginner scenarios (Hometown favorite → Big city, small town); Sandbox unlocks on
   completion.
-- Artifacts and loadout slots; profile store separate from run saves.
+- Artifacts and loadout slots; **abilities** earned from missions (2 slots in Sandbox); profile
+  store separate from run saves.
 - Run results screen: stats charts, election history maps, legacy score; Hall of Runs (the
   old M7).
 - CI: the bot plays each scenario and asserts its difficulty band.
@@ -180,9 +184,11 @@ compare runs.
 **Done when:** a full scenario plays comfortably one-handed on a phone and the app installs
 offline.
 
-## M12 — California & advanced scenarios
+## M12 — States v2 (NY re-cut + California) & advanced scenarios
 
-- California (Los Angeles, Bay Area, Central Valley) with offices and chapter platforms.
+- New York re-cut to 5 regions (2 cities, 2 secondary, 1 rural) and California with 5 (Los
+  Angeles, Bay Area · San Diego, Sacramento & Inland Empire · Central Valley & the North), with
+  mayors, House seats and chapter platforms; map shapes for both.
 - Advanced scenarios: The Underdog Superstar, Blue in a red district, The Carpetbagger,
   Machine politics, The Comeback.
 - Balance pass on every scenario band.
@@ -193,7 +199,8 @@ offline.
 
 ## After v2 (expansion)
 
-1. **More states:** up to 15 states / 25 regions, plus a US map.
+1. **More states:** about 10 playable states, with finer regions scaled by population (Rhode
+   Island 2, New York 10–12, California and Texas more), plus a US map.
 2. **The presidency:** national primaries and the general election over the playable states,
    where the transplant's two-state payoff kicks in.
 3. **Living world:** scandals, random events, recurring rivals, staff poached by opponents.
