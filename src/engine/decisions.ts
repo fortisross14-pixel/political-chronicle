@@ -125,7 +125,11 @@ export function decisionImpact(state: GameState, card: DecisionCard): DecisionIm
   const home = office.regionIds;
   const level = office.level;
 
-  for (const id of STATES[office.state]!.regionIds) {
+  // The jurisdiction (districts or a city's neighborhoods), plus the rest of the state for spillover;
+  // a city's own district hears about it through its neighborhoods (levels.ts).
+  const parents = new Set(home.map((id) => getRegion(id).parent).filter(Boolean));
+  const areas = [...new Set([...home, ...STATES[office.state]!.regionIds.filter((id) => !parents.has(id))])];
+  for (const id of areas) {
     const region = getRegion(id);
     let fit = 0;
     for (const tag of card.tags)

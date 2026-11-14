@@ -201,7 +201,8 @@ export function App() {
   if (finished) return <RunResults state={state} outcome={outcome} onMenu={toMenu} onHall={() => setScreen('hall')} />;
 
   const blocker = endTurnBlocker(state);
-  const electionDay = !!state.career.race?.platform.length && isElectionTurn(state.clock, state.career) && !isPrimaryTurn(state);
+  const electionDay =
+    !state.night && !!state.career.race?.platform.length && isElectionTurn(state.clock, state.career) && !isPrimaryTurn(state);
   const turnKey = `${state.clock.year}-${state.clock.turn}`;
 
   return (

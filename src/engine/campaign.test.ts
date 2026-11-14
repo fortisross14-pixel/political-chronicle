@@ -108,7 +108,7 @@ describe('launching a campaign', () => {
     const modest = launch(rich, WATERTOWN_PLATFORM, undefined, 50_000);
     const lavish = launch(rich, WATERTOWN_PLATFORM, undefined, 2_000_000);
     expect(selfFundingPenalty('mayor-watertown', 50_000)).toBe(0);
-    expect(lavish.regions['ny-north']!.favorability).toBeLessThan(modest.regions['ny-north']!.favorability - 0.05);
+    expect(lavish.regions['wt-arsenal']!.favorability).toBeLessThan(modest.regions['wt-arsenal']!.favorability - 0.05);
   });
 
   it('later platforms: drop one topic, add up to five, move one position by one step', () => {
@@ -128,7 +128,7 @@ describe('launching a campaign', () => {
     let late = newRun({ exactYear: false, seed: 'edge' });
     late = passTurns(late, 3);
     late = launch(late);
-    const known = (s: GameState) => s.career.race!.opponents[0]!.regions['ny-north']!.recognition;
+    const known = (s: GameState) => s.career.race!.opponents[0]!.regions['wt-arsenal']!.recognition;
     expect(known(late)).toBeGreaterThan(known(early));
   });
 });
@@ -253,7 +253,7 @@ describe('Election Day', () => {
       if (s.elections[0]!.playerWon) {
         won = true;
         expect(s.career.office).toMatchObject({ officeId: 'mayor-watertown', termEndsYear: 2031, startedYear: 2028 });
-        expect(s.career.office!.approval['ny-north']).toBeGreaterThan(0.3);
+        expect(s.career.office!.approval['wt-arsenal']).toBeGreaterThan(0.3);
       } else {
         lost = true;
         expect(s.career.office).toBeUndefined();

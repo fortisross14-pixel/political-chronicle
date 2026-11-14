@@ -29,6 +29,10 @@ export const NIGHT = {
   adBlitzCost: 20000,
   /** Total weighted swing from night actions can't exceed this. */
   maxSwing: 0.01,
+  /** Nor can the boost in any one area. */
+  maxAreaBoost: 0.03,
+  /** The count reveals areas one by one across this many half-hours. */
+  revealSpan: 8,
   volunteerTokens: 2,
   /** Late voters break your way (legendary card): on the uncounted vote, outside the swing cap. */
   lateSurge: 0.015,
@@ -132,14 +136,17 @@ export function startNight(
 ): GameState {
   const race = state.career.race!;
   const regions: Record<RegionId, NightRegion> = {};
+  const order = revealOrder(Object.keys(regionShares), rng);
   for (const [id, shares] of Object.entries(regionShares)) {
     const type = getRegion(id).type;
+    const many = order.length > 4;
     regions[id] = {
       trueShares: shares,
       prior: priors[id]!,
       skew: rng.gaussian(0, NIGHT.skewSd),
-      closeStep: NIGHT.closeStep[type],
-      countSteps: NIGHT.countSteps[type],
+      // Many areas: they report one after another; a few big regions: by type, as before.
+      closeStep: many ? 1 + Math.floor((order.indexOf(id) * NIGHT.revealSpan) / order.length) : NIGHT.closeStep[type],
+      countSteps: many ? 2 + (type === 'urban' ? 2 : 1) : NIGHT.countSteps[type],
       boost: 0,
       protected: false,
     };
@@ -167,6 +174,15 @@ export function startNight(
   return updateCalls({ ...state, rng: rng.state, night, items });
 }
 
+/** Small, rural and suburban areas report first; big-city boxes come in last (with some luck). */
+function revealOrder(ids: RegionId[], rng: Rng): RegionId[] {
+  const rank: Record<string, number> = { rural: 0, suburban: 1, midsize: 2, urban: 3 };
+  return ids
+    .map((id) => ({ id, key: rank[getRegion(id).type]! + rng.float() * 2.5 }))
+    .sort((a, b) => a.key - b.key)
+    .map((x) => x.id);
+}
+
 function updateCalls(state: GameState): GameState {
   const night = state.night!;
   const w = weights(night.officeId);
@@ -175,7 +191,7 @@ function updateCalls(state: GameState): GameState {
   const office = getOffice(night.officeId);
   for (const [id, r] of Object.entries(regions)) {
     const c = counted(r, night.step);
-    if (night.step === r.closeStep && office.regionIds.length > 1) ticker.push(`Polls close in ${getRegion(id).name}.`);
+    if (night.step === r.closeStep && office.regionIds.length > 1) ticker.push(`First returns from ${getRegion(id).name}.`);
     if (r.calledFor !== undefined || c < 0.3) continue;
     const rep = reportedShares(night, id)!;
     const est = rep.map((v, i) => c * v + (1 - c) * priorShares(r)[i]!);
@@ -234,6 +250,7 @@ export function mobilizeError(state: GameState, regionId: RegionId, free = false
   if (counted(r, night.step) >= 1) return 'Already fully counted.';
   if (!free && night.tokens < 1) return 'No ground-game tokens left.';
   if (totalSwing(night) >= NIGHT.maxSwing - 1e-9) return 'Your ground game is stretched to the limit.';
+  if (r.boost >= NIGHT.maxAreaBoost - 1e-9) return 'Every volunteer you have is already there.';
   return undefined;
 }
 
@@ -245,7 +262,7 @@ export function mobilizeEffect(state: GameState, regionId: RegionId, multiplier 
   const raw = NIGHT.mobilize * (0.6 + 0.08 * str) * (1 - c) * multiplier;
   const w = weights(night.officeId)[regionId]!;
   const room = Math.max(0, NIGHT.maxSwing - totalSwing(night));
-  return Math.min(raw, room / w);
+  return Math.max(0, Math.min(raw, room / w, NIGHT.maxAreaBoost - night.regions[regionId]!.boost));
 }
 
 export function mobilize(

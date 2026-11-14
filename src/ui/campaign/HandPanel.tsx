@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { CSSProperties } from 'react';
-import { BASIC_CARD_IDS, getEventCard, getItem, getRegion, ISSUES_BY_ID, MILESTONES_BY_ID, STATES } from '../../data';
-import { activePlatform, itemError, previewEvent } from '../../engine';
+import { BASIC_CARD_IDS, getEventCard, getItem, getOffice, getRegion, ISSUES_BY_ID, MILESTONES_BY_ID, STATES } from '../../data';
+import { activePlatform, describeDemo, itemError, previewEvent } from '../../engine';
 import type { Action, EventCard, GameState, IssueId, RegionId } from '../../engine';
 import { Bolt, GameCard } from '../cards/GameCard';
 import { EventArt } from '../cards/CardArt';
@@ -52,7 +52,8 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
   const precise = state.politician.skills.strategy >= PRECISE_PREVIEW_POLICY;
   const target = preview.effects.find((e) => e.regionId === regionId);
   const spill = preview.effects.filter((e) => e.regionId !== regionId);
-  const stateRegions = STATES[getRegion(regionId).state]!.regionIds;
+  const areaOffice = race?.officeId ?? state.career.office?.officeId;
+  const stateRegions = areaOffice ? getOffice(areaOffice).regionIds : STATES[getRegion(regionId).state]!.regionIds;
   const [notice, setNotice] = useState<string | null>(null);
   const play = (e: HandEntry, region: RegionId) => {
     const err = previewEvent(state, e.ref, region, issue).error;
@@ -95,8 +96,8 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
               aria-pressed={id === regionId}
               onClick={() => onRegionChange(id)}
             >
-              <strong>{getRegion(id).seatCity}</strong>
-              <span>{getRegion(id).name}</span>
+              <strong>{getRegion(id).parent ? getRegion(id).name : getRegion(id).seatCity}</strong>
+              <span>{getRegion(id).parent ? describeDemo(getRegion(id).demo) : getRegion(id).name}</span>
             </button>
           ))}
           <p className="muted small drag-hint">Drag a card onto a region to play it there, or pick one and press Play.</p>

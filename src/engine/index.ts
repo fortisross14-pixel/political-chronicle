@@ -23,6 +23,8 @@ export * from './policy';
 export * from './launch';
 export * from './world';
 export * from './trinkets';
+export * from './demographics';
+export * from './levels';
 export { applyAction } from './reducer';
 export { endTurnBlocker, validateAction } from './validate';
 export { GameError } from './errors';

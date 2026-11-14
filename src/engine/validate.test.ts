@@ -7,7 +7,7 @@ import type { Action, GameState } from './types';
 const INVALID: Record<Action['type'], (s: GameState) => [GameState, Action]> = {
   END_TURN: (s) => [s, { type: 'END_TURN' }], // decisions pending
   LAUNCH_CAMPAIGN: (s) => [s, { type: 'LAUNCH_CAMPAIGN', officeId: 'mayor-nyc', platform: [], donation: 0 }], // already running
-  PLAY_EVENT: (s) => [s, { type: 'PLAY_EVENT', cardUid: 'door_knocking', regionId: 'ny-north', issue: 'guns' }], // decisions pending
+  PLAY_EVENT: (s) => [s, { type: 'PLAY_EVENT', cardUid: 'door_knocking', regionId: 'wt-arsenal', issue: 'guns' }], // decisions pending
   RESOLVE_DECISIONS: (s) => [s, { type: 'RESOLVE_DECISIONS', apply: [] }],
   BUY_PACK: (s) => [
     { ...s, funds: 0 },
@@ -27,8 +27,8 @@ const INVALID: Record<Action['type'], (s: GameState) => [GameState, Action]> = {
   DISCARD_PERSON: (s) => [s, { type: 'DISCARD_PERSON', uid: 999 }],
   USE_ITEM: (s) => [s, { type: 'USE_ITEM', uid: 999 }],
   NIGHT_ADVANCE: (s) => [s, { type: 'NIGHT_ADVANCE' }],
-  NIGHT_MOBILIZE: (s) => [s, { type: 'NIGHT_MOBILIZE', regionId: 'ny-north' }],
-  NIGHT_LAWYERS: (s) => [s, { type: 'NIGHT_LAWYERS', regionId: 'ny-north' }],
+  NIGHT_MOBILIZE: (s) => [s, { type: 'NIGHT_MOBILIZE', regionId: 'wt-arsenal' }],
+  NIGHT_LAWYERS: (s) => [s, { type: 'NIGHT_LAWYERS', regionId: 'wt-arsenal' }],
   NIGHT_AD_BLITZ: (s) => [s, { type: 'NIGHT_AD_BLITZ' }],
   NIGHT_FINISH: (s) => [s, { type: 'NIGHT_FINISH' }],
   USE_TRINKET: (s) => [s, { type: 'USE_TRINKET', id: 'get_out_the_vote' }],

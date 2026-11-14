@@ -1,6 +1,7 @@
 // Event cards: pick a region and one of your platform topics (DESIGN §6.1).
 import { GameError } from './errors';
-import { getBackground, getEventCard, getOffice, getRegion, ISSUES_BY_ID, STATES } from '../data';
+import { cityRegionsOf, getBackground, getEventCard, getOffice, getRegion, ISSUES_BY_ID, STATES } from '../data';
+import { groupFit } from './demographics';
 import { alignment, clamp, nudgeFavorability, nudgeRecognition, regionAlignment, relevance, skillMult } from './opinion';
 import { GOVERNING, nudgeApproval } from './governing';
 import { adjustStanding } from './parties';
@@ -8,7 +9,7 @@ import { award, GROUND_GAME } from './loot';
 import { effectiveSkills, hasPerk, ROLE_EFFECT, roleStars } from './people';
 import { hasAbility, native } from './traits';
 import { Rng } from './rng';
-import type { EventCard, GameState, IssueId, OfficeLevel, Pledge, RegionId, Stance } from './types';
+import type { EventCard, GameState, IssueId, MediaChannel, OfficeLevel, Pledge, RegionId, Stance } from './types';
 
 export const HOMETOWN_EVENT_BONUS = 1.25;
 /** A transplant's own city is home turf too: they chose to live there. */
@@ -18,6 +19,12 @@ export const DOUBTED_ISSUE_FACTOR = 0.85;
 export const FATIGUE = 0.7;
 export const FUNDRAISING_FATIGUE = 0.5;
 /** A card's own topics (e.g. a college presentation on education) persuade this much more. */
+/** Share of an event heard in a city's other neighborhoods, by medium. */
+export const CITY_SPREAD: Record<MediaChannel, number> = { tv: 0.85, cable: 0.8, radio: 0.75, social: 0.6, inPerson: 0.35 };
+
+/** Share heard in the race's other districts (House and statewide races), by medium. */
+export const DISTRICT_SPREAD: Record<MediaChannel, number> = { tv: 0.45, cable: 0.45, radio: 0.35, social: 0.35, inPerson: 0.03 };
+
 /** Campaign events count this much when you run for re-election: the record speaks louder. */
 export const INCUMBENT_CAMPAIGN = 0.6;
 
@@ -132,7 +139,8 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
   if (stance === undefined || (card.reach === 0 && card.persuasion === 0)) return preview;
 
   // Only natives get the hometown bonus; a transplant's city doesn't know them that well yet.
-  const hometown = regionId === state.politician.residentRegionId ? (native(state) ? HOMETOWN_EVENT_BONUS : TRANSPLANT_EVENT_BONUS) : 1;
+  const atHome = regionId === state.politician.residentRegionId || region.parent === state.politician.residentRegionId;
+  const hometown = atHome ? (native(state) ? HOMETOWN_EVENT_BONUS : TRANSPLANT_EVENT_BONUS) : 1;
   const perks = getBackground(state.politician.backgroundId).perks;
   const perk = (card.id === 'door_knocking' ? (perks.doorKnocking ?? 1) : 1) * (card.id === 'debate' ? (perks.debate ?? 1) : 1);
   const manager = state.career.race ? 1 + ROLE_EFFECT.campaignPerStar * roleStars(state, 'campaignManager') : 1;
@@ -142,13 +150,24 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
   const mult = skillMult(skills, card.skills) * hometown * fatigue * perk * manager * defending;
   const cred = credibility(state, issue, stance);
   const targets: [RegionId, number][] = [[regionId, 1]];
-  if (card.spillover > 0) {
-    for (const id of STATES[region.state]!.regionIds) if (id !== regionId) targets.push([id, card.spillover]);
+  const city = cityRegionsOf(regionId);
+  if (city.length) {
+    // In a city, media carry across every neighborhood; door-knocking stays on the block.
+    const spread = Math.max(card.spillover, CITY_SPREAD[card.medium]);
+    for (const id of city) if (id !== regionId) targets.push([id, spread]);
+  } else {
+    // Across districts: media carry to the race's other districts; anything statewide is heard everywhere.
+    const raceIds = new Set(state.career.race ? getOffice(state.career.race.officeId).regionIds : []);
+    for (const id of STATES[region.state]!.regionIds) {
+      if (id === regionId) continue;
+      const share = raceIds.has(id) ? Math.max(card.spillover, DISTRICT_SPREAD[card.medium]) : card.spillover;
+      if (share > 0) targets.push([id, share]);
+    }
   }
 
   for (const [id, share] of targets) {
     const r = getRegion(id);
-    const m = r.media[card.medium] * mult * share;
+    const m = r.media[card.medium] * mult * share * groupFit(r.demo, card.audience ?? {});
     const align = regionAlignment(id, issue, stance);
     const you = state.regions[id]!;
     const gain = card.reach * m;

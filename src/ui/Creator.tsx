@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { BACKGROUNDS, getBackground, getOffice, ISSUES_BY_ID, REGIONS, STATES, US_STATE_NAMES, US_STATES } from '../data';
+import { BACKGROUNDS, getBackground, getOffice, ISSUES_BY_ID, DISTRICTS, STATES, US_STATE_NAMES, US_STATES } from '../data';
 import {
   autoAllocate,
   creationCap,
@@ -58,7 +58,7 @@ export function Creator({ onCreate, onCancel }: Props) {
   const skills = finalSkills(input);
   const background = getBackground(backgroundId);
   const native = homeState === residentStateId;
-  const regionsHere = REGIONS.filter((r) => r.state === residentStateId);
+  const regionsHere = DISTRICTS.filter((r) => r.state === residentStateId);
   const mayoralty = hometownMayoralty(residentRegionId);
   const firstRace = mayoralty ? getOffice(mayoralty) : undefined;
   const start = initialRegions({ name, gender, startAge: age, homeState, residentRegionId, backgroundId, skills });

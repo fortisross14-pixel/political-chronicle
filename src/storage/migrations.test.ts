@@ -111,6 +111,27 @@ describe('save migrations', () => {
     expect(out.state.artifacts).toContain('rapid_response');
   });
 
+  it('v11 → v12 rebuilds four-region saves for 18 districts and city neighborhoods', () => {
+    const s = readyRun();
+    const old = ['ny-nyc', 'ny-suburbs', 'ny-wny', 'ny-north'];
+    const pick = <T>(rec: Record<string, T>) => Object.fromEntries(old.map((id) => [id, rec[id]!]));
+    const raw = {
+      ...(s as unknown as Record<string, unknown>),
+      regions: pick(s.regions),
+      career: {
+        ...s.career,
+        race: { ...s.career.race!, opponents: s.career.race!.opponents.map((c) => ({ ...c, regions: pick(c.regions) })) },
+      },
+    };
+    const out = migrate(raw, 11);
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    const regions = out.state.regions as Record<string, unknown>;
+    expect(regions['ny-central']).toEqual(s.regions['ny-north']);
+    expect(regions['wt-mill']).toEqual(s.regions['ny-north']);
+    expect(Object.keys(regions)).toHaveLength(Object.keys(s.regions).length);
+  });
+
   it('leaves current saves untouched', () => {
     const s = readyRun();
     expect(migrate(s as unknown as Record<string, unknown>, SCHEMA_VERSION)).toMatchObject({ ok: true, from: SCHEMA_VERSION });

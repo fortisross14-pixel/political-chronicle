@@ -1,5 +1,5 @@
 // Scenarios (missions): a preset start, an objective with a deadline, and star goals (DESIGN_V2 §8.1).
-import { getOffice, getScenario, PARTIES } from '../data';
+import { getOffice, getRegion, getScenario, PARTIES } from '../data';
 import type { Scenario, StarRule } from '../data';
 import { autoAllocate, buildRunConfig, finalSkills, SKILL_LABELS } from './creation';
 import { reject } from './errors';
@@ -79,6 +79,13 @@ export function createScenarioRun(scenarioId: string, start: ScenarioStart): Gam
         ...regions[id]!,
         recognition: nudgeRecognition(regions[id]!.recognition, 0.5),
         favorability: Math.max(regions[id]!.favorability, 0.15),
+      };
+    // A mayor is known across the district around the city too.
+    for (const id of new Set(office.regionIds.map((r) => getRegion(r).parent).filter((p): p is string => !!p)))
+      regions[id] = {
+        ...regions[id]!,
+        recognition: nudgeRecognition(regions[id]!.recognition, 0.3),
+        favorability: Math.max(regions[id]!.favorability, 0.08),
       };
     const past: ElectionRecord = {
       officeId: o.officeId,

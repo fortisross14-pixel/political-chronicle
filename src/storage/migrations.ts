@@ -1,6 +1,6 @@
 // Save migrations: each step upgrades a raw save from version N to N + 1. Saves are plain JSON,
 // so steps work on loosely typed objects and only touch what changed in that version.
-import { POLICY_CARDS } from '../data';
+import { getOffice, getRegion, POLICY_CARDS, REGIONS } from '../data';
 import {
   DEFAULT_MODIFIERS,
   initWorld,
@@ -101,7 +101,58 @@ const STEPS: Record<number, (s: Raw) => Raw> = {
       policyHand: ((s.policyHand as { cardId: string }[] | undefined) ?? []).filter((c) => known(c.cardId)),
     };
   },
+  // v11 → v12 (M16): New York re-cut into 18 districts with city neighborhoods. Every record keyed
+  // by region is rebuilt from the old region that covered the new one.
+  11: (s) => {
+    const fill = <T>(rec: Record<string, T> | undefined, ids: string[] = REGIONS.map((r) => r.id)): Record<string, T> => {
+      const out: Record<string, T> = {};
+      if (!rec) return out;
+      for (const id of ids) {
+        const v = rec[id] ?? rec[oldRegionOf(id)];
+        if (v !== undefined) out[id] = structuredClone(v);
+      }
+      return out;
+    };
+    const career = s.career as Record<string, unknown>;
+    const race = career.race as
+      (Record<string, unknown> & { officeId: string; opponents: { regions: Record<string, unknown> }[] }) | undefined;
+    const office = career.office as (Record<string, unknown> & { officeId: string; approval: Record<string, number> }) | undefined;
+    const night = s.night as (Record<string, unknown> & { officeId: string; regions: Record<string, unknown> }) | undefined;
+    return {
+      ...s,
+      regions: fill(s.regions as Record<string, unknown>),
+      career: {
+        ...career,
+        ...(race ? { race: { ...race, opponents: race.opponents.map((c) => ({ ...c, regions: fill(c.regions) })) } } : {}),
+        ...(office ? { office: { ...office, approval: fill(office.approval, getOffice(office.officeId).regionIds) } } : {}),
+      },
+      ...(night ? { night: { ...night, regions: fill(night.regions, getOffice(night.officeId).regionIds) } } : {}),
+    };
+  },
 };
+
+/** Before M16 New York had four regions; this is the one that covered each new district or neighborhood. */
+const OLD_REGION: Record<string, string> = {
+  'ny-brooklyn': 'ny-nyc',
+  'ny-queens': 'ny-nyc',
+  'ny-bronx': 'ny-nyc',
+  'ny-staten': 'ny-nyc',
+  'ny-westchester': 'ny-suburbs',
+  'ny-hudson': 'ny-suburbs',
+  'ny-capital': 'ny-north',
+  'ny-catskills': 'ny-north',
+  'ny-mohawk': 'ny-north',
+  'ny-central': 'ny-north',
+  'ny-fingerlakes': 'ny-north',
+  'ny-southern': 'ny-north',
+  'ny-rochester': 'ny-wny',
+  'ny-chautauqua': 'ny-wny',
+};
+
+function oldRegionOf(id: string): string {
+  const district = getRegion(id).parent ?? id;
+  return OLD_REGION[district] ?? district;
+}
 
 export type MigrationResult = { ok: true; state: Raw; from: number } | { ok: false; reason: string };
 

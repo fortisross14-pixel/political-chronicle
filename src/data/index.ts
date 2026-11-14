@@ -35,6 +35,25 @@ export function getRegion(id: RegionId): Region {
   return region;
 }
 
+/** State-level districts (no neighborhoods). */
+export const DISTRICTS: Region[] = REGIONS.filter((r) => !r.parent);
+
+/** The district a region sits in (a district is its own). */
+export function districtOf(id: RegionId): RegionId {
+  return getRegion(id).parent ?? id;
+}
+
+/** Neighborhoods of a district. */
+export function neighborhoodsOf(id: RegionId): RegionId[] {
+  return REGIONS.filter((r) => r.parent === id).map((r) => r.id);
+}
+
+/** The city a neighborhood belongs to: every neighborhood of its mayoralty. Empty for districts. */
+export function cityRegionsOf(id: RegionId): RegionId[] {
+  if (!getRegion(id).parent) return [];
+  return OFFICES.find((o) => o.level === 'mayor' && o.regionIds.includes(id))?.regionIds ?? [];
+}
+
 export function getOffice(id: OfficeId): Office {
   const office = OFFICES_BY_ID[id];
   if (!office) throw new Error(`Unknown office: ${id}`);

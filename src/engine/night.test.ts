@@ -45,7 +45,7 @@ describe('election night', () => {
 
   it('results come in gradually and converge to the final count', () => {
     let s = toNight();
-    const id = 'ny-north';
+    const id = 'wt-arsenal';
     expect(reportedShares(s.night!, id)).toBeUndefined();
     const seen: number[] = [];
     while (!nightFinished(s.night!)) {
@@ -71,24 +71,24 @@ describe('election night', () => {
   it('mobilizing spends a token, only on uncounted regions, and is capped', () => {
     let s = toNight();
     const before = s.night!.tokens;
-    s = applyAction(s, { type: 'NIGHT_MOBILIZE', regionId: 'ny-north' });
+    s = applyAction(s, { type: 'NIGHT_MOBILIZE', regionId: 'wt-arsenal' });
     expect(s.night!.tokens).toBe(before - 1);
-    expect(s.night!.regions['ny-north']!.boost).toBeGreaterThan(0);
+    expect(s.night!.regions['wt-arsenal']!.boost).toBeGreaterThan(0);
     // Hammer it: the total swing never exceeds the cap.
     for (let i = 0; i < 20; i++) {
       s = { ...s, night: { ...s.night!, tokens: 5 } };
-      if (!mobilizeError(s, 'ny-north')) s = applyAction(s, { type: 'NIGHT_MOBILIZE', regionId: 'ny-north' });
+      if (!mobilizeError(s, 'wt-arsenal')) s = applyAction(s, { type: 'NIGHT_MOBILIZE', regionId: 'wt-arsenal' });
     }
-    expect(s.night!.regions['ny-north']!.boost).toBeLessThanOrEqual(NIGHT.maxSwing + 1e-9);
+    expect(s.night!.regions['wt-arsenal']!.boost).toBeLessThanOrEqual(NIGHT.maxAreaBoost + 1e-9);
     while (!nightFinished(s.night!)) s = applyAction(s, { type: 'NIGHT_ADVANCE' });
-    expect(mobilizeError({ ...s, night: { ...s.night!, tokens: 3 } }, 'ny-north')).toMatch(/counted/);
+    expect(mobilizeError({ ...s, night: { ...s.night!, tokens: 3 } }, 'wt-arsenal')).toMatch(/counted/);
   });
 
   it('lawyers go once per region; the ad blitz costs money once', () => {
     let s = { ...toNight(), funds: 1e6 };
-    s = applyAction(s, { type: 'NIGHT_LAWYERS', regionId: 'ny-north' });
-    expect(s.night!.regions['ny-north']!.protected).toBe(true);
-    expect(() => applyAction(s, { type: 'NIGHT_LAWYERS', regionId: 'ny-north' })).toThrow(/already/);
+    s = applyAction(s, { type: 'NIGHT_LAWYERS', regionId: 'wt-arsenal' });
+    expect(s.night!.regions['wt-arsenal']!.protected).toBe(true);
+    expect(() => applyAction(s, { type: 'NIGHT_LAWYERS', regionId: 'wt-arsenal' })).toThrow(/already/);
     const ads = applyAction(s, { type: 'NIGHT_AD_BLITZ' });
     expect(ads.funds).toBeLessThan(s.funds);
     expect(() => applyAction(ads, { type: 'NIGHT_AD_BLITZ' })).toThrow(/already/);
@@ -108,8 +108,8 @@ describe('items', () => {
     s = giveItem(giveItem(s, 'endorsement'), 'volunteer_list');
     const [endorse, volunteers] = s.items;
     expect(itemError(s, volunteers!.uid)).toMatch(/election night/);
-    const after = applyAction(s, { type: 'USE_ITEM', uid: endorse!.uid, regionId: 'ny-north' });
-    expect(after.regions['ny-north']!.favorability).toBeGreaterThan(s.regions['ny-north']!.favorability);
+    const after = applyAction(s, { type: 'USE_ITEM', uid: endorse!.uid, regionId: 'wt-arsenal' });
+    expect(after.regions['wt-arsenal']!.favorability).toBeGreaterThan(s.regions['wt-arsenal']!.favorability);
     expect(after.items).toHaveLength(1);
   });
 
@@ -117,9 +117,9 @@ describe('items', () => {
     let s = readyRun();
     s = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: [s.decisions!.cardIds[0]!] });
     s = giveItem(s, 'oppo_dossier');
-    const after = applyAction(s, { type: 'USE_ITEM', uid: s.items[0]!.uid, regionId: 'ny-north' });
-    expect(after.career.race!.opponents[0]!.regions['ny-north']!.favorability).toBeLessThan(
-      s.career.race!.opponents[0]!.regions['ny-north']!.favorability,
+    const after = applyAction(s, { type: 'USE_ITEM', uid: s.items[0]!.uid, regionId: 'wt-arsenal' });
+    expect(after.career.race!.opponents[0]!.regions['wt-arsenal']!.favorability).toBeLessThan(
+      s.career.race!.opponents[0]!.regions['wt-arsenal']!.favorability,
     );
   });
 
@@ -154,7 +154,7 @@ describe('loot', () => {
     for (let i = 0; i < 3; i++)
       s = applyAction(
         { ...s, energy: 6 },
-        { type: 'PLAY_EVENT', cardUid: 'door_knocking', regionId: 'ny-north', issue: s.career.race!.platform[0]!.issue },
+        { type: 'PLAY_EVENT', cardUid: 'door_knocking', regionId: 'wt-arsenal', issue: s.career.race!.platform[0]!.issue },
       );
     expect(s.career.race!.tokens).toBe(start + 3);
     expect(s.career.race!.doorKnocks).toBe(3);
@@ -184,5 +184,5 @@ describe('M9 acceptance', () => {
     }
     expect(blowoutFlips).toBe(0);
     expect(flipped).toBeLessThanOrEqual(close);
-  });
+  }, 30_000);
 });

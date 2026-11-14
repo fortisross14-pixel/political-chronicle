@@ -520,3 +520,25 @@ result; late-voter cards and trinkets act then, on the whole uncounted vote. The
 
 **Governing decides re-election.** An incumbent's vote leans on job approval (weight 3) and their
 own campaign events count ×0.6. Running for a different office, the campaign counts in full.
+
+## 14. The electorate (M16, as built)
+
+**Three levels of geography.** Cities (neighborhoods) for mayoral races, the state (districts) for
+House and statewide races, and later the nation (states). Only the active race is simulated at the
+finest level; everything else rolls up.
+
+**Demographics.** Each area is a mix of age (young adults, adults, seniors), class (low, middle,
+high) and education (no degree, high school / some college, college and beyond). A
+neighborhood usually has one character: young middle-to-high-income college grads (young urban
+professionals), affluent retirees, low-income no-degree mill blocks. From the mix and the place's
+voting history the game derives, per topic, how voters stand and how much they care, plus which
+media reach them.
+
+**Cards and decisions land unevenly.** TV skews older, social media younger, radio to voters
+without a degree; a union rally reaches working-class voters, a rotary lunch affluent ones. Laws
+are judged by each neighborhood's own opinions. The strategy is to read the map: give up an area
+that is out of reach and win the tied, populous ones.
+
+**Tracker.** Every turn the map can show who leads each area (red, blue, gold for you as an
+independent, grey where undecided voters are the biggest bloc) or how it shifted since last turn;
+tap an area for each candidate's share and change. On election night the areas report one by one.

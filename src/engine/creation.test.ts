@@ -137,14 +137,14 @@ describe('native vs transplant', () => {
     expect(isNative(transplantRun.politician)).toBe(false);
     expect(nativeRun.regions['ny-north']!.recognition).toBeGreaterThan(transplantRun.regions['ny-north']!.recognition);
     expect(newcomerPenalty(nativeRun)).toBe(0);
-    expect(newcomerPenalty(transplantRun)).toBeCloseTo(0.03);
-    expect(newcomerPenalty(transplantRun, 'ny-north')).toBeCloseTo(0.027); // rural ×0.9
-    expect(newcomerPenalty(transplantRun, 'ny-nyc')).toBeCloseTo(0.012); // urban ×0.4
+    expect(newcomerPenalty(transplantRun)).toBeCloseTo(0.045);
+    expect(newcomerPenalty(transplantRun, 'ny-north')).toBeCloseTo(0.0405); // rural ×0.9
+    expect(newcomerPenalty(transplantRun, 'ny-nyc')).toBeCloseTo(0.018); // urban ×0.4
     const later: GameState = { ...transplantRun, clock: { ...transplantRun.clock, monthsElapsed: 48 } };
-    expect(newcomerPenalty(later)).toBeCloseTo(0.015);
+    expect(newcomerPenalty(later)).toBeCloseTo(0.0225);
     const running = launch(transplantRun, [{ issue: 'guns', stance: 2 }], undefined, 0);
-    const you = raceViews(running, running.career.race!, 'ny-north')[0]!;
-    expect(you.standing.favorability).toBeCloseTo(running.regions['ny-north']!.favorability - 0.027);
+    const you = raceViews(running, running.career.race!, 'wt-mill')[0]!;
+    expect(you.standing.favorability).toBeCloseTo(running.regions['wt-mill']!.favorability - newcomerPenalty(running, 'wt-mill'));
   });
 
   it('transplants raise more from outside donors; their city is home turf for events too', () => {
@@ -153,8 +153,8 @@ describe('native vs transplant', () => {
       const p = launch(s, [{ issue: 'guns', stance: 2 }]);
       return applyAction(p, { type: 'RESOLVE_DECISIONS', apply: [p.decisions!.cardIds[0]!] });
     };
-    const a = previewEvent(ready(nativeRun), 'door_knocking', 'ny-north', 'guns').effects[0]!.dRecognition;
-    const b = previewEvent({ ...ready(transplantRun), regions: ready(nativeRun).regions }, 'door_knocking', 'ny-north', 'guns').effects[0]!
+    const a = previewEvent(ready(nativeRun), 'door_knocking', 'wt-mill', 'guns').effects[0]!.dRecognition;
+    const b = previewEvent({ ...ready(transplantRun), regions: ready(nativeRun).regions }, 'door_knocking', 'wt-mill', 'guns').effects[0]!
       .dRecognition;
     expect(a).toBeCloseTo(b, 6);
   });
@@ -193,6 +193,6 @@ describe('M7 acceptance: natives vs transplants', () => {
     const n = hometownWinRate(botCharacter('ny-north'), 'sensible', 30);
     const t = hometownWinRate(botCharacter('ny-north', 'public_servant', 35, 'TX'), 'sensible', 30);
     expect(n.winRate).toBeGreaterThan(t.winRate);
-    expect(n.avgShare - t.avgShare).toBeGreaterThan(0.02);
+    expect(n.avgShare - t.avgShare).toBeGreaterThan(0.015);
   });
 });

@@ -108,9 +108,9 @@ export const SCENARIOS: Scenario[] = [
     setup: {
       character: { gender: 'male', age: 41, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'veteran' },
       startYear: 2028,
-      office: { officeId: 'mayor-watertown', approval: 0.45, platform: WATERTOWN_PLATFORM, wonYear: 2027, share: 0.52 },
+      office: { officeId: 'mayor-watertown', approval: 0.52, platform: WATERTOWN_PLATFORM, wonYear: 2027, share: 0.52 },
       // A well-funded challenger campaigns hard for the whole window.
-      opponentActivity: 3,
+      opponentActivity: 2,
     },
     objective: { officeId: 'mayor-watertown', by: 2031, minYear: 2031, text: 'Win re-election as Mayor of Watertown in 2031' },
     stars: [
@@ -133,7 +133,8 @@ export const SCENARIOS: Scenario[] = [
       character: { gender: 'nonbinary', age: 38, homeState: 'NY', residentRegionId: 'ny-north', backgroundId: 'lawyer' },
       startYear: 2028,
       office: { officeId: 'mayor-watertown', approval: 0.55, platform: WATERTOWN_PLATFORM, wonYear: 2027, share: 0.54 },
-      opponentRecognition: 1.2,
+      opponentRecognition: 0.3,
+      opponentActivity: -1.5,
     },
     objective: { officeId: 'house-ny-north', by: 2028, text: 'Win the North Country House seat in 2028' },
     stars: [

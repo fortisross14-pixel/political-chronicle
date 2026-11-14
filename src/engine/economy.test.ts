@@ -49,7 +49,12 @@ describe('income', () => {
   it('Fundraising and recognition raise donor income', () => {
     const s = readyRun();
     const better = { ...s, politician: { ...s.politician, skills: { ...s.politician.skills, economics: 6 } } };
-    const known = { ...s, regions: { ...s.regions, 'ny-north': { recognition: 0.9, favorability: 0.2 } } };
+    const known = {
+      ...s,
+      regions: Object.fromEntries(
+        Object.entries(s.regions).map(([id, r]) => [id, id.startsWith('wt-') ? { recognition: 0.9, favorability: 0.2 } : r]),
+      ),
+    };
     expect(projectedIncome(better).donors).toBeGreaterThan(projectedIncome(s).donors);
     expect(projectedIncome(known).donors).toBeGreaterThan(projectedIncome(s).donors);
   });

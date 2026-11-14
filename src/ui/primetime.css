@@ -3081,3 +3081,136 @@ img.card-art.painted {
 img.card-art.painted.portrait {
   object-position: center 22%;
 }
+
+/* Race map: decor, tap popup, demographics. */
+.race-map {
+  position: relative;
+}
+
+.map-decor {
+  pointer-events: none;
+  fill: none;
+}
+
+.map-decor.water {
+  fill: #0d2d55;
+  opacity: 0.7;
+}
+
+.map-decor.land {
+  fill: #2b3956;
+  stroke: #9fb3d9;
+  stroke-width: 1;
+}
+
+.map-decor.river {
+  stroke: #3d82f5;
+  stroke-width: 6;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+.map-decor.frame,
+.map-decor.link {
+  stroke: #9fb3d9;
+  stroke-width: 1.2;
+  stroke-dasharray: 4 3;
+  opacity: 0.7;
+}
+
+.area-popup {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  min-width: 240px;
+  max-width: calc(100% - 16px);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(20, 33, 61, 0.97), rgba(8, 16, 40, 0.97));
+  border: 1px solid rgba(245, 200, 66, 0.5);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  animation: popup-in 160ms ease-out;
+}
+
+@keyframes popup-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+.area-popup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--display);
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.area-popup-head button {
+  padding: 0 8px;
+  min-height: 28px;
+}
+
+.area-popup ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.area-popup li {
+  display: grid;
+  grid-template-columns: 12px 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.area-popup li.you .area-name {
+  font-weight: 700;
+}
+
+.area-popup .swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.area-popup .pos {
+  color: #6fe0c3;
+}
+
+.area-popup .neg {
+  color: #ffab7a;
+}
+
+.demo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.demo-chip {
+  font-size: 0.78rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+@media (max-width: 600px) {
+  .area-popup {
+    position: static;
+    transform: none;
+    max-width: none;
+    margin-top: 8px;
+    animation: none;
+  }
+}

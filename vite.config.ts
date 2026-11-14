@@ -35,6 +35,8 @@ export default defineConfig({
   build: { outDir: 'dist', sourcemap: false },
   test: {
     environment: 'node',
+    // Career simulations over 18 districts take a few seconds each, more under coverage.
+    testTimeout: 30_000,
     include: ['src/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',

@@ -11,6 +11,7 @@ import { poll } from './opinion';
 import { evaluateScenario } from './scenarios';
 import { endTurnBlocker, validateAction } from './validate';
 import { applyTrinket } from './trinkets';
+import { syncLevels } from './levels';
 import { hasAbility } from './traits';
 import { rollChambers } from './legislature';
 import { assignPerson, discardPerson, hasPerk, unassignRole } from './people';
@@ -30,7 +31,7 @@ import type { Action, GameState } from './types';
  */
 export function applyAction(state: GameState, action: Action): GameState {
   reject(validateAction(state, action));
-  return evaluateScenario(reduce(state, action));
+  return evaluateScenario(syncLevels(state, reduce(state, action)));
 }
 
 function reduce(state: GameState, action: Action): GameState {
@@ -91,6 +92,9 @@ function endTurn(state: GameState): GameState {
   const rng = new Rng(state.rng);
   let s: GameState = state;
 
+  // The map's "shift this turn" compares against where things stood now.
+  if (s.career.race?.platform.length)
+    s = { ...s, career: { ...s.career, race: { ...s.career.race, prevPoll: poll(s, s.career.race).regions } } };
   // Opponents campaign, milestones pay out, then the turn is recorded (including the poll).
   if (s.career.race) s = checkTurnMilestones({ ...s, career: { ...s.career, race: opponentsAct(rng, s.career.race) } });
   s = { ...s, snapshots: [...s.snapshots, takeSnapshot(s)] };

@@ -29,14 +29,16 @@ test('on a phone, decisions are swiped and cards are dragged onto a region', asy
   await expect(page.locator('.dot.yes')).toHaveCount(1);
   await page.getByRole('button', { name: /^Confirm 1 stance/ }).click();
 
-  // Drag Door-knocking onto the Buffalo chip.
+  // Drag Door-knocking onto the Mill Street chip.
   await page.getByRole('button', { name: /^Play cards/ }).click();
   const energy = Number((await page.locator('.stat', { hasText: 'Energy' }).locator('.count').innerText()).trim());
-  const target = (await page.locator('.region-chip', { hasText: 'Buffalo' }).boundingBox())!;
+  const chip = page.locator('.region-chip', { hasText: 'Mill Street' });
+  await chip.scrollIntoViewIfNeeded();
+  const target = (await chip.boundingBox())!;
   await drag(page, page.locator('.hand-fan .gcard', { hasText: 'Door-knocking' }), {
     x: target.x + target.width / 2,
     y: target.y + target.height / 2,
   });
   await expect(page.locator('.stat', { hasText: 'Energy' }).locator('.count')).toHaveText(String(energy - 2));
-  await expect(page.locator('.region-chip.active')).toContainText('Buffalo');
+  await expect(page.locator('.region-chip.active')).toContainText('Mill Street');
 });

@@ -295,11 +295,48 @@ try / prepared: underdog 7% / 53%, Blue in the North 17% / 40%, small town to th
 
 ---
 
+## M16 — Electorate, maps and art pipeline ✅ done
+
+- **Demographics drive everything local.** Every district and neighborhood is a mix of three age
+  groups (young, adult, senior), three classes (low, middle, high) and three education levels (no
+  degree, some college, college). The mix sets each topic's average opinion and salience, the
+  media mix and, with the place's history, its lean (`engine/demographics.ts`).
+- **New York re-cut into 18 districts** (five boroughs, Long Island, Westchester, Hudson Valley,
+  Capital Region, Catskills, Mohawk Valley, North Country, Central NY, Finger Lakes, Rochester,
+  Buffalo, Southern Tier, Chautauqua). Six House seats, each across several districts.
+- **City neighborhoods** for the mayoral races: Watertown 7, Buffalo 9, NYC 12. They roll up into
+  their district (weighted by the city's reach) and district changes flow down (`engine/levels.ts`).
+- **Cards have audiences.** Each medium reaches some groups better (TV seniors, social young
+  adults, radio no-degree voters…) and many cards add their own (union rally, rotary lunch,
+  college tour, podcast). Card faces say who they reach best and worst; the hand preview still
+  gives exact numbers per area.
+- **Media carry across a race:** in a city TV reaches every neighborhood (85%), door-knocking stays
+  mostly on the block (35%); across districts, TV and cable carry 45% to the race's other districts.
+  Opponents' events spread the same way.
+- **Maps:** generated geometry (`scripts/maps.ts` → `data/geometry.ts`) for the state (with an
+  NYC inset) and each city. The map shows the city when the race or office is a mayoralty.
+  Layers: Leading (grey where undecided is the biggest bloc), **Shift this turn**, approval,
+  lean, recognition, favorability. Tap an area: “Mill Street: Brennan 51.8 (+2.7) · You 21.2 (−1.2) ·
+  Undecided 27.0 (−1.5)”.
+- **Election night** reveals areas one by one (rural and suburban first, big-city boxes last), with
+  a per-area cap on night boosts.
+- **Art pipeline:** `art/grids.json` → `art/PROMPTS.md` (five 6 × 4 grids: actions, events and items,
+  trinkets and backgrounds, two of portraits incl. opponents and player faces); `npm run art`
+  slices `art/grids/<id>.png` into `public/art/` and cards use the painted image when it exists.
+- Fixed: governing decisions never reached a mayor's jurisdiction once it was neighborhoods.
+- Save schema v12 (region-keyed records rebuilt from the old four regions).
+
+**Measured (bot):** hometown mayor 78% (Watertown), 68% (Buffalo), 45% (NYC); transplant 68%;
+keeper re-elected 97%, flip-flopper 0%; Governor reached 85% (first try 30%). Missions first try /
+prepared: Hometown 80 / 100, Keep your word 70 / 90, Pick a side 60 / 85 (now a four-district
+seat: win Syracuse), Big city 80 / 100.
+
+---
+
 ## After v2 (expansion)
 
-1. **More states:** New York re-cut to 5 regions and California (2 cities, 2 secondary,
-   1 rural), growing to about 10 playable states with finer regions scaled by population
-   (Rhode Island 2, New York 10–12, California and Texas more), plus a US map.
+1. **More states:** California, Texas and smaller states (4–6 districts for Iowa-sized states),
+   growing to about 10 playable states, plus a 50-state US map for the presidency.
 2. **More advanced missions:** The impossible law (a law-passing objective), The Carpetbagger,
    Machine politics, The Comeback; a town council for mayors so Force the vote matters there too.
 3. **The presidency:** national primaries and the general election over the playable states,

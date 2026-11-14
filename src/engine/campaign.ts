@@ -57,6 +57,9 @@ export const OPPONENT = {
   /** In a big city the field splits: the front-runner and a second candidate do less each. */
   bigCityActivity: 2,
   mayorSecondActivity: 1,
+  /** Share of an opponent's event heard in the race's other neighborhoods / districts. */
+  citySpread: 0.55,
+  districtSpread: 0.35,
   /** Outside big cities, the chance a mayoral race draws a second challenger. */
   secondCandidateChance: 0.5,
 };
@@ -276,16 +279,23 @@ export function opponentsAct(rng: Rng, race: Race): Race {
             rng.float() * 0.2,
         }))
         .sort((a, b) => b.score - a.score)[0]!.p;
-      const cur = regions[regionId]!;
-      const dF =
-        OPPONENT.persuasionPerEvent *
-        region.issueSalience[best.issue] *
-        regionAlignment(regionId, best.issue, best.stance) *
-        relevance(best.issue, office.level);
-      regions[regionId] = {
-        recognition: nudgeRecognition(cur.recognition, OPPONENT.reachPerEvent),
-        favorability: nudgeFavorability(cur.favorability, dF),
-      };
+      // Like the player's media, an opponent's event carries to the race's other areas.
+      const spread = region.parent ? OPPONENT.citySpread : OPPONENT.districtSpread;
+      for (const id of office.regionIds) {
+        const share = id === regionId ? 1 : spread;
+        const r = getRegion(id);
+        const cur = regions[id]!;
+        const dF =
+          OPPONENT.persuasionPerEvent *
+          share *
+          r.issueSalience[best.issue] *
+          regionAlignment(id, best.issue, best.stance) *
+          relevance(best.issue, office.level);
+        regions[id] = {
+          recognition: nudgeRecognition(cur.recognition, OPPONENT.reachPerEvent * share),
+          favorability: nudgeFavorability(cur.favorability, dF),
+        };
+      }
     }
     return { ...c, regions };
   });
@@ -300,7 +310,9 @@ export function opponentsAct(rng: Rng, race: Race): Race {
  *  before you sign up, and the race you file matches it. */
 export function raceField(state: GameState, officeId: OfficeId, electionYear: number): Candidate[] {
   const rng = new Rng(seedFromString(`${state.runId}:${officeId}:${electionYear}`));
-  let opponents = generateOpponents(rng, officeId, state.career.office?.officeId === officeId, state.career.affiliation).map((c) => {
+  let opponents = generateOpponents(rng, officeId, state.career.office?.officeId === officeId, state.career.affiliation);
+  // Scaled after the sitting incumbent is seated, so an easier start also means a weaker incumbent.
+  opponents = seatIncumbent(state, officeId, opponents, rng).map((c) => {
     const scale = state.modifiers.opponentRecognition;
     if (scale === 1) return c;
     return {
@@ -308,7 +320,6 @@ export function raceField(state: GameState, officeId: OfficeId, electionYear: nu
       regions: Object.fromEntries(Object.entries(c.regions).map(([id, r]) => [id, { ...r, recognition: r.recognition * scale }])),
     };
   });
-  opponents = seatIncumbent(state, officeId, opponents, rng);
   const extra = state.modifiers.opponentActivity ?? 0;
   if (extra) opponents = opponents.map((c) => ({ ...c, activity: Math.max(0, c.activity + extra) }));
   return opponents;

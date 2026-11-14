@@ -13,7 +13,7 @@ export const TRAITS = {
   /** Transplant: people in your city have seen you around, but don't know you yet. */
   transplantRecognition: 0.28,
   /** Newcomer trust penalty statewide, fading to 0 over this many years of residency. */
-  newcomerPenalty: 0.03,
+  newcomerPenalty: 0.045,
   newcomerYears: 8,
   /** Big cities are full of newcomers; small towns notice them. Multiplier on the newcomer penalty by region type. */
   newcomerByType: { urban: 0.4, suburban: 0.7, midsize: 0.8, rural: 0.9 } as Record<string, number>,
@@ -48,8 +48,8 @@ export function initialRegions(politician: Politician): Record<RegionId, RegionS
     : bg.disfavoredStates?.includes(home)
       ? TRAITS.disfavoredState
       : 0;
-  return Object.fromEntries(
-    REGIONS.map((r) => {
+  const out: Record<RegionId, RegionStanding> = Object.fromEntries(
+    REGIONS.filter((r) => !r.parent).map((r) => {
       let recognition = TRAITS.baseRecognition;
       let favorability = 0;
       if (r.id === politician.residentRegionId) {
@@ -63,6 +63,9 @@ export function initialRegions(politician: Politician): Record<RegionId, RegionS
       return [r.id, { recognition, favorability: clamp(favorability, -1, 1) }];
     }),
   );
+  // Neighborhoods start where their district stands.
+  for (const r of REGIONS) if (r.parent) out[r.id] = { ...out[r.parent]! };
+  return out;
 }
 
 /**

@@ -200,8 +200,12 @@ function playEvents(state: GameState, style: BotStyle): GameState {
   for (let guard = 0; guard < 20; guard++) {
     let best: { ref: number | string; regionId: string; issue: IssueId; value: number } | undefined;
     const refs: (number | string)[] = [...s.hand.map((c) => c.uid), ...BASIC_CARD_IDS];
+    // The biggest areas (and home) are enough to find a good play; checking all 18 districts is slow.
+    const areas = [...office.regionIds]
+      .sort((a, b) => getRegion(b).population * getRegion(b).turnout - getRegion(a).population * getRegion(a).turnout)
+      .slice(0, 6);
     for (const ref of refs) {
-      for (const regionId of office.regionIds) {
+      for (const regionId of areas) {
         for (const p of platform) {
           const pv = previewEvent(s, ref, regionId, p.issue);
           if (pv.error) continue;

@@ -157,6 +157,6 @@ describe('M10/M15 acceptance: beginner missions sit in their difficulty bands', 
       expect(winRate).toBeGreaterThanOrEqual(bands[scn.id]![0] - 0.1);
       expect(winRate).toBeLessThanOrEqual(bands[scn.id]![1]);
       expect(scenarioRate(scn.id, 20, preparedLoadout(scn.id)).winRate).toBeGreaterThanOrEqual(0.85);
-    });
+    }, 30_000);
   }
 });

@@ -32,9 +32,16 @@ describe('world data', () => {
     }
   });
 
-  it('New York matches the POC population split (≈43/25/15/17)', () => {
-    expect(populationShare('ny-nyc')).toBeCloseTo(0.43, 1);
-    expect(populationShare('ny-suburbs')).toBeCloseTo(0.25, 1);
+  it('New York has 18 districts, NYC about 40% of the state, and neighborhoods that add up', () => {
+    expect(STATES.NY!.regionIds).toHaveLength(18);
+    const nyc = ['ny-nyc', 'ny-brooklyn', 'ny-queens', 'ny-bronx', 'ny-staten'].reduce((s, id) => s + populationShare(id), 0);
+    expect(nyc).toBeGreaterThan(0.36);
+    expect(nyc).toBeLessThan(0.45);
+    for (const o of OFFICES.filter((x) => x.level === 'mayor')) {
+      expect(o.regionIds.length).toBeGreaterThanOrEqual(6);
+      expect(o.regionIds.length).toBeLessThanOrEqual(12);
+      for (const id of o.regionIds) expect(REGIONS_BY_ID[id]!.parent).toBeDefined();
+    }
   });
 
   it('offices reference existing regions and have valid cycles', () => {
@@ -46,9 +53,9 @@ describe('world data', () => {
     }
   });
 
-  it('POC has 3 mayoralties, 4 House seats, 1 Senate and 1 Governor in NY', () => {
+  it('NY has 3 mayoralties, 6 House seats, 1 Senate and 1 Governor', () => {
     const count = (level: string) => OFFICES.filter((o) => o.state === 'NY' && o.level === level).length;
-    expect([count('mayor'), count('house'), count('senate'), count('governor')]).toEqual([3, 4, 1, 1]);
+    expect([count('mayor'), count('house'), count('senate'), count('governor')]).toEqual([3, 6, 1, 1]);
   });
 
   it('parties have a full platform within range', () => {

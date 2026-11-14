@@ -35,18 +35,18 @@ describe('trinkets', () => {
   });
 
   it('you can only use what you brought', () => {
-    expect(trinketError(readyRun(), 'surprise_appearance', 'ny-north')).toMatch(/didn’t bring/);
+    expect(trinketError(readyRun(), 'surprise_appearance', 'wt-arsenal')).toMatch(/didn’t bring/);
   });
 
   it('a surprise appearance at the game helps in one region, twice per race', () => {
     const s = equip(readyRun(), 'surprise_appearance');
     expect(trinketError(s, 'surprise_appearance')).toMatch(/region/);
-    const once = applyAction(s, { type: 'USE_TRINKET', id: 'surprise_appearance', regionId: 'ny-north' });
-    expect(once.regions['ny-north']!.favorability).toBeGreaterThan(s.regions['ny-north']!.favorability);
-    expect(once.regions['ny-north']!.recognition).toBeGreaterThan(s.regions['ny-north']!.recognition);
-    const twice = applyAction(once, { type: 'USE_TRINKET', id: 'surprise_appearance', regionId: 'ny-north' });
+    const once = applyAction(s, { type: 'USE_TRINKET', id: 'surprise_appearance', regionId: 'wt-arsenal' });
+    expect(once.regions['wt-arsenal']!.favorability).toBeGreaterThan(s.regions['wt-arsenal']!.favorability);
+    expect(once.regions['wt-arsenal']!.recognition).toBeGreaterThan(s.regions['wt-arsenal']!.recognition);
+    const twice = applyAction(once, { type: 'USE_TRINKET', id: 'surprise_appearance', regionId: 'wt-arsenal' });
     expect(trinketUsesLeft(twice, 'surprise_appearance')).toBe(0);
-    expect(trinketError(twice, 'surprise_appearance', 'ny-north')).toMatch(/Used up/);
+    expect(trinketError(twice, 'surprise_appearance', 'wt-arsenal')).toMatch(/Used up/);
   });
 
   it('get out the vote works on Election Day only, and adds to the draw', () => {
@@ -55,8 +55,8 @@ describe('trinkets', () => {
     const day = toElectionDay(s);
     expect(trinketError(day, 'get_out_the_vote')).toBeUndefined();
     const mobilized = applyAction(day, { type: 'USE_TRINKET', id: 'get_out_the_vote' });
-    const a = drawElection(day, new Rng(7)).regionShares['ny-north']![0]!;
-    const b = drawElection(mobilized, new Rng(7)).regionShares['ny-north']![0]!;
+    const a = drawElection(day, new Rng(7)).regionShares['wt-arsenal']![0]!;
+    const b = drawElection(mobilized, new Rng(7)).regionShares['wt-arsenal']![0]!;
     expect(b - a).toBeCloseTo(0.01, 5);
   });
 

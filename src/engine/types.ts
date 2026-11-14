@@ -1,3 +1,4 @@
+import type { Demo, Group } from './demographics';
 // Core game types. The engine is pure TypeScript: no React, no DOM.
 
 // ---------- Static world data ----------
@@ -80,6 +81,10 @@ export interface Region {
   media: Record<MediaChannel, number>;
   /** One-line flavour shown in the region panel. */
   blurb: string;
+  /** Who lives here: ages, incomes and schooling (DESIGN_V2 §14). */
+  demo: Demo;
+  /** Neighborhoods: the district they belong to. Districts have none. */
+  parent?: RegionId;
 }
 
 export interface UsState {
@@ -205,6 +210,8 @@ export interface Race {
   used?: string[];
   /** Voters mobilized before Election Day: share points added to your vote everywhere. */
   gotv?: number;
+  /** Each area's poll (player, opponents…, undecided) when the last turn ended: the map's "shift". */
+  prevPoll?: Record<RegionId, number[]>;
   /** Personal money put into this campaign. */
   selfFunded?: number;
   /** Turns left until Election Day when you launched (7 at the earliest, 4 at the latest). */
@@ -315,6 +322,8 @@ export interface EventCard {
   rarity?: Rarity;
   /** Persuasion ×1.4 on these topics. */
   issueBonus?: IssueId[];
+  /** Who this card reaches beyond what its medium does: multiplier per group (DESIGN_V2 §14). */
+  audience?: Partial<Record<Group, number>>;
   /** Basic cards are always available and never consumed. */
   basic: boolean;
   cost: number;

@@ -10,7 +10,7 @@ import { nextElectionYear, turnsInYear } from './time';
 import { initWorld } from './world';
 import type { Career, GameState, Politician, RegionId, RunModifiers, Skills, Snapshot } from './types';
 
-export const SCHEMA_VERSION = 11;
+export const SCHEMA_VERSION = 12;
 export const MAX_AGE_ENDS_RUN = 85;
 export const DEFAULT_START_YEAR = 2027;
 
@@ -102,7 +102,8 @@ export function energyForAge(age: number): number {
 }
 
 export function hometownMayoralty(regionId: RegionId): string | undefined {
-  return OFFICES.find((o) => o.level === 'mayor' && o.regionIds.includes(regionId))?.id;
+  const district = getRegion(regionId).parent ?? regionId;
+  return OFFICES.find((o) => o.level === 'mayor' && o.regionIds.some((id) => (getRegion(id).parent ?? id) === district))?.id;
 }
 
 export function createRun(config: NewRunConfig): GameState {

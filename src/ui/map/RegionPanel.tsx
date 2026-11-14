@@ -1,5 +1,6 @@
 import { getRegion, ISSUES_BY_ID, OFFICES, populationShare } from '../../data';
 import type { GameState, IssueId, MediaChannel, RegionId } from '../../engine';
+import { describeDemo } from '../../engine';
 import { leanLabel, pct, signed } from '../format';
 
 const MEDIA_LABELS: Record<MediaChannel, string> = {
@@ -27,10 +28,20 @@ export function RegionPanel({ state, regionId }: { state: GameState; regionId: R
     <aside className="region-panel" aria-live="polite">
       <h3>{region.name}</h3>
       <p className="muted small">
-        {region.seatCity} · {region.type} · {(region.population / 1_000_000).toFixed(1)}M people ({pct(populationShare(regionId))} of the
-        state) · turnout {pct(region.turnout)}
-        {regionId === state.politician.residentRegionId && ' · your city'}
+        {region.parent ? region.seatCity : region.seatCity} ·{' '}
+        {region.population >= 1e6 ? `${(region.population / 1e6).toFixed(1)}M` : `${Math.round(region.population / 1000)}k`} people
+        {!region.parent && ` (${pct(populationShare(regionId))} of the state)`} · turnout {pct(region.turnout)}
+        {(regionId === state.politician.residentRegionId || region.parent === state.politician.residentRegionId) && ' · home'}
       </p>
+      <div className="demo-chips" aria-label="Who lives here">
+        {describeDemo(region.demo)
+          .split(' · ')
+          .map((t, i) => (
+            <span key={i} className="demo-chip">
+              {['Age', 'Income', 'School'][i]}: {t}
+            </span>
+          ))}
+      </div>
       <p className="small">{region.blurb}</p>
 
       <dl className="kv">

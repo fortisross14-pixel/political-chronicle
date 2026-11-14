@@ -1,6 +1,7 @@
 // Plain-language summaries of what a card does, shown on the card face.
 import { getEventCard, getItem, getPolicyCard, ISSUES_BY_ID, REGIONS } from '../../data';
-import type { EventCard, RegionType } from '../../engine';
+import { audienceSummary, GROUP_LABEL, MEDIUM_GROUPS } from '../../engine';
+import type { EventCard, Group, RegionType } from '../../engine';
 
 const TYPE_LABEL: Record<RegionType, string> = { urban: 'cities', suburban: 'suburbs', midsize: 'towns', rural: 'rural' };
 
@@ -20,6 +21,13 @@ export function bestIn(card: EventCard): string[] {
     .map(([t]) => TYPE_LABEL[t]);
 }
 
+/** Who a card reaches: its medium's audience times its own. */
+export function cardAudience(card: EventCard): { strong: Group[]; weak: Group[] } {
+  const weights: Partial<Record<Group, number>> = { ...MEDIUM_GROUPS[card.medium] };
+  for (const [g, w] of Object.entries(card.audience ?? {}) as [Group, number][]) weights[g] = (weights[g] ?? 1) * w;
+  return audienceSummary(weights);
+}
+
 export interface Chip {
   text: string;
   tone?: 'pos' | 'neg' | 'gold';
@@ -30,8 +38,23 @@ export function actionChips(id: string): Chip[] {
   const chips: Chip[] = [];
   if (c.reach > 0) chips.push({ text: `Reach ${pips(c.reach, 0.24)}` });
   if (c.persuasion > 0) chips.push({ text: `Persuade ${pips(c.persuasion, 0.18)}` });
-  const best = bestIn(c);
-  if (best.length) chips.push({ text: `Best in ${best.join(', ')}`, tone: 'pos' });
+  const { strong, weak } = cardAudience(c);
+  if (strong.length)
+    chips.push({
+      text: `Best: ${strong
+        .slice(0, 2)
+        .map((g) => GROUP_LABEL[g])
+        .join(', ')}`,
+      tone: 'pos',
+    });
+  if (weak.length)
+    chips.push({
+      text: `Weak: ${weak
+        .slice(0, 1)
+        .map((g) => GROUP_LABEL[g])
+        .join(', ')}`,
+      tone: 'neg',
+    });
   if (c.spillover >= 0.5) chips.push({ text: 'Statewide' });
   if (c.issueBonus?.length) chips.push({ text: c.issueBonus.map((i) => ISSUES_BY_ID[i]!.name).join(', '), tone: 'gold' });
   if (c.fundraising) chips.push({ text: 'Raises money', tone: 'gold' });
