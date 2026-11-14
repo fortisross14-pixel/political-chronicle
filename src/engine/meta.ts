@@ -1,6 +1,6 @@
 // Meta-progression across runs: stars, unlocks, artifacts, abilities, and the Hall of Runs
 // (DESIGN_V2 §8). Pure functions over a Profile; storage lives in src/storage/profile.ts.
-import { getOffice, getScenario, SCENARIOS } from '../data';
+import { getOffice, getScenario, SCENARIOS, STARTER_TRINKETS } from '../data';
 import type { Scenario } from '../data';
 import type { GameState, OfficeLevel } from './types';
 
@@ -39,7 +39,9 @@ export interface RunSummary {
 export interface Profile {
   version: 1;
   scenarios: Record<string, ScenarioProgress>;
+  /** Trinkets earned in missions (the six commons are always owned). */
   artifacts: string[];
+  /** Old saves: abilities earned before they became trinkets. */
   abilities: string[];
   runs: RunSummary[];
 }
@@ -75,8 +77,13 @@ export function totalStars(profile: Profile): number {
   return Object.values(profile.scenarios).reduce((s, p) => s + p.stars.length, 0);
 }
 
-/** 2 artifact slots to start, +1 at 6 stars, +1 at 10. */
-export function artifactSlots(profile: Profile): number {
+/** Every trinket you can equip: the starters plus everything earned. */
+export function ownedTrinkets(profile: Profile): string[] {
+  return [...new Set([...STARTER_TRINKETS, ...profile.artifacts, ...profile.abilities])];
+}
+
+/** 2 trinket slots to start, +1 at 6 stars, +1 at 10. */
+export function trinketSlots(profile: Profile): number {
   const stars = totalStars(profile);
   return 2 + (stars >= 6 ? 1 : 0) + (stars >= 10 ? 1 : 0);
 }
@@ -149,9 +156,8 @@ export function buildRunSummary(state: GameState): RunSummary {
 
 export interface RecordOutcome {
   profile: Profile;
-  /** Rewards newly earned by this run. */
-  newArtifacts: string[];
-  newAbilities: string[];
+  /** Trinkets newly earned by this run. */
+  newTrinkets: string[];
   newStars: string[];
   unlockedSandbox: boolean;
 }
@@ -160,7 +166,7 @@ export interface RecordOutcome {
 export function recordRun(profile: Profile, state: GameState): RecordOutcome {
   const summary = buildRunSummary(state);
   const already = profile.runs.some((r) => r.runId === summary.runId);
-  const out: RecordOutcome = { profile, newArtifacts: [], newAbilities: [], newStars: [], unlockedSandbox: false };
+  const out: RecordOutcome = { profile, newTrinkets: [], newStars: [], unlockedSandbox: false };
   if (already) return out;
   const wasSandbox = sandboxUnlocked(profile);
   let next: Profile = { ...profile, runs: [summary, ...profile.runs].slice(0, MAX_RUNS_KEPT) };
@@ -173,13 +179,11 @@ export function recordRun(profile: Profile, state: GameState): RecordOutcome {
     // Rewards are tied to how many stars you hold: reaching 1, 2 or 3 for the first time pays out.
     for (let n = prev.stars.length + 1; n <= best.length; n++) {
       const reward = scenario.rewards[n - 1];
-      for (const a of reward?.artifacts ?? []) if (!next.artifacts.includes(a)) out.newArtifacts.push(a);
-      for (const a of reward?.abilities ?? []) if (!next.abilities.includes(a)) out.newAbilities.push(a);
+      for (const a of reward?.trinkets ?? []) if (!ownedTrinkets(next).includes(a) && !out.newTrinkets.includes(a)) out.newTrinkets.push(a);
     }
     next = {
       ...next,
-      artifacts: [...next.artifacts, ...out.newArtifacts],
-      abilities: [...next.abilities, ...out.newAbilities],
+      artifacts: [...next.artifacts, ...out.newTrinkets],
       scenarios: {
         ...next.scenarios,
         [scenario.id]: { stars: best, completions: prev.completions + (result.won ? 1 : 0), attempts: prev.attempts + 1 },
@@ -190,10 +194,9 @@ export function recordRun(profile: Profile, state: GameState): RecordOutcome {
   return { ...out, profile: next };
 }
 
-export function loadoutError(profile: Profile, artifacts: string[], abilities: string[]): string | undefined {
-  if (artifacts.length > artifactSlots(profile)) return `You have ${artifactSlots(profile)} artifact slots.`;
-  if (artifacts.some((a) => !profile.artifacts.includes(a))) return 'You don’t own that artifact.';
-  if (abilities.length > 2) return 'At most 2 abilities.';
-  if (abilities.some((a) => !profile.abilities.includes(a))) return 'You haven’t earned that ability.';
+export function loadoutError(profile: Profile, trinkets: string[]): string | undefined {
+  if (new Set(trinkets).size !== trinkets.length) return 'Each trinket once.';
+  if (trinkets.length > trinketSlots(profile)) return `You have ${trinketSlots(profile)} trinket slots.`;
+  if (trinkets.some((a) => !ownedTrinkets(profile).includes(a))) return 'You don’t own that trinket.';
   return undefined;
 }

@@ -22,6 +22,7 @@ export * from './packs';
 export * from './policy';
 export * from './launch';
 export * from './world';
+export * from './trinkets';
 export { applyAction } from './reducer';
 export { endTurnBlocker, validateAction } from './validate';
 export { GameError } from './errors';

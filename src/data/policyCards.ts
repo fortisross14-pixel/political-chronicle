@@ -13,8 +13,6 @@ export interface PolicyEffect {
   funds?: number;
   standing?: number;
   integrity?: number;
-  /** Training: +1 to this skill (up to your current cap). */
-  skill?: SkillId;
 }
 
 /** Political events (DESIGN_V2 §3b): held in a hand of 5, played for their effect. */
@@ -79,26 +77,17 @@ export const POLICY_CARDS: PolicyCard[] = [
   {
     id: 'op_ed',
     name: 'Op-ed in the local paper',
-    rarity: 'common',
+    rarity: 'uncommon',
     energy: 1,
     effect: { integrity: 3, favorability: 0.015 },
     text: 'Say what you believe, in print. +integrity.',
     art: { skill: 'law' },
   },
-  {
-    id: 'speech_coach',
-    name: 'Speech & debate coach',
-    rarity: 'common',
-    energy: 2,
-    effect: { skill: 'charisma' },
-    text: 'Training: +1 Charisma.',
-    art: { skill: 'charisma' },
-  },
   // Rare
   {
     id: 'federal_grant',
     name: 'Federal grant secured',
-    rarity: 'rare',
+    rarity: 'uncommon',
     energy: 2,
     needsOffice: true,
     effect: { approval: 0.05, funds: 10_000 },
@@ -125,60 +114,6 @@ export const POLICY_CARDS: PolicyCard[] = [
     text: 'The storm hit; you were there first. +approval.',
     art: { skill: 'leadership' },
   },
-  {
-    id: 'think_tank',
-    name: 'Think-tank fellowship',
-    rarity: 'rare',
-    energy: 2,
-    effect: { skill: 'law' },
-    text: 'Training: +1 Law & Policy.',
-    art: { skill: 'law' },
-  },
-  {
-    id: 'donor_gala',
-    name: 'Donor network gala',
-    rarity: 'rare',
-    energy: 2,
-    effect: { skill: 'economics', funds: 5_000 },
-    text: 'Training: +1 Economics, +$5k.',
-    art: { skill: 'economics' },
-  },
-  {
-    id: 'war_room',
-    name: 'War-room simulation',
-    rarity: 'rare',
-    energy: 2,
-    effect: { skill: 'strategy' },
-    text: 'Training: +1 Strategy.',
-    art: { skill: 'strategy' },
-  },
-  {
-    id: 'management_course',
-    name: 'Public-management course',
-    rarity: 'rare',
-    energy: 2,
-    effect: { skill: 'administration' },
-    text: 'Training: +1 Administration.',
-    art: { skill: 'administration' },
-  },
-  {
-    id: 'coalition_retreat',
-    name: 'Bipartisan retreat',
-    rarity: 'rare',
-    energy: 2,
-    effect: { skill: 'diplomacy' },
-    text: 'Training: +1 Diplomacy.',
-    art: { skill: 'diplomacy' },
-  },
-  {
-    id: 'leadership_retreat',
-    name: 'Leadership retreat',
-    rarity: 'rare',
-    energy: 2,
-    effect: { skill: 'leadership' },
-    text: 'Training: +1 Leadership.',
-    art: { skill: 'leadership' },
-  },
   // Epic
   {
     id: 'infrastructure_law',
@@ -203,7 +138,7 @@ export const POLICY_CARDS: PolicyCard[] = [
   {
     id: 'ethics_reform',
     name: 'Ethics reform',
-    rarity: 'epic',
+    rarity: 'rare',
     energy: 2,
     needsOffice: true,
     effect: { integrity: 10, approval: 0.03 },

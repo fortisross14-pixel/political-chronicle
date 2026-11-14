@@ -1,5 +1,6 @@
 // Save migrations: each step upgrades a raw save from version N to N + 1. Saves are plain JSON,
 // so steps work on loosely typed objects and only touch what changed in that version.
+import { POLICY_CARDS } from '../data';
 import {
   DEFAULT_MODIFIERS,
   initWorld,
@@ -83,6 +84,21 @@ const STEPS: Record<number, (s: Raw) => Raw> = {
         ...(keptOffice ? { office: keptOffice } : {}),
         ...(platform ? { platform } : {}),
       },
+    };
+  },
+  // v10 → v11 (M15): training cards became skill cards in packs; abilities became trinkets.
+  10: (s) => {
+    const known = (id: string) => POLICY_CARDS.some((c) => c.id === id);
+    const politician = s.politician as { abilities?: string[] };
+    const artifacts = [...new Set([...((s.artifacts as string[] | undefined) ?? []), ...(politician.abilities ?? [])])];
+    const packs = ((s.packs as { kind: string; cards: string[] }[] | undefined) ?? [])
+      .map((p) => (p.kind === 'policy' ? { ...p, cards: p.cards.filter(known) } : p))
+      .filter((p) => p.cards.length > 0);
+    return {
+      ...s,
+      artifacts,
+      packs,
+      policyHand: ((s.policyHand as { cardId: string }[] | undefined) ?? []).filter((c) => known(c.cardId)),
     };
   },
 };

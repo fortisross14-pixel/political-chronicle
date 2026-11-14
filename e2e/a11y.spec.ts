@@ -36,6 +36,9 @@ test('election night passes WCAG AA checks', async ({ page }) => {
   await seed(page, { state: nightState() });
   await page.goto('/');
   await page.getByRole('button', { name: /Continue/ }).click();
+  await expect(page.locator('.exit-polls')).toBeVisible();
+  expect(await audit(page), 'exit polls').toEqual([]);
+  await page.getByRole('button', { name: 'Start the count' }).click();
   await page.getByRole('button', { name: /Pause/ }).click();
   expect(await audit(page)).toEqual([]);
 });
@@ -50,13 +53,13 @@ test('Sandbox creator passes WCAG AA checks', async ({ page }) => {
 test('the starter pack, the launch screen and the topic sliders pass WCAG AA checks', async ({ page }) => {
   await seed(page, {});
   await page.goto('/');
-  await page.getByRole('button', { name: /^Scenarios/ }).click();
+  await page.getByRole('button', { name: /^Missions/ }).click();
   await page.getByRole('button', { name: /Hometown favorite/ }).click();
   await page.getByPlaceholder(/Sam Ortega/).fill('Casey Moran');
-  await page.getByRole('button', { name: 'Start scenario' }).click();
+  await page.getByRole('button', { name: 'Start mission' }).click();
   await expect(page.locator('.pack-overlay')).toBeVisible();
   expect(await audit(page), 'pack').toEqual([]);
-  await page.getByRole('button', { name: /^Keep 3 cards/ }).click();
+  await page.getByRole('button', { name: /^Keep (\d cards|this card)/ }).click();
   await page
     .locator('.race-slot.open', { hasText: 'Mayor of Watertown' })
     .getByRole('button', { name: /^Launch/ })

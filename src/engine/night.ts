@@ -32,6 +32,8 @@ export const NIGHT = {
   volunteerTokens: 2,
   /** Late voters break your way (legendary card): on the uncounted vote, outside the swing cap. */
   lateSurge: 0.015,
+  /** How far the exit poll can miss the true race-wide share. */
+  exitPollSd: 0.012,
 };
 
 export const HOURS = ['8:00', '8:30', '9:00', '9:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '1:00', '1:30', '2:00'];
@@ -153,8 +155,13 @@ export function startNight(
     statewideBoost: 0,
     adBought: false,
     finalPoll,
-    ticker: [`Polls are closing. You have ${race.tokens + unspentTokens} ground-game tokens.`],
+    phase: 'exit',
+    exitPoll: 0,
+    ticker: ['Polls are closed. Here are the exit polls.'],
   };
+  const w = weights(race.officeId);
+  const trueShare = Object.entries(regionShares).reduce((s, [id, sh]) => s + w[id]! * sh[0]!, 0);
+  night.exitPoll = clamp(trueShare + rng.gaussian(0, NIGHT.exitPollSd), 0.01, 0.99);
   // Campaign-only items expire on Election Day.
   const items = state.items.filter((i) => getItem(i.itemId).window !== 'campaign');
   return updateCalls({ ...state, rng: rng.state, night, items });
@@ -203,6 +210,11 @@ export function nightFinished(night: ElectionNight): boolean {
 export function advanceNight(state: GameState): GameState {
   const night = state.night;
   if (!night) throw new GameError('No election night.');
+  if (night.phase === 'exit')
+    return {
+      ...state,
+      night: { ...night, phase: 'count', ticker: [...night.ticker, `The count begins. You have ${night.tokens} ground-game tokens.`] },
+    };
   if (nightFinished(night)) return state;
   return updateCalls({ ...state, night: { ...night, step: night.step + 1 } });
 }

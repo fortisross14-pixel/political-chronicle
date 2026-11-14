@@ -33,7 +33,7 @@ export function veteranProfile(): Profile {
   for (const id of ['hometown_favorite', 'keep_your_word', 'pick_a_side', 'big_city_small_town']) {
     p.scenarios[id] = { stars: ['win'], completions: 1, attempts: 1 };
   }
-  return { ...p, artifacts: ['war_chest', 'lucky_tie'], abilities: ['rapid_response'] };
+  return { ...p, artifacts: ['lucky_tie', 'rapid_response'], abilities: [] };
 }
 
 /** Hometown favorite with the Watertown campaign launched (packs set aside), ready to play. */

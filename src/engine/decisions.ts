@@ -245,6 +245,8 @@ export function resolveDecisions(state: GameState, apply: string[]): GameState {
     else if (impact.promisesKept.length) notes.push(`kept a promise with “${card.title}”`);
   }
 
+  // Force the vote is spent on the first bill that needed the chamber.
+  const forced = !!office?.forceVote && apply.some((id) => getDecisionCard(id).context === 'office' && getDecisionCard(id).tags.length > 0);
   const verb = office ? 'Signed' : 'Backed';
   const titles = apply.map((id) => getDecisionCard(id).title).join(', ');
   return adjustStanding(
@@ -255,7 +257,8 @@ export function resolveDecisions(state: GameState, apply: string[]): GameState {
       funds,
       promises,
       integrity: clamp(Math.round(integrity), 0, 100),
-      career: office && approval ? { ...state.career, office: { ...office, approval } } : state.career,
+      career:
+        office && approval ? { ...state.career, office: { ...office, approval, ...(forced ? { forceVote: false } : {}) } } : state.career,
       rng: rng.state,
       decisions: { ...hand, resolved: true, applied: [...apply], failed },
       log: [

@@ -57,7 +57,7 @@ export const VOTE_WEIGHTS = {
   known: 0.6,
   incumbent: 0.3,
   /** An incumbent with a job-approval record is judged on it instead: weight × (approval − 0.5). */
-  approval: 2,
+  approval: 3,
   /** Party fit matters less in nonpartisan mayoral races. */
   partyNonpartisan: 0.4,
   partyPartisan: 0.4,
@@ -138,7 +138,7 @@ export function raceViews(state: GameState, race: Race, regionId: RegionId): Vot
   const doubt = newcomerPenalty(state, regionId);
   const player: VoterView = {
     standing: doubt ? { ...raw, favorability: clamp(raw.favorability - doubt, -1, 1) } : raw,
-    crossover: state.politician.abilities?.includes('crossover_appeal'),
+    crossover: (state.artifacts ?? []).includes('crossover_appeal') || state.politician.abilities?.includes('crossover_appeal'),
     lean: affiliationLean(state.career.affiliation),
     affiliation: state.career.affiliation,
     incumbent: state.career.office?.officeId === race.officeId,

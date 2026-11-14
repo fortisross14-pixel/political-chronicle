@@ -1,6 +1,12 @@
 // A simple "sensible player" bot used to measure balance (DESIGN §12).
-import { BASIC_CARD_IDS, getDecisionCard, getItem, getOffice, getPerson, getPolicyCard, getRegion, ISSUE_IDS } from '../data';
+import { BASIC_CARD_IDS, getDecisionCard, getItem, getOffice, getPerson, getPolicyCard, getRegion, getTrinket, ISSUE_IDS } from '../data';
 import {
+  isSkillCard,
+  missionBaseSkills,
+  MISSION_EXTRA_POINTS,
+  MISSION_SKILL_CAP,
+  policyJurisdiction,
+  trinketError,
   activePlatform,
   applyAction,
   askError,
@@ -34,7 +40,7 @@ import {
   ROLES,
   stanceAt,
 } from '../engine';
-import type { CreationInput, GameState, IssueId, OfficeId, PartyId, Pledge } from '../engine';
+import type { CreationInput, GameState, IssueId, OfficeId, PartyId, Pledge, Rarity, SkillId } from '../engine';
 
 /** 'flipflop' campaigns sensibly but, in office, signs bills that break its promises. */
 /** 'climber' plays like 'sensible', joins its best-fitting party and runs for higher office. */
@@ -119,8 +125,8 @@ function openPacks(state: GameState, style: BotStyle): GameState {
     let keep: number[] = [];
     if (pack.kind === 'people') keep = pack.cards.map((_, i) => i).slice(0, Math.max(0, 10 - s.team.cards.length));
     else if (style !== 'idle') {
-      const rank = { common: 0, rare: 1, epic: 2, legendary: 3 } as const;
-      const scored = pack.cards.map((id, i) => ({ i, r: rank[cardRarityOf(pack.kind, id)] }));
+      const rank = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 } as const;
+      const scored = pack.cards.map((id, i) => ({ i, r: isSkillCard(id) ? -1 : rank[cardRarityOf(pack.kind, id)] }));
       const room = pack.kind === 'policy' ? 5 - s.policyHand.length : 8 - s.hand.length - s.items.length;
       if (room > 0) keep = [scored.sort((a, b) => b.r - a.r)[0]!.i];
     }
@@ -129,7 +135,8 @@ function openPacks(state: GameState, style: BotStyle): GameState {
   return s;
 }
 
-function cardRarityOf(kind: 'people' | 'policy' | 'campaign', id: string): 'common' | 'rare' | 'epic' | 'legendary' {
+function cardRarityOf(kind: 'people' | 'policy' | 'campaign', id: string): Rarity {
+  if (isSkillCard(id)) return 'uncommon';
   if (kind === 'people') return getPerson(id).rarity;
   if (kind === 'policy') return getPolicyCard(id).rarity;
   return id.startsWith('item:') ? getItem(id.slice(5)).rarity : 'common';
@@ -322,6 +329,7 @@ export function playNight(state: GameState, style: BotStyle, actions = true): Ga
         }
       }
     }
+    if (act && s.night?.phase === 'exit' && !trinketError(s, 'phone_bank')) s = applyAction(s, { type: 'USE_TRINKET', id: 'phone_bank' });
     s = applyAction(s, { type: 'NIGHT_ADVANCE' });
   }
   return s.night ? applyAction(s, { type: 'NIGHT_FINISH' }) : s;
@@ -334,6 +342,24 @@ export function setNightActions(on: boolean): void {
   nightActions = on;
 }
 
+/** Fires every equipped trinket that can fire now: at home (or the biggest region) when it needs one. */
+function fireTrinkets(state: GameState): GameState {
+  let s = state;
+  for (const id of s.artifacts) {
+    const t = getTrinket(id);
+    if (t.window === 'passive' || t.window === 'lateVoters') continue;
+    const pool = t.window === 'governing' ? policyJurisdiction(s) : s.career.race ? getOffice(s.career.race.officeId).regionIds : [];
+    const home = s.politician.residentRegionId;
+    const target = t.targetsRegion
+      ? pool.includes(home)
+        ? home
+        : [...pool].sort((a, b) => getRegion(b).population - getRegion(a).population)[0]
+      : undefined;
+    for (let k = 0; k < t.uses && !trinketError(s, id, target); k++) s = applyAction(s, { type: 'USE_TRINKET', id, regionId: target });
+  }
+  return s;
+}
+
 export function playTurn(state: GameState, style: BotStyle): GameState {
   let s = state;
   if (s.ended) return s;
@@ -343,6 +369,7 @@ export function playTurn(state: GameState, style: BotStyle): GameState {
   if (style === 'climber') s = climb(s);
   s = openPacks(launchIfReady(s, style), style);
   s = staff(s);
+  if (style !== 'idle') s = fireTrinkets(s);
   if (s.decisions && !s.decisions.resolved) s = applyAction(s, { type: 'RESOLVE_DECISIONS', apply: decide(s, style) });
   s = shop(s, style);
   if (style !== 'idle') s = playPolicies(playEvents(s, style));
@@ -486,7 +513,31 @@ export const SCENARIO_STYLE: Record<string, BotStyle> = {
   keep_your_word: 'sensible',
   pick_a_side: 'climber',
   big_city_small_town: 'climber',
+  the_underdog: 'sensible',
+  blue_in_the_north: 'climber',
+  small_town_to_the_top: 'climber',
 };
+
+/** A first try: no trinkets, extra points dropped on the weakest skills (not a plan). */
+export const FIRST_TRY: MissionLoadout = { trinkets: [], extra: {} };
+
+export interface MissionLoadout {
+  trinkets: string[];
+  extra: Partial<Record<SkillId, number>>;
+}
+
+/** What a player who read the mission would bring: election trinkets and points where elections are won. */
+export function preparedLoadout(scenarioId: string): MissionLoadout {
+  const base = missionBaseSkills(scenarioId);
+  const extra: Partial<Record<SkillId, number>> = {};
+  let left = MISSION_EXTRA_POINTS;
+  for (const id of ['charisma', 'strategy', 'diplomacy'] as SkillId[]) {
+    const add = Math.min(left, MISSION_SKILL_CAP - base[id]);
+    if (add > 0) extra[id] = add;
+    left -= Math.max(0, add);
+  }
+  return { trinkets: ['get_out_the_vote', 'surprise_appearance'], extra };
+}
 
 /** Plays a scenario to its end. */
 export function playScenario(
@@ -494,18 +545,19 @@ export function playScenario(
   seed: string,
   artifacts: string[] = [],
   style: BotStyle = SCENARIO_STYLE[scenarioId] ?? 'sensible',
+  extra: Partial<Record<SkillId, number>> = {},
 ): GameState {
   forcedParty = undefined;
-  let s = createScenarioRun(scenarioId, { name: 'Bot', artifacts, seed });
+  let s = createScenarioRun(scenarioId, { name: 'Bot', artifacts, seed, extra });
   for (let guard = 0; guard < 120 && !s.scenario?.result; guard++) s = playTurn(s, style);
   return s;
 }
 
-export function scenarioRate(scenarioId: string, runs: number, artifacts: string[] = []): { winRate: number; avgStars: number } {
+export function scenarioRate(scenarioId: string, runs: number, loadout: MissionLoadout = FIRST_TRY): { winRate: number; avgStars: number } {
   let wins = 0;
   let stars = 0;
   for (let i = 0; i < runs; i++) {
-    const r = playScenario(scenarioId, `scn-${scenarioId}-${i}`, artifacts).scenario!.result!;
+    const r = playScenario(scenarioId, `scn-${scenarioId}-${i}`, loadout.trinkets, undefined, loadout.extra).scenario!.result!;
     if (r.won) wins++;
     stars += r.stars.length;
   }

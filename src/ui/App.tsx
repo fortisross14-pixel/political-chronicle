@@ -6,6 +6,8 @@ import {
   createScenarioRun,
   DIFFICULTY,
   endTurnBlocker,
+  isElectionTurn,
+  isPrimaryTurn,
   GameError,
   recordRun,
   turnLabel,
@@ -156,7 +158,9 @@ export function App() {
       <ScenarioSelect
         profile={profile}
         onBack={() => setScreen('menu')}
-        onStart={(id, name, artifacts) => confirmReplace() && begin(createScenarioRun(id, { name, artifacts, seed: randomSeed() }))}
+        onStart={(id, name, trinkets, extra) =>
+          confirmReplace() && begin(createScenarioRun(id, { name, artifacts: trinkets, extra, seed: randomSeed() }))
+        }
       />
     );
   if (screen === 'sandbox')
@@ -164,14 +168,13 @@ export function App() {
       <SandboxSetup
         profile={profile}
         onBack={() => setScreen('menu')}
-        onStart={(input, artifacts, abilities, careerYears, difficulty) => {
+        onStart={(input, trinkets, careerYears, difficulty) => {
           if (!confirmReplace()) return;
           const config = buildRunConfig(input, randomSeed());
           begin(
             createRun({
               ...config,
-              politician: { ...config.politician, abilities },
-              artifacts,
+              artifacts: trinkets,
               careerYears,
               modifiers: DIFFICULTY[difficulty],
             }),
@@ -198,6 +201,7 @@ export function App() {
   if (finished) return <RunResults state={state} outcome={outcome} onMenu={toMenu} onHall={() => setScreen('hall')} />;
 
   const blocker = endTurnBlocker(state);
+  const electionDay = !!state.career.race?.platform.length && isElectionTurn(state.clock, state.career) && !isPrimaryTurn(state);
   const turnKey = `${state.clock.year}-${state.clock.turn}`;
 
   return (
@@ -250,7 +254,7 @@ export function App() {
             ))}
           </nav>
           <button className="primary end-turn" onClick={() => dispatch({ type: 'END_TURN' })} disabled={!!blocker} title={blocker}>
-            End turn
+            {electionDay ? 'Start election day' : 'End turn'}
           </button>
         </div>
       </footer>

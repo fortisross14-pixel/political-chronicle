@@ -22,6 +22,6 @@ test('the app installs a service worker, has a manifest and reloads offline', as
   await page.reload();
 
   await expect(page.getByRole('heading', { name: /Political/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^Scenarios/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Missions/ })).toBeVisible();
   await context.setOffline(false);
 });

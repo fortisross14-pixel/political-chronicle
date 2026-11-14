@@ -5,13 +5,7 @@ import { Loadout } from './Loadout';
 
 interface Props {
   profile: Profile;
-  onStart: (
-    input: CreationInput,
-    artifacts: string[],
-    abilities: string[],
-    careerYears: number | undefined,
-    difficulty: Difficulty,
-  ) => void;
+  onStart: (input: CreationInput, trinkets: string[], careerYears: number | undefined, difficulty: Difficulty) => void;
   onBack: () => void;
 }
 
@@ -31,8 +25,7 @@ const DIFFICULTIES: { id: Difficulty; label: string; text: string }[] = [
 /** Sandbox: build any politician, then pick a loadout and a career length. */
 export function SandboxSetup({ profile, onStart, onBack }: Props) {
   const [input, setInput] = useState<CreationInput | null>(null);
-  const [artifacts, setArtifacts] = useState<string[]>([]);
-  const [abilities, setAbilities] = useState<string[]>([]);
+  const [trinkets, setTrinkets] = useState<string[]>([]);
   const [years, setYears] = useState<number | undefined>(30);
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
 
@@ -44,7 +37,7 @@ export function SandboxSetup({ profile, onStart, onBack }: Props) {
       <h1>Sandbox: {input.name}</h1>
       <div className="creator-grid">
         <section className="panel">
-          <Loadout profile={profile} artifacts={artifacts} onArtifacts={setArtifacts} abilities={abilities} onAbilities={setAbilities} />
+          <Loadout profile={profile} trinkets={trinkets} onTrinkets={setTrinkets} />
         </section>
         <section className="panel stack">
           <fieldset className="field">
@@ -84,7 +77,7 @@ export function SandboxSetup({ profile, onStart, onBack }: Props) {
             <span className="muted small">{DIFFICULTIES.find((d) => d.id === difficulty)!.text}</span>
           </fieldset>
           <div className="row">
-            <button className="primary" onClick={() => onStart(input, artifacts, abilities, years, difficulty)}>
+            <button className="primary" onClick={() => onStart(input, trinkets, years, difficulty)}>
               Start career
             </button>
           </div>

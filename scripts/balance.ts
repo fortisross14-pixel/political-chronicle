@@ -2,7 +2,7 @@
 //   npm run balance          → compare; exits 1 if any metric drifts past its tolerance
 //   npm run balance:update   → re-record the baseline (commit it with the change that moved it)
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { botCharacter, climbCareer, hometownWinRate, reelectionRate, scenarioRate } from '../src/sim/bot';
+import { botCharacter, climbCareer, hometownWinRate, preparedLoadout, reelectionRate, scenarioRate } from '../src/sim/bot';
 
 const RUNS = 40;
 const BASELINE = 'balance/baseline.json';
@@ -29,6 +29,7 @@ function measure(): Record<string, Metric> {
   m['climb.governor.firstTry'] = rate(tries.filter((c) => c.firstGovernorTry).length / Math.max(1, tries.length), 0.2);
   for (const id of ['hometown_favorite', 'keep_your_word', 'pick_a_side', 'big_city_small_town']) {
     m[`scenario.${id}`] = rate(scenarioRate(id, 20).winRate, 0.15);
+    m[`scenario.${id}.prepared`] = rate(scenarioRate(id, 20, preparedLoadout(id)).winRate, 0.12);
   }
   return m;
 }

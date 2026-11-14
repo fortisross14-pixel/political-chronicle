@@ -49,7 +49,7 @@ export function ProfileTab({ state }: { state: GameState }) {
         <section className="panel profile-hero">
           <GameCard
             className="politician-card"
-            tone={state.career.affiliation === 'DU' ? 'rare' : state.career.affiliation === 'RP' ? 'tv' : 'legendary'}
+            tone="legendary"
             title={p.name}
             typeLine={`${getBackground(p.backgroundId).name}, ${Math.floor(age)}`}
             art={<PortraitArt name={p.name} role="chiefOfStaff" />}

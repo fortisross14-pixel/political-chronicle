@@ -2,7 +2,16 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import { PACK_KEEP, PACK_KIND_LABEL, PACK_ODDS, PACK_TIER_LABEL } from '../../data';
-import { buyPackError, cardName, keepError, packPrice, POLICY_HAND_LIMIT, CAMPAIGN_HAND_LIMIT, ROSTER_LIMIT } from '../../engine';
+import {
+  buyPackError,
+  cardName,
+  isSkillCard,
+  keepError,
+  packPrice,
+  POLICY_HAND_LIMIT,
+  CAMPAIGN_HAND_LIMIT,
+  ROSTER_LIMIT,
+} from '../../engine';
 import type { Action, GameState, PackKind, PackTier } from '../../engine';
 import { PackCardView } from '../cards/CardViews';
 import { money } from '../format';
@@ -69,9 +78,11 @@ export function PackShop({ state, dispatch }: { state: GameState; dispatch: (a: 
 export function PackOpening({ state, dispatch }: { state: GameState; dispatch: (a: Action) => void }) {
   const pack = state.packs[0]!;
   const any = PACK_KEEP[pack.kind] === 'any';
-  const [keep, setKeep] = useState<number[]>(() => (any ? pack.cards.map((_, i) => i) : []));
+  const [keep, setKeep] = useState<number[]>(() => (any ? pack.cards.map((_, i) => i).filter((i) => !isSkillCard(pack.cards[i]!)) : []));
   const error = keep.length ? keepError(state, keep) : undefined;
+  const hasSkill = pack.cards.some(isSkillCard);
   const toggle = (i: number) => {
+    if (isSkillCard(pack.cards[i]!)) return;
     cue('tap');
     if (any) setKeep(keep.includes(i) ? keep.filter((k) => k !== i) : [...keep, i]);
     else setKeep(keep[0] === i ? [] : [i]);
@@ -98,7 +109,10 @@ export function PackOpening({ state, dispatch }: { state: GameState; dispatch: (
             <span className={`pack-badge ${pack.tier}`}>{pack.free ? 'Free' : PACK_TIER_LABEL[pack.tier]} pack</span>
             <h2>{PACK_KIND_LABEL[pack.kind]}</h2>
           </div>
-          <span className="muted small">{any ? 'Keep any' : 'Keep one'}</span>
+          <span className="muted small">
+            {any ? 'Keep any' : 'Keep one'}
+            {hasSkill ? ' · plus the free skill card' : ''}
+          </span>
         </div>
         <div className="card-row reveal" key={state.packs.length}>
           {pack.cards.map((id, i) => (
@@ -124,7 +138,7 @@ export function PackOpening({ state, dispatch }: { state: GameState; dispatch: (
           </div>
         )}
         <div className="sheet-foot">
-          <button onClick={() => dispatch({ type: 'KEEP_FROM_PACK', keep: [] })}>Keep none</button>
+          <button onClick={() => dispatch({ type: 'KEEP_FROM_PACK', keep: [] })}>{hasSkill ? 'Only the skill' : 'Keep none'}</button>
           <button
             className="primary"
             disabled={!keep.length || !!error}

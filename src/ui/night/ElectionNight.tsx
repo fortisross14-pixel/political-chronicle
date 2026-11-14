@@ -17,6 +17,7 @@ import { money, pct } from '../format';
 import { CountUp } from '../fx/CountUp';
 import { inkOn, sideColor } from '../map/colors';
 import { StateMap } from '../map/StateMap';
+import { TrinketBar } from '../campaign/TrinketBar';
 
 /** Semicircle needle: 0 (left, you lose) → 1 (right, you win). */
 function Needle({ p }: { p: number }) {
@@ -42,11 +43,31 @@ function Needle({ p }: { p: number }) {
   );
 }
 
+/** The first thing the night shows: the exit polls, before a single vote is counted. */
+function ExitPolls({ share, rival, onCount }: { share: number; rival: number; onCount: () => void }) {
+  // With one opponent, 50% is the line; a three-way race can be won with less.
+  const line = rival > 1 ? 0.42 : 0.5;
+  const gap = share - line;
+  const call = Math.abs(gap) < 0.02 ? 'Too close to call' : gap > 0 ? 'You lead in the exit polls' : 'You trail in the exit polls';
+  return (
+    <div className={`exit-polls ${Math.abs(gap) < 0.02 ? 'close' : gap > 0 ? 'ahead' : 'behind'}`} role="status">
+      <span className="called-tag">Exit polls</span>
+      <span className="exit-share">{Math.round(share * 1000) / 10}%</span>
+      <span className="exit-call">{call}</span>
+      <span className="muted small">Margin of error about ±1.2 points. Late voters can still decide a close one.</span>
+      <button className="primary" onClick={onCount}>
+        Start the count
+      </button>
+    </div>
+  );
+}
+
 export function ElectionNight({ state, dispatch }: { state: GameState; dispatch: (a: Action) => void }) {
   const night = state.night!;
   const office = getOffice(night.officeId);
   const view = nightView(night);
-  const [playing, setPlaying] = useState(true);
+  const exit = night.phase === 'exit';
+  const [playing, setPlaying] = useState(!exit);
   const [selected, setSelected] = useState<RegionId>(office.regionIds[0]!);
   const done = nightFinished(night);
   const names = ['You', ...(state.career.race?.opponents.map((c) => c.name) ?? [])];
@@ -55,10 +76,10 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
 
   // Auto-play the count.
   useEffect(() => {
-    if (!playing || done) return;
+    if (!playing || done || exit) return;
     const t = setTimeout(() => dispatch({ type: 'NIGHT_ADVANCE' }), 1100);
     return () => clearTimeout(t);
-  }, [playing, done, night.step, dispatch]);
+  }, [playing, done, exit, night.step, dispatch]);
 
   // "Called!" banner the moment the race is called.
   useEffect(() => {
@@ -115,6 +136,17 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
             </div>
           ))}
         </div>
+        {exit && (
+          <ExitPolls
+            share={night.exitPoll ?? night.finalPoll}
+            rival={state.career.race?.opponents.length ?? 1}
+            onCount={() => {
+              dispatch({ type: 'NIGHT_ADVANCE' });
+              setPlaying(true);
+            }}
+          />
+        )}
+        {exit && <TrinketBar state={state} dispatch={dispatch} windows={['lateVoters']} title="Last voters in line" />}
         {banner && (
           <div className={night.calledFor === 0 ? 'called-banner win' : 'called-banner lose'} role="status">
             <span className="called-tag">Projection</span>
@@ -129,7 +161,7 @@ export function ElectionNight({ state, dispatch }: { state: GameState; dispatch:
           </div>
           <div className="stack">
             <div className="row night-controls">
-              {!done && (
+              {!done && !exit && (
                 <>
                   <button onClick={() => setPlaying(!playing)}>{playing ? '❚❚ Pause' : '▶ Play'}</button>
                   <button onClick={() => dispatch({ type: 'NIGHT_ADVANCE' })}>Next ›</button>

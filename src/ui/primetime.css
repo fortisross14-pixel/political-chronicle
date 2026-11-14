@@ -1029,37 +1029,19 @@ button.gcard:active:not(:disabled) {
   display: none;
 }
 
-/* Frames and title bands by card type. */
-.tone-tv {
-  --band1: #d9453a;
-  --band2: #8e1a14;
+/* Frames and title bands by rarity only: grey, green, blue, purple, gold. */
+.tone-common {
+  --band1: #7d8794;
+  --band2: #46505c;
+  --frame1: #f1f2f4;
+  --frame2: #9aa3ad;
 }
 
-.tone-cable {
-  --band1: #b0234f;
-  --band2: #5e0c2a;
-}
-
-.tone-social {
-  --band1: #3d82f5;
-  --band2: #1b48b8;
-}
-
-.tone-inPerson {
-  --band1: #c9962a;
-  --band2: #7a560f;
-}
-
-.tone-radio {
-  --band1: #1f8a63;
-  --band2: #0b4a3c;
-}
-
-.tone-skill {
-  --band1: #2a9d6f;
-  --band2: #0f5a45;
-  --frame1: #e3f7ec;
-  --frame2: #6fae93;
+.tone-uncommon {
+  --band1: #2f9e5f;
+  --band2: #12613a;
+  --frame1: #e2f6e8;
+  --frame2: #4fa874;
 }
 
 .tone-bill {
@@ -1067,11 +1049,6 @@ button.gcard:active:not(:disabled) {
   --band2: #071a45;
   --frame1: #f3e9cf;
   --frame2: #a8935f;
-}
-
-.tone-item {
-  --band1: #7a4fd6;
-  --band2: #3a1f80;
 }
 
 .tone-rare {
@@ -2862,4 +2839,232 @@ button.link {
     max-height: 100dvh;
     border-radius: 14px 14px 0 0;
   }
+}
+
+/* Effect summary chips on card faces. */
+.fx-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.fx-chip {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: rgba(20, 33, 61, 0.08);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.fx-chip.pos {
+  background: rgba(18, 97, 58, 0.14);
+  color: #0d5530;
+}
+
+.fx-chip.neg {
+  background: rgba(160, 30, 30, 0.12);
+  color: #8e1a14;
+}
+
+.fx-chip.gold {
+  background: rgba(184, 137, 43, 0.18);
+  color: #6b4a08;
+}
+
+.gcard.small .fx-chip {
+  font-size: 0.62rem;
+}
+
+/* Field preview on the launch screen. */
+.field-preview {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2, rgba(255, 255, 255, 0.06));
+}
+
+.field-preview ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 8px;
+  border-left: 4px solid #8a93a0;
+}
+
+.field-row.red {
+  border-left-color: #d9453a;
+}
+
+.field-row.blue {
+  border-left-color: #3d82f5;
+}
+
+.field-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.lean-chip {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #5b6470;
+  color: #fff;
+}
+
+.lean-chip.red {
+  background: #b3261e;
+}
+
+.lean-chip.blue {
+  background: #1b5fd1;
+}
+
+/* Exit polls: the opening beat of election night. */
+.exit-polls {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(20, 33, 61, 0.92), rgba(42, 58, 110, 0.92));
+  color: #fff;
+  border-left: 6px solid #8a95b8;
+}
+
+.exit-polls.ahead {
+  border-left-color: #f5c842;
+}
+
+.exit-polls.behind {
+  border-left-color: #c3271e;
+}
+
+.exit-share {
+  font-family: var(--slab);
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.exit-call {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.exit-polls .muted {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Trinkets: loadout cards and the in-game bar. */
+.rarity-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: 0;
+  background: #9aa3ad;
+}
+
+.r-uncommon.rarity-dot,
+.rarity-dot.r-uncommon {
+  background: #2f9e5f;
+}
+
+.rarity-dot.r-rare {
+  background: #3d82f5;
+}
+
+.rarity-dot.r-epic {
+  background: #9a63f0;
+}
+
+.rarity-dot.r-legendary {
+  background: #d6a52c;
+}
+
+.trinket-meta {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 0.74rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.loadout-card.trinket {
+  border-left: 5px solid #9aa3ad;
+}
+
+.loadout-card.trinket.r-uncommon,
+.trinket-tile.r-uncommon {
+  border-left-color: #2f9e5f;
+}
+
+.loadout-card.trinket.r-rare,
+.trinket-tile.r-rare {
+  border-left-color: #3d82f5;
+}
+
+.loadout-card.trinket.r-epic,
+.trinket-tile.r-epic {
+  border-left-color: #9a63f0;
+}
+
+.loadout-card.trinket.r-legendary,
+.trinket-tile.r-legendary {
+  border-left-color: #d6a52c;
+}
+
+.trinket-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.trinket-tile {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border-left: 5px solid #9aa3ad;
+  background: var(--surface-2, rgba(255, 255, 255, 0.06));
+}
+
+.trinket-tile.spent {
+  opacity: 0.55;
+}
+
+.trinket-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.dossier dd .pos {
+  color: var(--good, #2f9e5f);
+}
+
+.dossier dd .neg {
+  color: var(--bad, #c3271e);
 }

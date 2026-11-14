@@ -92,6 +92,25 @@ describe('save migrations', () => {
     expect(loadGameResult()).toMatchObject({ state: null, reason: expect.stringMatching(/unreadable/) });
   });
 
+  it('v10 → v11 drops training cards and turns abilities into equipped trinkets', () => {
+    const s = readyRun();
+    const raw = {
+      ...(s as unknown as Record<string, unknown>),
+      policyHand: [
+        { uid: 1, cardId: 'speech_coach' },
+        { uid: 2, cardId: 'op_ed' },
+      ],
+      politician: { ...s.politician, abilities: ['rapid_response'] },
+      packs: [{ kind: 'policy', tier: 'regular', cards: ['speech_coach'] }],
+    };
+    const out = migrate(raw, 10);
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    expect(out.state.policyHand).toEqual([{ uid: 2, cardId: 'op_ed' }]);
+    expect(out.state.packs).toEqual([]);
+    expect(out.state.artifacts).toContain('rapid_response');
+  });
+
   it('leaves current saves untouched', () => {
     const s = readyRun();
     expect(migrate(s as unknown as Record<string, unknown>, SCHEMA_VERSION)).toMatchObject({ ok: true, from: SCHEMA_VERSION });

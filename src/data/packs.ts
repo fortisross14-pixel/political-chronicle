@@ -4,10 +4,12 @@ import type { PackKind, PackTier, Rarity } from '../engine/types';
 export const PACK_SIZE = 3;
 
 /** Chance of each rarity per card, by pack tier. Regular packs never hold a legendary. */
+export const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+
 export const PACK_ODDS: Record<PackTier, Record<Rarity, number>> = {
-  regular: { common: 75, rare: 22, epic: 3, legendary: 0 },
-  golden: { common: 30, rare: 45, epic: 20, legendary: 5 },
-  elite: { common: 0, rare: 35, epic: 45, legendary: 20 },
+  regular: { common: 60, uncommon: 28, rare: 10, epic: 2, legendary: 0 },
+  golden: { common: 15, uncommon: 30, rare: 33, epic: 17, legendary: 5 },
+  elite: { common: 0, uncommon: 10, rare: 35, epic: 37, legendary: 18 },
 };
 
 export const PACK_PRICE: Record<PackKind, Record<PackTier, number>> = {

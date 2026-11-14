@@ -5,7 +5,10 @@ import { createPortal } from 'react-dom';
 import { getOffice, getPerson, getRegion, ISSUES, ISSUES_BY_ID, PARTIES, PARTY_IDS } from '../../data';
 import {
   askError,
+  campaignWindow,
   donationNorm,
+  leanSide,
+  raceField,
   effectivePlatform,
   homeStateId,
   joinChance,
@@ -343,6 +346,8 @@ export function LaunchScreen({
           <PartyTile state={state} platform={platform} dispatch={dispatch} partisan={office.partisan} />
         </div>
 
+        <FieldPreview state={state} officeId={officeId} />
+
         <div className="sheet-foot">
           {error && <span className="muted small">{error}</span>}
           <button
@@ -389,6 +394,30 @@ export function LaunchScreen({
       )}
     </div>,
     document.body,
+  );
+}
+
+const SIDE_LABEL = { red: 'Leans red', blue: 'Leans blue', neutral: 'Neutral' } as const;
+
+/** Who else is running, and which way they lean. */
+function FieldPreview({ state, officeId }: { state: GameState; officeId: OfficeId }) {
+  const field = useMemo(() => raceField(state, officeId, campaignWindow(state, officeId).electionYear), [state, officeId]);
+  return (
+    <section className="field-preview" aria-label="Who else is running">
+      <span className="tile-title">On the ballot with you</span>
+      <ul>
+        {field.map((c) => {
+          const side = leanSide(c);
+          return (
+            <li key={c.id} className={`field-row ${side}`}>
+              <span className="field-name">{c.name}</span>
+              {c.incumbent && <span className="chip">Incumbent</span>}
+              <span className={`lean-chip ${side}`}>{c.affiliation !== 'IND' ? PARTIES[c.affiliation].nickname : SIDE_LABEL[side]}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

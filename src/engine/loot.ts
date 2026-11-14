@@ -20,6 +20,8 @@ export const GROUND_GAME = {
 };
 
 export const ITEM_EFFECT = {
+  /** Vans to the polls: Election Day share points. */
+  turnoutVans: 0.008,
   dossierFavorability: -0.08,
   endorsementRecognition: 0.05,
   endorsementFavorability: 0.04,
@@ -158,6 +160,14 @@ export function applyCampaignItem(state: GameState, uid: number, regionId?: Regi
       };
     }
     return { ...state, items, regions, log: [...state.log, { ...at, text: 'A celebrity endorses you on every channel.' }] };
+  }
+  if (card.itemId === 'turnout_vans') {
+    return {
+      ...state,
+      items,
+      career: { ...state.career, race: { ...race, gotv: (race.gotv ?? 0) + ITEM_EFFECT.turnoutVans } },
+      log: [...state.log, { ...at, text: 'Vans are booked to drive your voters to the polls.' }],
+    };
   }
   throw new GameError('That item does nothing during the campaign.');
 }

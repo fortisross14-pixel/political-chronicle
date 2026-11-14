@@ -21,6 +21,9 @@ import {
   regionIntention,
   selfFundingPenalty,
   stanceAt,
+  hometownMayoralty,
+  leanSide,
+  raceField,
 } from './index';
 import { launch, newRun, passTurn, passTurns, readyRun, WATERTOWN_PLATFORM } from './testUtils';
 import type { GameState } from './types';
@@ -308,5 +311,26 @@ describe('difficulty', () => {
     const plain = launch(newRun()).career.race!.opponents[0]!.activity;
     const tough = launch(newRun({ modifiers: { opponentActivity: 3 } })).career.race!.opponents[0]!.activity;
     expect(tough).toBe(plain + 3);
+  });
+});
+
+describe('the field preview', () => {
+  it('shows exactly who you will face, with a red, blue or neutral lean', () => {
+    const s = newRun();
+    const id = hometownMayoralty(s.politician.residentRegionId)!;
+    const preview = raceField(s, id, campaignWindow(s, id).electionYear);
+    const filed = launch(s);
+    expect(filed.career.race!.opponents.map((c) => c.name)).toEqual(preview.map((c) => c.name));
+    for (const c of preview) expect(['red', 'blue', 'neutral']).toContain(leanSide(c));
+  });
+
+  it('small-town mayoral races draw one or two challengers', () => {
+    const counts = new Set<number>();
+    for (let i = 0; i < 30; i++) {
+      const s = newRun({ seed: `field-${i}` });
+      const id = hometownMayoralty(s.politician.residentRegionId)!;
+      counts.add(raceField(s, id, campaignWindow(s, id).electionYear).length);
+    }
+    expect([...counts].sort()).toEqual([1, 2]);
   });
 });

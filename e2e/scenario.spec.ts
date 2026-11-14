@@ -7,13 +7,13 @@ test('a scenario plays from the menu: starter pack, launch, campaign, results an
   page.on('dialog', (d) => d.accept());
   await seed(page, {});
   await page.goto('/');
-  await page.getByRole('button', { name: /^Scenarios/ }).click();
+  await page.getByRole('button', { name: /^Missions/ }).click();
   await page.getByRole('button', { name: /Hometown favorite/ }).click();
   await page.getByPlaceholder(/Sam Ortega/).fill('Casey Moran');
-  await page.getByRole('button', { name: 'Start scenario' }).click();
+  await page.getByRole('button', { name: 'Start mission' }).click();
 
   // The free people pack: keep all three.
-  await page.getByRole('button', { name: /^Keep 3 cards/ }).click();
+  await page.getByRole('button', { name: /^Keep (\d cards|this card)/ }).click();
   await expect(page.locator('.scenario-hud h2')).toHaveText(/Mayor of Watertown/);
 
   // Launch the Watertown race: topics on the 7-step sliders, then launch.
@@ -29,14 +29,14 @@ test('a scenario plays from the menu: starter pack, launch, campaign, results an
   await page.getByRole('button', { name: 'Launch the campaign' }).click();
   // Two free launch packs: keep one card from each.
   for (let i = 0; i < 2; i++) {
-    await page.locator('.pack-overlay .gcard').first().click();
+    await page.locator('.pack-overlay .gcard:not(.skill-card)').first().click();
     await page.getByRole('button', { name: /^Keep this card/ }).click();
   }
 
   for (let t = 0; t < 7; t++) {
     await page.locator('.decision-card button').first().click();
     await page.getByRole('button', { name: /^Confirm/ }).click();
-    await page.getByRole('button', { name: 'End turn' }).click();
+    await page.getByRole('button', { name: /^(End turn|Start election day)$/ }).click();
   }
   await expect(page.locator('.night-head h2')).toContainText('Election night');
   await page.getByRole('button', { name: 'Skip to the end' }).click();
@@ -54,6 +54,9 @@ test('election night streams results, takes actions and ends on the result', asy
   await page.goto('/');
   await page.getByRole('button', { name: /Continue/ }).click();
   await expect(page.locator('.live')).toBeVisible();
+  // The night opens on the exit polls; then the count starts.
+  await expect(page.locator('.exit-polls')).toBeVisible();
+  await page.getByRole('button', { name: 'Start the count' }).click();
   await page.getByRole('button', { name: /Pause/ }).click();
   await page.getByRole('button', { name: 'Next ›' }).click();
   const tokens = Number(await page.locator('.tokens .big-number').innerText());

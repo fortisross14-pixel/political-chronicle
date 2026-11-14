@@ -14,7 +14,7 @@ test('a veteran builds a Sandbox politician with a loadout and the run saves acr
   await page.getByPlaceholder(/Sam Ortega/).fill('Jo Park');
   await page.getByRole('button', { name: 'Start career' }).click();
   await page.locator('.loadout-card', { hasText: 'War chest' }).click();
-  await page.locator('.loadout-card', { hasText: 'Rapid response' }).click();
+  await page.locator('.loadout-card', { hasText: 'Rapid-response pager' }).click();
   await page.getByRole('button', { name: 'Start career' }).click();
   await expect(page.locator('.who strong')).toHaveText('Jo Park');
   await page.reload();

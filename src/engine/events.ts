@@ -18,6 +18,9 @@ export const DOUBTED_ISSUE_FACTOR = 0.85;
 export const FATIGUE = 0.7;
 export const FUNDRAISING_FATIGUE = 0.5;
 /** A card's own topics (e.g. a college presentation on education) persuade this much more. */
+/** Campaign events count this much when you run for re-election: the record speaks louder. */
+export const INCUMBENT_CAMPAIGN = 0.6;
+
 export const ISSUE_BONUS = 1.4;
 
 export interface RegionEffect {
@@ -134,7 +137,9 @@ export function previewEvent(state: GameState, ref: number | string, regionId: R
   const perk = (card.id === 'door_knocking' ? (perks.doorKnocking ?? 1) : 1) * (card.id === 'debate' ? (perks.debate ?? 1) : 1);
   const manager = state.career.race ? 1 + ROLE_EFFECT.campaignPerStar * roleStars(state, 'campaignManager') : 1;
   const topical = card.issueBonus?.includes(issue) ? ISSUE_BONUS : 1;
-  const mult = skillMult(skills, card.skills) * hometown * fatigue * perk * manager;
+  // Defending your own seat, voters judge your record more than your campaign (DESIGN_V2 §13).
+  const defending = state.career.race && state.career.office?.officeId === state.career.race.officeId ? INCUMBENT_CAMPAIGN : 1;
+  const mult = skillMult(skills, card.skills) * hometown * fatigue * perk * manager * defending;
   const cred = credibility(state, issue, stance);
   const targets: [RegionId, number][] = [[regionId, 1]];
   if (card.spillover > 0) {

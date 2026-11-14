@@ -16,7 +16,7 @@ import {
   regionWeights,
   relevance,
 } from './opinion';
-import { Rng } from './rng';
+import { Rng, seedFromString } from './rng';
 import { newTerm } from './governing';
 import { turnsInYear } from './time';
 import { recordPlayerElection, seatIncumbent } from './world';
@@ -57,6 +57,8 @@ export const OPPONENT = {
   /** In a big city the field splits: the front-runner and a second candidate do less each. */
   bigCityActivity: 2,
   mayorSecondActivity: 1,
+  /** Outside big cities, the chance a mayoral race draws a second challenger. */
+  secondCandidateChance: 0.5,
 };
 
 /** Partisan races: tougher, better-funded opponents as the office grows (DESIGN §5.3). */
@@ -163,7 +165,7 @@ export function generateOpponents(rng: Rng, officeId: OfficeId, playerIsIncumben
   const office = getOffice(officeId);
   if (office.partisan) return partisanOpponents(rng, office, playerIsIncumbent, playerParty);
   const seat = getRegion(office.regionIds[0]!);
-  const count = office.level === 'mayor' && seat.type === 'urban' ? 2 : 1;
+  const count = seat.type === 'urban' ? 2 : rng.chance(OPPONENT.secondCandidateChance) ? 2 : 1;
   const used = new Set<string>();
   const opponents: Candidate[] = [];
 
@@ -174,7 +176,7 @@ export function generateOpponents(rng: Rng, officeId: OfficeId, playerIsIncumben
     used.add(name);
 
     const regionSide = Math.abs(seat.partisanLean) > 0.15 ? Math.sign(seat.partisanLean) : rng.chance(0.5) ? 1 : -1;
-    const lean = i === 0 ? regionSide : -regionSide * (rng.chance(0.5) ? 1 : 0.5);
+    const lean = i === 0 ? regionSide : -regionSide * rng.pick([1, 0.5, 0]);
     const affiliation: Affiliation = office.partisan ? (lean < 0 ? 'DU' : 'RP') : 'IND';
     const incumbent = !playerIsIncumbent && i === 0 && rng.chance(OPPONENT.incumbentChance);
 
@@ -207,7 +209,7 @@ export function generateOpponents(rng: Rng, officeId: OfficeId, playerIsIncumben
       platform: opponentPlatform(rng, seat.id, lean, office.level),
       incumbent,
       activity:
-        (seat.type === 'urban' ? (i > 0 ? OPPONENT.mayorSecondActivity : OPPONENT.bigCityActivity) : OPPONENT.mayorActivity) +
+        (i > 0 ? OPPONENT.mayorSecondActivity : seat.type === 'urban' ? OPPONENT.bigCityActivity : OPPONENT.mayorActivity) +
         (playerIsIncumbent && i === 0 ? 1 : 0),
       regions,
     });
@@ -294,10 +296,10 @@ export function opponentsAct(rng: Rng, race: Race): Race {
 
 /** Opens a race. `turnsLeft` is how many turns remain until Election Day; opponents already
  * campaigned for the turns of the window you let pass (launching early is an edge). */
-export function fileRace(state: GameState, officeId: OfficeId, electionYear: number, turnsLeft = 7): GameState {
-  const rng = new Rng(state.rng);
-  const status = nominationStatus(state, officeId);
-  const party = member(state);
+/** Who else is on the ballot. Drawn from its own seed so the launch screen can show the field
+ *  before you sign up, and the race you file matches it. */
+export function raceField(state: GameState, officeId: OfficeId, electionYear: number): Candidate[] {
+  const rng = new Rng(seedFromString(`${state.runId}:${officeId}:${electionYear}`));
   let opponents = generateOpponents(rng, officeId, state.career.office?.officeId === officeId, state.career.affiliation).map((c) => {
     const scale = state.modifiers.opponentRecognition;
     if (scale === 1) return c;
@@ -309,6 +311,21 @@ export function fileRace(state: GameState, officeId: OfficeId, electionYear: num
   opponents = seatIncumbent(state, officeId, opponents, rng);
   const extra = state.modifiers.opponentActivity ?? 0;
   if (extra) opponents = opponents.map((c) => ({ ...c, activity: Math.max(0, c.activity + extra) }));
+  return opponents;
+}
+
+/** Red, blue or neutral, for the field preview. */
+export function leanSide(c: Candidate): 'red' | 'blue' | 'neutral' {
+  if (c.affiliation === 'RP') return 'red';
+  if (c.affiliation === 'DU') return 'blue';
+  return Math.abs(c.lean) < 0.3 ? 'neutral' : c.lean > 0 ? 'red' : 'blue';
+}
+
+export function fileRace(state: GameState, officeId: OfficeId, electionYear: number, turnsLeft = 7): GameState {
+  const rng = new Rng(state.rng);
+  const status = nominationStatus(state, officeId);
+  const party = member(state);
+  const opponents = raceField(state, officeId, electionYear);
   let race: Race = {
     officeId,
     electionYear,
@@ -382,7 +399,7 @@ export function drawElection(state: GameState, rng: Rng): ElectionDraw {
   for (const id of office.regionIds) {
     const shares = decided(regionIntention(raceViews(state, race, id), id, office.level, office.partisan));
     priors[id] = shares[0]!;
-    const player = clamp(shares[0]! + common + rng.gaussian(0, ELECTION_NOISE.regional), 0.01, 0.99);
+    const player = clamp(shares[0]! + (race.gotv ?? 0) + common + rng.gaussian(0, ELECTION_NOISE.regional), 0.01, 0.99);
     const othersTotal = 1 - shares[0]!;
     regionShares[id] = [player, ...shares.slice(1).map((s) => (othersTotal > 0 ? (s / othersTotal) * (1 - player) : 0))];
   }

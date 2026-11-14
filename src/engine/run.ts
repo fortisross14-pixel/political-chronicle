@@ -10,7 +10,7 @@ import { nextElectionYear, turnsInYear } from './time';
 import { initWorld } from './world';
 import type { Career, GameState, Politician, RegionId, RunModifiers, Skills, Snapshot } from './types';
 
-export const SCHEMA_VERSION = 10;
+export const SCHEMA_VERSION = 11;
 export const MAX_AGE_ENDS_RUN = 85;
 export const DEFAULT_START_YEAR = 2027;
 

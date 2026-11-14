@@ -36,7 +36,7 @@ export interface Issue {
 /** A position on an issue axis, −2 .. +2. Player platforms use 7 steps of 2/3 (see stance.ts). */
 export type Stance = number;
 
-export type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
+export type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 
 export type PackKind = 'people' | 'policy' | 'campaign';
 export type PackTier = 'regular' | 'golden' | 'elite';
@@ -201,8 +201,10 @@ export interface Race {
   doorKnocks: number;
   /** Money raised by fundraising events this turn (for the "haul" milestone). */
   raisedThisTurn: number;
-  /** Once-per-campaign effects already used (abilities, artifacts). */
+  /** Trinket uses and once-per-campaign effects spent this race (one entry per use). */
   used?: string[];
+  /** Voters mobilized before Election Day: share points added to your vote everywhere. */
+  gotv?: number;
   /** Personal money put into this campaign. */
   selfFunded?: number;
   /** Turns left until Election Day when you launched (7 at the earliest, 4 at the latest). */
@@ -249,6 +251,10 @@ export interface ElectionNight {
   surge?: number;
   calledFor?: number;
   finalPoll: number;
+  /** The night opens on the exit polls; the count starts when you say so. */
+  phase?: 'exit' | 'count';
+  /** Race-wide exit-poll estimate of your share. */
+  exitPoll?: number;
   /** Things that happened, for the ticker. */
   ticker: string[];
 }
@@ -270,6 +276,10 @@ export interface OfficeTerm {
   /** The platform you won on: what your promises are judged against. */
   platform: Pledge[];
   startedYear: number;
+  /** Governing trinkets used this term (one entry per use). */
+  used?: string[];
+  /** Force the vote (trinket): the next bill passes regardless of the chamber. */
+  forceVote?: boolean;
 }
 
 export interface PromiseEvent {
@@ -538,7 +548,7 @@ export interface GameState {
   /** Sandbox: the career ends after this many years. */
   careerYears?: number;
   startYear: number;
-  /** Artifacts equipped for this run. */
+  /** Trinkets equipped for this run (stored under their old name, "artifacts"). */
   artifacts: string[];
   snapshots: Snapshot[];
   log: LogEntry[];
@@ -564,4 +574,5 @@ export type Action =
   | { type: 'NIGHT_MOBILIZE'; regionId: RegionId }
   | { type: 'NIGHT_LAWYERS'; regionId: RegionId }
   | { type: 'NIGHT_AD_BLITZ' }
-  | { type: 'NIGHT_FINISH' };
+  | { type: 'NIGHT_FINISH' }
+  | { type: 'USE_TRINKET'; id: string; regionId?: RegionId };

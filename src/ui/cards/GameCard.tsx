@@ -3,8 +3,8 @@
 import { useRef } from 'react';
 import type { CSSProperties, PointerEvent, ReactNode } from 'react';
 
-export type CardTone =
-  'tv' | 'cable' | 'social' | 'inPerson' | 'radio' | 'skill' | 'bill' | 'stance' | 'item' | 'common' | 'rare' | 'epic' | 'legendary';
+/** Collectible cards are framed by rarity only; decisions use the bill and stance frames. */
+export type CardTone = 'bill' | 'stance' | 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 
 interface Props {
   tone: CardTone;

@@ -485,3 +485,38 @@ and −1 energy only for the first two turns.
 **Still open:** the climber's first Governor try is rarely won (0–13%), and a Blue from the
 North Country reaches the House only ~30% of the time. Both reflect the red-region, blue-state
 tension by design, but expansion scenarios may want them less extreme.
+
+## 13. Missions, trinkets and election day (M15, as built)
+
+**The loop.** Try a mission, lose, come back with better points and trinkets, win. Beginner
+missions are winnable with a sensible setup (casual game); advanced ones need a plan.
+
+**Mission setup.** Every try shows the character in full and takes 5 extra skill points (no skill
+above 7 at the start) and up to 2 trinkets (3 at 6 stars, 4 at 10). Skills keep growing through
+skill cards, up to the office cap.
+
+**Rarity.** Five tiers, colour by rarity only: common grey, uncommon green, rare blue, epic purple,
+legendary gold. Social posts and town halls are common; an arena rally is rare; a national TV
+interview is legendary. Better packs cost more and pay better odds.
+
+**Trinkets.**
+
+| Rarity    | Trinket                                          | Window           | Uses   | Effect                                                           |
+| --------- | ------------------------------------------------ | ---------------- | ------ | ---------------------------------------------------------------- |
+| Common    | Get-out-the-vote binder                          | Election Day     | 1/race | +1 point everywhere                                              |
+| Common    | Phone bank                                       | After exit polls | 1/race | +0.8 points on the uncounted vote                                |
+| Common    | Season tickets                                   | Campaign         | 2/race | Surprise appearance: +3 recognition, +3 favorability in a region |
+| Common    | Open-door sign                                   | Governing        | 2/term | +3 approval in a region                                          |
+| Common    | Campaign button, War chest                       | Passive          | –      | +5% home recognition; +$15k                                      |
+| Uncommon  | Lucky tie, Rolodex, Union hall key, Debate notes | Passive          | –      | as before                                                        |
+| Rare      | Rapid-response pager, Iron discipline            | Passive          | –      | as before                                                        |
+| Epic      | Crossover appeal, Comeback kid                   | Passive          | –      | as before                                                        |
+| Epic      | Gavel of the house                               | Governing        | 1/term | Force the vote: your next bill passes                            |
+| Legendary | Star power                                       | Campaign         | 1/race | +5 recognition, +4 favorability across the race                  |
+
+**Election day.** Mobilize before the polls open (trinket or the Vans to the polls card: share
+points added to the draw). The night opens on the exit polls, a noisy (±1.2) read of the true
+result; late-voter cards and trinkets act then, on the whole uncounted vote. Then the count.
+
+**Governing decides re-election.** An incumbent's vote leans on job approval (weight 3) and their
+own campaign events count ×0.6. Running for a different office, the campaign counts in full.

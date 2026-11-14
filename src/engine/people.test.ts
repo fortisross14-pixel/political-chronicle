@@ -82,7 +82,7 @@ describe('the roster', () => {
   });
 
   it('every person has 0–5 stars in every role, best role matching their rarity', () => {
-    const floor = { common: 1.5, rare: 2.5, epic: 3.5, legendary: 4.5 } as const;
+    const floor = { common: 1.5, uncommon: 2, rare: 2.5, epic: 3.5, legendary: 4.5 } as const;
     for (const p of PEOPLE) {
       for (const v of Object.values(p.stars)) expect(v >= 0 && v <= 5 && (v * 2) % 1 === 0).toBe(true);
       expect(Math.max(...Object.values(p.stars))).toBeGreaterThanOrEqual(floor[p.rarity]);

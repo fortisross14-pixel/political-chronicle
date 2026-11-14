@@ -23,7 +23,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: 'oppo_dossier',
-    rarity: 'rare',
+    rarity: 'uncommon',
     name: 'Opposition research dossier',
     window: 'campaign',
     targetsRegion: true,
@@ -31,7 +31,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: 'endorsement',
-    rarity: 'rare',
+    rarity: 'uncommon',
     name: 'Local endorsement',
     window: 'both',
     targetsRegion: true,
@@ -45,6 +45,14 @@ export const ITEMS: Item[] = [
     window: 'night',
     targetsRegion: false,
     nightText: 'A free late ad blitz across the race',
+  },
+  {
+    id: 'turnout_vans',
+    rarity: 'uncommon',
+    name: 'Vans to the polls',
+    window: 'campaign',
+    targetsRegion: false,
+    campaignText: 'Mobilize voters: +0.8 points on Election Day',
   },
   {
     id: 'poll_watchers',

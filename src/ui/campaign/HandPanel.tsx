@@ -107,13 +107,13 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
           <GameCard
             key={e.key}
             small
-            tone={e.card.medium}
+            tone={e.card.rarity ?? 'common'}
             title={`${e.card.name}${e.count && e.count > 1 ? ` ×${e.count}` : ''}`}
             typeLine={`${MEDIUM_LABEL[e.card.medium]}${e.card.basic ? ', always available' : ', one use'}`}
             art={<EventArt id={e.card.id} medium={e.card.medium} />}
             energy={e.card.energy}
-            rarity={e.card.basic ? 'Basic' : 'Event'}
-            foil={!e.card.basic && e.card.energy >= 3}
+            rarity={e.card.basic ? 'Basic' : e.card.rarity ? e.card.rarity[0]!.toUpperCase() + e.card.rarity.slice(1) : 'Event'}
+            foil={e.card.rarity === 'epic' || e.card.rarity === 'legendary'}
             selected={e.key === entry.key}
             onClick={() => {
               cue('tap');
@@ -131,7 +131,7 @@ export function HandPanel({ state, dispatch, regionId, onRegionChange }: Props) 
           <div className="drag-ghost" style={{ left: drag.x, top: drag.y }} aria-hidden="true">
             <GameCard
               small
-              tone={dragged.card.medium}
+              tone={dragged.card.rarity ?? 'common'}
               title={dragged.card.name}
               typeLine={drag.over ? `Play in ${getRegion(drag.over).seatCity}` : 'Drop on a region'}
               art={<EventArt id={dragged.card.id} medium={dragged.card.medium} />}

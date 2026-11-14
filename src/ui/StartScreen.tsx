@@ -1,5 +1,5 @@
-import { getScenario } from '../data';
-import { sandboxUnlocked, totalStars, turnLabel } from '../engine';
+import { getScenario, TRINKETS } from '../data';
+import { ownedTrinkets, sandboxUnlocked, totalStars, turnLabel } from '../engine';
 import type { GameState, Profile } from '../engine';
 import { install, useCanInstall } from './fx/install';
 
@@ -40,7 +40,7 @@ export function StartScreen({ saved, notice, profile, onContinue, onScenarios, o
           </button>
         )}
         <button className={live ? '' : 'primary'} onClick={onScenarios}>
-          Scenarios <span className="muted small">· {totalStars(profile)} ★ earned</span>
+          Missions <span className="muted small">· {totalStars(profile)} ★ earned</span>
         </button>
         <button
           disabled={!sandbox}
@@ -55,8 +55,7 @@ export function StartScreen({ saved, notice, profile, onContinue, onScenarios, o
         </button>
       </div>
       <p className="muted small">
-        {profile.artifacts.length} artifact{profile.artifacts.length === 1 ? '' : 's'} · {profile.abilities.length} abilit
-        {profile.abilities.length === 1 ? 'y' : 'ies'} collected
+        {ownedTrinkets(profile).length} of {TRINKETS.length} trinkets collected
         {!sandbox && ' · Sandbox unlocks after the beginner track'}
       </p>
     </div>

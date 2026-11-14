@@ -2,8 +2,6 @@
 // mostly in office (approval), some anywhere (recognition, money, training).
 import { reject } from './errors';
 import { getOffice, getPolicyCard, getRegion, STATES } from '../data';
-import { SKILL_LABELS } from './creation';
-import { skillCap } from './economy';
 import { nudgeApproval } from './governing';
 import { clamp, nudgeFavorability, nudgeRecognition } from './opinion';
 import { adjustStanding } from './parties';
@@ -30,8 +28,6 @@ export function policyError(state: GameState, uid: number, regionId?: RegionId):
   if (card.energy > state.energy) return 'Not enough energy this turn.';
   if (card.needsOffice && !state.career.office) return 'Only while you hold office.';
   if (card.needsParty && state.career.affiliation === 'IND') return 'Party members only.';
-  if (card.effect.skill && state.politician.skills[card.effect.skill] >= skillCap(state))
-    return `Skill capped at ${skillCap(state)} at your current office.`;
   if (card.targetsRegion && (!regionId || !policyJurisdiction(state).includes(regionId))) return 'Pick a region you govern.';
   return undefined;
 }
@@ -63,12 +59,10 @@ export function playPolicy(state: GameState, uid: number, regionId?: RegionId): 
     }
     career = { ...career, office: { ...office, approval } };
   }
-  const skills = e.skill ? { ...state.politician.skills, [e.skill]: state.politician.skills[e.skill] + 1 } : state.politician.skills;
   const next: GameState = {
     ...state,
     regions,
     career,
-    politician: { ...state.politician, skills },
     funds: state.funds + (e.funds ?? 0),
     integrity: clamp(state.integrity + (e.integrity ?? 0), 0, 100),
     energy: state.energy - card.energy,
@@ -78,7 +72,7 @@ export function playPolicy(state: GameState, uid: number, regionId?: RegionId): 
       {
         year: state.clock.year,
         turn: state.clock.turn,
-        text: `${card.name}${e.skill ? `: ${SKILL_LABELS[e.skill]} is now ${skills[e.skill]}` : ''}${regionId && card.targetsRegion ? ` in ${getRegion(regionId).seatCity}` : ''}.`,
+        text: `${card.name}${regionId && card.targetsRegion ? ` in ${getRegion(regionId).seatCity}` : ''}.`,
       },
     ],
   };

@@ -6,6 +6,7 @@ import { CampaignPanel } from '../campaign/CampaignPanel';
 import { DecisionTray } from '../campaign/DecisionTray';
 import { ElectionResult } from '../campaign/ElectionResult';
 import { HandPanel } from '../campaign/HandPanel';
+import { TrinketBar } from '../campaign/TrinketBar';
 import { LaunchScreen, RaceBoard } from '../campaign/LaunchFlow';
 import { PackShop } from '../campaign/Packs';
 import { PolicyHand } from '../campaign/PolicyHand';
@@ -143,6 +144,7 @@ export function GovernmentTab({ state, dispatch }: Props) {
           <>
             {state.scenario && <ScenarioHud state={state} />}
             {state.decisions && <DecisionTray key={state.decisions.turnNo} state={state} dispatch={dispatch} />}
+            <TrinketBar state={state} dispatch={dispatch} windows={['campaign', 'mobilize', 'governing']} />
             {campaigning && <CampaignPanel state={state} />}
             {inOffice && <OfficePanel state={state} dispatch={dispatch} />}
             {!race && (

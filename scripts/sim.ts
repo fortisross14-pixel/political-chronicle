@@ -8,6 +8,7 @@ import {
   hometownWinRate,
   playCampaign,
   reelectionRate,
+  preparedLoadout,
   scenarioRate,
   setDonationShare,
   setNightActions,
@@ -159,12 +160,12 @@ for (const [background, party] of [
   );
 }
 
-console.log('\nBeginner scenarios (target: 80–90% wins for sensible play)');
+console.log('\nBeginner missions (target: first try 55–80%, prepared 80–95%)');
 for (const scn of SCENARIOS.filter((x) => x.track === 'beginner')) {
   const n = Math.max(40, runs / 3);
   const plain = scenarioRate(scn.id, n);
-  const loaded = scenarioRate(scn.id, n, ['war_chest', 'union_hall_key']);
+  const loaded = scenarioRate(scn.id, n, preparedLoadout(scn.id));
   console.log(
-    `${scn.title.padEnd(22)} win ${pct(plain.winRate)}  stars ${plain.avgStars.toFixed(2)}   with 2 artifacts: win ${pct(loaded.winRate)}  stars ${loaded.avgStars.toFixed(2)}`,
+    `${scn.title.padEnd(22)} first try ${pct(plain.winRate)}  stars ${plain.avgStars.toFixed(2)}   prepared (points + 2 trinkets): ${pct(loaded.winRate)}  stars ${loaded.avgStars.toFixed(2)}`,
   );
 }

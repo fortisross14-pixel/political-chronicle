@@ -31,6 +31,7 @@ const INVALID: Record<Action['type'], (s: GameState) => [GameState, Action]> = {
   NIGHT_LAWYERS: (s) => [s, { type: 'NIGHT_LAWYERS', regionId: 'ny-north' }],
   NIGHT_AD_BLITZ: (s) => [s, { type: 'NIGHT_AD_BLITZ' }],
   NIGHT_FINISH: (s) => [s, { type: 'NIGHT_FINISH' }],
+  USE_TRINKET: (s) => [s, { type: 'USE_TRINKET', id: 'get_out_the_vote' }],
 };
 
 describe('validateAction', () => {

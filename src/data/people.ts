@@ -99,12 +99,12 @@ export const PEOPLE: Person[] = [
   {
     id: 'pl_doyle',
     name: 'Frank Doyle',
-    rarity: 'common',
+    rarity: 'uncommon',
     stars: stars(1.5, 1, 2.5, 1),
     bio: 'Knows which committee chair likes which steakhouse.',
   },
-  { id: 'ld_cho', name: 'Daniel Cho', rarity: 'common', stars: stars(0.5, 1.5, 1, 2.5), bio: 'Drafts amendments in his sleep.' },
-  { id: 'vol_ruiz', name: 'Marisol Ruiz', rarity: 'common', stars: stars(2.5, 0.5, 1, 0), bio: 'Ran the phone bank out of her garage.' },
+  { id: 'ld_cho', name: 'Daniel Cho', rarity: 'uncommon', stars: stars(0.5, 1.5, 1, 2.5), bio: 'Drafts amendments in his sleep.' },
+  { id: 'vol_ruiz', name: 'Marisol Ruiz', rarity: 'uncommon', stars: stars(2.5, 0.5, 1, 0), bio: 'Ran the phone bank out of her garage.' },
   {
     id: 'intern_park',
     name: 'Ben Park',
@@ -120,7 +120,7 @@ export const PEOPLE: Person[] = [
     bio: 'Ex-reporter. Knows every deadline in town.',
   },
   { id: 'union_mcbride', name: 'Pat McBride', rarity: 'common', stars: stars(1.5, 0.5, 2, 1), bio: 'Can fill a union hall by Thursday.' },
-  { id: 'clerk_alvarez', name: 'Rosa Alvarez', rarity: 'common', stars: stars(0.5, 2.5, 1, 2), bio: 'Has the town code memorized.' },
+  { id: 'clerk_alvarez', name: 'Rosa Alvarez', rarity: 'uncommon', stars: stars(0.5, 2.5, 1, 2), bio: 'Has the town code memorized.' },
   // Rare
   {
     id: 'cm_vance',

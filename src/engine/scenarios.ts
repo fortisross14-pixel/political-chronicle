@@ -1,18 +1,44 @@
 // Scenarios (missions): a preset start, an objective with a deadline, and star goals (DESIGN_V2 §8.1).
 import { getOffice, getScenario, PARTIES } from '../data';
 import type { Scenario, StarRule } from '../data';
-import { autoAllocate, buildRunConfig } from './creation';
+import { autoAllocate, buildRunConfig, finalSkills, SKILL_LABELS } from './creation';
+import { reject } from './errors';
 import { dealDecisions } from './decisions';
 import { newTerm } from './governing';
 import { nudgeRecognition } from './opinion';
 import { createRun } from './run';
 import { turnsInYear } from './time';
-import type { ElectionRecord, GameState } from './types';
+import type { ElectionRecord, GameState, SkillId, Skills } from './types';
 
 export interface ScenarioStart {
   name: string;
+  /** Trinkets equipped for this try. */
   artifacts: string[];
   seed: string;
+  /** Extra skill points placed on the mission setup screen (up to MISSION_EXTRA_POINTS). */
+  extra?: Partial<Record<SkillId, number>>;
+}
+
+/** Points you place yourself at the start of every mission. */
+export const MISSION_EXTRA_POINTS = 5;
+/** No starting skill above this after the extra points. */
+export const MISSION_SKILL_CAP = 7;
+
+/** The mission character's skills before your extra points. */
+export function missionBaseSkills(scenarioId: string): Skills {
+  const ch = getScenario(scenarioId).setup.character;
+  return finalSkills({ backgroundId: ch.backgroundId, allocation: ch.allocation ?? autoAllocate(ch.backgroundId, ch.age) });
+}
+
+export function extraPointsError(scenarioId: string, extra: Partial<Record<SkillId, number>>): string | undefined {
+  const base = missionBaseSkills(scenarioId);
+  const values = Object.values(extra);
+  if (values.some((v) => !Number.isInteger(v) || v! < 0)) return 'Whole, non-negative points only.';
+  const spent = values.reduce((a: number, b) => a + (b ?? 0), 0);
+  if (spent > MISSION_EXTRA_POINTS) return `You have ${MISSION_EXTRA_POINTS} points to place.`;
+  const over = (Object.keys(extra) as SkillId[]).find((k) => base[k] + (extra[k] ?? 0) > MISSION_SKILL_CAP);
+  if (over) return `${SKILL_LABELS[over]} can start at ${MISSION_SKILL_CAP} at most.`;
+  return undefined;
 }
 
 /** Builds the opening state of a scenario. */
@@ -24,7 +50,12 @@ export function createScenarioRun(scenarioId: string, start: ScenarioStart): Gam
     name: start.name,
     allocation: setup.character.allocation ?? autoAllocate(setup.character.backgroundId, setup.character.age),
   };
-  const config = buildRunConfig(input, start.seed);
+  const built = buildRunConfig(input, start.seed);
+  const extra = start.extra ?? {};
+  reject(extraPointsError(scenarioId, extra));
+  const skills = { ...built.politician.skills };
+  for (const k of Object.keys(extra) as SkillId[]) skills[k] += extra[k] ?? 0;
+  const config = { ...built, politician: { ...built.politician, skills } };
   let s = createRun({
     ...config,
     earliestYear: setup.startYear,

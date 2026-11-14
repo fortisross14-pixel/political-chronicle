@@ -82,6 +82,7 @@ export function backgroundEnergyPenalty(state: Pick<GameState, 'politician' | 'c
   return penalty && state.clock.monthsElapsed < penalty.months ? penalty.amount : 0;
 }
 
-export function hasAbility(state: Pick<GameState, 'politician'>, ability: string): boolean {
-  return state.politician.abilities?.includes(ability) ?? false;
+/** A passive trinket equipped this run (or an ability earned in an old save). */
+export function hasAbility(state: Pick<GameState, 'politician'> & Partial<Pick<GameState, 'artifacts'>>, ability: string): boolean {
+  return (state.artifacts ?? []).includes(ability) || (state.politician.abilities?.includes(ability) ?? false);
 }

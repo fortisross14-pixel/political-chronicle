@@ -1,5 +1,6 @@
 // One place that knows whether an action is legal right now. `applyAction` calls it first, so
 // the UI can ask the same question (`validateAction`) before offering a button.
+import { trinketError } from './trinkets';
 import { getPerson } from '../data';
 import { decisionError } from './decisions';
 import { previewEvent } from './events';
@@ -28,6 +29,7 @@ const NIGHT_ACTIONS = new Set<Action['type']>([
   'NIGHT_AD_BLITZ',
   'NIGHT_FINISH',
   'USE_ITEM',
+  'USE_TRINKET',
 ]);
 /** Team and hand management don't touch the game's flow, so they're allowed whenever the career is live. */
 const ALWAYS = new Set<Action['type']>(['ASSIGN_PERSON', 'UNASSIGN_ROLE', 'DISCARD_PERSON', 'DISCARD_CARD', 'KEEP_FROM_PACK']);
@@ -37,7 +39,8 @@ export function validateAction(state: GameState, action: Action): string | undef
   if (action.type === 'DISMISS_RESULT') return state.pendingResult === undefined ? 'There is no result to dismiss.' : undefined;
   if (state.ended) return 'Your career is over.';
   if (state.night && !NIGHT_ACTIONS.has(action.type) && !ALWAYS.has(action.type)) return 'Election night is under way.';
-  if (!state.night && NIGHT_ACTIONS.has(action.type) && action.type !== 'USE_ITEM') return 'There is no election night right now.';
+  if (!state.night && NIGHT_ACTIONS.has(action.type) && action.type !== 'USE_ITEM' && action.type !== 'USE_TRINKET')
+    return 'There is no election night right now.';
 
   switch (action.type) {
     case 'END_TURN':
@@ -86,5 +89,7 @@ export function validateAction(state: GameState, action: Action): string | undef
       return adBlitzError(state);
     case 'NIGHT_FINISH':
       return undefined;
+    case 'USE_TRINKET':
+      return trinketError(state, action.id, action.regionId);
   }
 }

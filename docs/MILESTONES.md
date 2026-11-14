@@ -262,13 +262,46 @@ race) plays through these systems, with saves migrated (v9 → v10).
 
 ---
 
+## M15 — Missions, trinkets and election day ✅ done
+
+- **Five rarities** (common, uncommon, rare, epic, legendary); collectible cards are framed by
+  rarity only (grey, green, blue, purple, gold). Pack odds per tier: regular 60/28/10/2/0,
+  golden 15/30/33/17/5, elite 0/10/35/37/18. A new legendary campaign action: National TV interview.
+- **Effect chips** on every card (reach and persuasion pips, where the medium lands best,
+  statewide, topics, money, gaffe risk; approval, favorability and funds on political events).
+  The hand still shows the exact per-region preview before you play.
+- **Skill cards** in packs: 30/40/50% of regular/golden/elite packs swap one card for +1 to a
+  skill under your cap. Free, on top of what you keep. Training political events are gone.
+- **The field:** mayoral races outside the big city draw 1–2 challengers (2–3 candidates).
+  The launch screen lists who you'd face, incumbent or not, and their lean (red, blue, neutral),
+  from a per-race seed so the preview is the race you file.
+- **Trinkets** replace artifacts and abilities: 16 in five rarities, six commons owned from the
+  start, the rest earned with mission stars. 2 slots (+1 at 6 and 10 stars). Windows: campaign,
+  Election Day (mobilize), election night after the exit polls (late voters), governing, passive.
+  Force the vote passes your next bill without the votes in the chamber.
+- **Mission setup:** the full dossier (background, age, birthplace and residence, native or
+  transplant, money, party, office), 5 extra skill points (start cap 7), trinkets, and retries.
+- **Election day:** End turn reads “Start election day” on the election turn; mobilize first.
+  The night opens on the exit polls (±1.2 points), late-voter cards and trinkets, then the count.
+- **Re-election is judged on the record:** approval weight 2 → 3; campaign events count ×0.6
+  when you defend your own seat.
+- **Advanced missions** (after the beginner track): The underdog, Blue in the North Country,
+  Small town to the top.
+- Save schema v11 (training cards dropped, abilities become equipped trinkets).
+
+**Measured (bot, 30–40 runs):** beginner missions on a first try (no points, no trinkets) 70–95%;
+prepared (5 points on charisma/strategy, mobilize + surprise appearance) 93–100%. Advanced, first
+try / prepared: underdog 7% / 53%, Blue in the North 17% / 40%, small town to the top 33% / 73%.
+
+---
+
 ## After v2 (expansion)
 
 1. **More states:** New York re-cut to 5 regions and California (2 cities, 2 secondary,
    1 rural), growing to about 10 playable states with finer regions scaled by population
    (Rhode Island 2, New York 10–12, California and Texas more), plus a US map.
-2. **Advanced scenarios:** The Underdog Superstar, Blue in a red district, The Carpetbagger,
-   Machine politics, The Comeback.
+2. **More advanced missions:** The impossible law (a law-passing objective), The Carpetbagger,
+   Machine politics, The Comeback; a town council for mayors so Force the vote matters there too.
 3. **The presidency:** national primaries and the general election over the playable states,
    where the transplant's two-state payoff kicks in.
 4. **Living world:** scandals, random events, recurring rivals, staff poached by opponents.

@@ -14,16 +14,31 @@ import {
   PACK_SIZE,
   PEOPLE,
   POLICY_CARDS,
+  RARITIES,
 } from '../data';
 import { acquirePerson, ROSTER_LIMIT } from './people';
 import { Rng } from './rng';
-import type { GameState, OpenPack, PackKind, PackTier, Rarity } from './types';
+import { SKILL_LABELS } from './creation';
+import { skillCap } from './economy';
+import type { GameState, OpenPack, PackKind, PackTier, Rarity, SkillId } from './types';
 
 export const POLICY_HAND_LIMIT = 5;
 /** Campaign actions (event cards + items) you can hold. */
 export const CAMPAIGN_HAND_LIMIT = 8;
 
 const ITEM_PREFIX = 'item:';
+const SKILL_PREFIX = 'skill:';
+
+/** Chance, per pack, that one of its three cards is a skill card (DESIGN_V2 §13). */
+export const SKILL_CARD_CHANCE: Record<PackTier, number> = { regular: 0.3, golden: 0.4, elite: 0.5 };
+
+export function isSkillCard(id: string): boolean {
+  return id.startsWith(SKILL_PREFIX);
+}
+
+export function skillOfCard(id: string): SkillId {
+  return id.slice(SKILL_PREFIX.length) as SkillId;
+}
 
 export function isItemCard(id: string): boolean {
   return id.startsWith(ITEM_PREFIX);
@@ -31,6 +46,7 @@ export function isItemCard(id: string): boolean {
 
 /** Rarity of any pack card id. */
 export function cardRarity(kind: PackKind, id: string): Rarity {
+  if (isSkillCard(id)) return 'uncommon';
   if (kind === 'people') return getPerson(id).rarity;
   if (kind === 'policy') return getPolicyCard(id).rarity;
   return isItemCard(id) ? getItem(id.slice(ITEM_PREFIX.length)).rarity : getEventCard(id).rarity!;
@@ -59,7 +75,7 @@ export function drawPack(state: GameState, rng: Rng, kind: PackKind, tier: PackT
     if (!left.length) break;
     let roll = rng.float() * 100;
     let rarity: Rarity = 'common';
-    for (const r of ['common', 'rare', 'epic', 'legendary'] as Rarity[]) {
+    for (const r of RARITIES) {
       roll -= odds[r];
       if (roll <= 0) {
         rarity = r;
@@ -67,13 +83,18 @@ export function drawPack(state: GameState, rng: Rng, kind: PackKind, tier: PackT
       }
     }
     // Fall back to the nearest rarity that still has cards (people packs run dry as you collect).
-    const order: Rarity[] = ['common', 'rare', 'epic', 'legendary'];
+    const order = RARITIES;
     const at = order.indexOf(rarity);
     const byDistance = [...order].sort((a, b) => Math.abs(order.indexOf(a) - at) - Math.abs(order.indexOf(b) - at));
     const tierOk = byDistance.filter((r) => odds[r] > 0);
     const rar = tierOk.find((r) => left.some((c) => c.rarity === r));
     if (!rar) break;
     picked.push(rng.pick(left.filter((c) => c.rarity === rar)).id);
+  }
+  // Sometimes one slot is a skill card instead: +1 to a skill that still has room under the cap.
+  const open = (Object.keys(state.politician.skills) as SkillId[]).filter((k) => state.politician.skills[k] < skillCap(state));
+  if (picked.length === PACK_SIZE && open.length && rng.float() < SKILL_CARD_CHANCE[tier]) {
+    picked[rng.int(0, PACK_SIZE - 1)] = `${SKILL_PREFIX}${rng.pick(open)}`;
   }
   return picked;
 }
@@ -117,17 +138,28 @@ export function keepError(state: GameState, keep: number[]): string | undefined 
   if (!pack) return 'There is no pack to open.';
   if (new Set(keep).size !== keep.length || keep.some((i) => i < 0 || i >= pack.cards.length || !Number.isInteger(i)))
     return 'Pick cards from this pack.';
+  // Skill cards are free: they never count toward what you keep.
+  keep = keep.filter((i) => !isSkillCard(pack.cards[i]!));
   if (PACK_KEEP[pack.kind] === 'one' && keep.length > 1) return 'Keep one card from this pack.';
   if (keep.length > 0 && keep.length > roomFor(state, pack.kind))
     return pack.kind === 'people' ? `Your roster holds ${ROSTER_LIMIT}.` : 'Your hand is full: play or discard a card first.';
   return undefined;
 }
 
-/** Keeps the chosen cards of the first pack and throws the rest away. Keeping none is allowed. */
-export function keepFromPack(state: GameState, keep: number[]): GameState {
-  reject(keepError(state, keep));
+/** Keeps the chosen cards of the first pack and throws the rest away. Keeping none is allowed.
+ *  A skill card in the pack is always learned, on top of what you keep. */
+export function keepFromPack(state: GameState, keepIn: number[]): GameState {
+  reject(keepError(state, keepIn));
   const pack = state.packs[0]!;
   let s: GameState = { ...state, packs: state.packs.slice(1) };
+  const learned: string[] = [];
+  for (const id of pack.cards.filter(isSkillCard)) {
+    const skill = skillOfCard(id);
+    if (s.politician.skills[skill] >= skillCap(s)) continue;
+    s = { ...s, politician: { ...s.politician, skills: { ...s.politician.skills, [skill]: s.politician.skills[skill] + 1 } } };
+    learned.push(`${SKILL_LABELS[skill]} +1`);
+  }
+  const keep = keepIn.filter((i) => !isSkillCard(pack.cards[i]!));
   for (const i of keep) {
     const id = pack.cards[i]!;
     if (pack.kind === 'people') s = acquirePerson(s, id);
@@ -137,11 +169,12 @@ export function keepFromPack(state: GameState, keep: number[]): GameState {
       s = { ...s, items: [...s.items, { uid: s.nextItemUid, itemId: id.slice(ITEM_PREFIX.length) }], nextItemUid: s.nextItemUid + 1 };
     else s = { ...s, hand: [...s.hand, { uid: s.nextCardUid, cardId: id }], nextCardUid: s.nextCardUid + 1 };
   }
-  const names = keep.map((i) => cardName(pack.kind, pack.cards[i]!));
+  const names = [...learned, ...keep.map((i) => cardName(pack.kind, pack.cards[i]!))];
   return names.length ? { ...s, log: [...s.log, { year: s.clock.year, turn: s.clock.turn, text: `Kept ${names.join(', ')}.` }] } : s;
 }
 
 export function cardName(kind: PackKind, id: string): string {
+  if (isSkillCard(id)) return `${SKILL_LABELS[skillOfCard(id)]} +1`;
   if (kind === 'people') return getPerson(id).name;
   if (kind === 'policy') return getPolicyCard(id).name;
   return isItemCard(id) ? getItem(id.slice(ITEM_PREFIX.length)).name : getEventCard(id).name;

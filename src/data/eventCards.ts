@@ -63,7 +63,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'radio_interview',
-    rarity: 'common',
+    rarity: 'uncommon',
     name: 'Local radio interview',
     basic: false,
     cost: 8000,
@@ -93,7 +93,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'cable_interview',
-    rarity: 'rare',
+    rarity: 'epic',
     name: 'Cable news interview',
     basic: false,
     cost: 25000,
@@ -123,7 +123,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'podcast_tour',
-    rarity: 'rare',
+    rarity: 'uncommon',
     name: 'Podcast tour',
     basic: false,
     cost: 15000,
@@ -138,7 +138,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'arena_rally',
-    rarity: 'epic',
+    rarity: 'rare',
     name: 'Arena rally',
     basic: false,
     cost: 120000,
@@ -153,7 +153,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'fundraising_dinner',
-    rarity: 'rare',
+    rarity: 'uncommon',
     name: 'Fundraising dinner',
     basic: false,
     cost: 10000,
@@ -169,7 +169,7 @@ export const EVENT_CARDS: EventCard[] = [
   },
   {
     id: 'party_unity',
-    rarity: 'rare',
+    rarity: 'uncommon',
     name: 'Party unity event',
     basic: false,
     cost: 20000,
@@ -261,6 +261,21 @@ export const EVENT_CARDS: EventCard[] = [
     spillover: 0.6,
     gaffeRisk: false,
     description: 'Ten million views by Tuesday. Everyone in the state has seen it.',
+  },
+  {
+    id: 'national_tv_interview',
+    rarity: 'legendary',
+    name: 'National TV interview',
+    basic: false,
+    cost: 90000,
+    energy: 2,
+    medium: 'tv',
+    skills: ['charisma', 'strategy'],
+    reach: 0.24,
+    persuasion: 0.18,
+    spillover: 0.8,
+    gaffeRisk: true,
+    description: 'Prime time on a national network. Everyone watches; one slip and everyone sees it.',
   },
 ];
 

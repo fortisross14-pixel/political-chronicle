@@ -10,6 +10,7 @@ import { simulateYear } from './world';
 import { poll } from './opinion';
 import { evaluateScenario } from './scenarios';
 import { endTurnBlocker, validateAction } from './validate';
+import { applyTrinket } from './trinkets';
 import { hasAbility } from './traits';
 import { rollChambers } from './legislature';
 import { assignPerson, discardPerson, hasPerk, unassignRole } from './people';
@@ -64,6 +65,8 @@ function reduce(state: GameState, action: Action): GameState {
       return adBlitz(state);
     case 'NIGHT_FINISH':
       return finishNight(state);
+    case 'USE_TRINKET':
+      return applyTrinket(state, action.id, action.regionId);
     case 'ASK_TO_JOIN':
       return askToJoin(state, action.party, action.platform);
     case 'ASSIGN_PERSON':

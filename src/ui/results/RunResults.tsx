@@ -1,4 +1,4 @@
-import { ABILITIES_BY_ID, ARTIFACTS_BY_ID, getBackground, getOffice, getScenario } from '../../data';
+import { getBackground, getTrinket, getOffice, getScenario } from '../../data';
 import { buildRunSummary } from '../../engine';
 import type { GameState, RecordOutcome } from '../../engine';
 import { CareerCharts } from '../charts/CareerCharts';
@@ -43,17 +43,12 @@ export function RunResults({ state, outcome, onMenu, onHall }: Props) {
             </ul>
           </>
         )}
-        {outcome && (outcome.newArtifacts.length > 0 || outcome.newAbilities.length > 0 || outcome.unlockedSandbox) && (
+        {outcome && (outcome.newTrinkets.length > 0 || outcome.unlockedSandbox) && (
           <div className="rewards">
             <h3>Rewards</h3>
-            {outcome.newArtifacts.map((a) => (
+            {outcome.newTrinkets.map((a) => (
               <div key={a}>
-                🎁 Artifact: {ARTIFACTS_BY_ID[a]!.name} — {ARTIFACTS_BY_ID[a]!.text}
-              </div>
-            ))}
-            {outcome.newAbilities.map((a) => (
-              <div key={a}>
-                ✨ Ability: {ABILITIES_BY_ID[a]!.name} — {ABILITIES_BY_ID[a]!.text}
+                🎁 New trinket: {getTrinket(a).name} — {getTrinket(a).text}
               </div>
             ))}
             {outcome.unlockedSandbox && <div>🔓 Sandbox unlocked!</div>}

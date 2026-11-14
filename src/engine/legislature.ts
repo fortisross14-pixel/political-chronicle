@@ -49,6 +49,7 @@ export function yourChamber(state: GameState): { name: string; control: ChamberC
 export function passageChance(state: GameState, card: DecisionCard): number {
   const chamber = yourChamber(state);
   if (!chamber || card.context !== 'office' || card.tags.length === 0) return 1;
+  if (state.career.office?.forceVote) return 1;
   const skills = effectiveSkills(state);
   const party = state.career.affiliation;
   const own = party !== 'IND' && chamber.control === party;

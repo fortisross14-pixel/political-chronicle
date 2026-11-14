@@ -5,7 +5,9 @@ import {
   applyAction,
   buildRunConfig,
   buyPackError,
+  cardName,
   cardRarity,
+  isSkillCard,
   createRun,
   drawPack,
   endTurnBlocker,
@@ -75,7 +77,8 @@ describe('packs', () => {
     expect(s.packs[0]!.kind).toBe('people');
     expect(s.packs[0]!.cards).toHaveLength(PACK_SIZE);
     const kept = applyAction(s, { type: 'KEEP_FROM_PACK', keep: [0, 1, 2] });
-    expect(kept.team.cards.length).toBe(s.team.cards.length + 3);
+    const people = s.packs[0]!.cards.filter((id) => !isSkillCard(id)).length;
+    expect(kept.team.cards.length).toBe(s.team.cards.length + people);
     expect(kept.packs).toHaveLength(0);
   });
 
@@ -115,13 +118,20 @@ describe('packs', () => {
     expect(keepError(withPack, [0])).toMatch(/full/);
   });
 
-  it('training cards raise a skill up to the office cap', () => {
-    const s = { ...resolved(), policyHand: [{ uid: 900, cardId: 'speech_coach' }] };
-    const trained = applyAction(s, { type: 'PLAY_POLICY', uid: 900 });
-    expect(trained.politician.skills.charisma).toBe(s.politician.skills.charisma + 1);
+  it('a skill card is learned for free, on top of what you keep, up to the office cap', () => {
+    const base = resolved();
+    const pack = { kind: 'policy' as const, tier: 'regular' as const, cards: ['op_ed', 'skill:charisma', 'press_conference'] };
+    const s = { ...base, packs: [pack] };
+    expect(keepError(s, [0, 1])).toBeUndefined();
+    const kept = applyAction(s, { type: 'KEEP_FROM_PACK', keep: [0] });
+    expect(kept.politician.skills.charisma).toBe(base.politician.skills.charisma + 1);
+    expect(kept.policyHand).toHaveLength(base.policyHand.length + 1);
+    const none = applyAction(s, { type: 'KEEP_FROM_PACK', keep: [] });
+    expect(none.politician.skills.charisma).toBe(base.politician.skills.charisma + 1);
     expect(skillCap(s)).toBe(6);
     const capped = { ...s, politician: { ...s.politician, skills: { ...s.politician.skills, charisma: 6 } } };
-    expect(policyError(capped, 900)).toMatch(/capped/);
+    expect(applyAction(capped, { type: 'KEEP_FROM_PACK', keep: [] }).politician.skills.charisma).toBe(6);
+    expect(cardName('policy', 'skill:charisma')).toMatch(/Charisma \+1/);
   });
 });
 
